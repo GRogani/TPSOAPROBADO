@@ -1,5 +1,5 @@
-#ifndef UTILS_PROTOCOLO_H_
-#define UTILS_PROTOCOLO_H_
+#ifndef UTILS_PROTOCOL_H_
+#define UTILS_PROTOCOL_H_
 
 #include <stdint.h>
 #include <stdlib.h>
