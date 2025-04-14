@@ -29,6 +29,7 @@ void buffer_add(t_buffer *buffer, void *data, uint32_t size);
 void buffer_add_uint32(t_buffer *buffer, uint32_t data);
 void buffer_add_string(t_buffer *buffer, uint32_t length, char *string);
 void buffer_add_pointer(t_buffer *buffer, void *ptr);
+
 //FUNCIONES PARA DESERIALIZAR
 void buffer_read(t_buffer *buffer, void *data, uint32_t size);
 uint32_t buffer_read_uint32(t_buffer *buffer);

@@ -1,6 +1,6 @@
 #include "server.h"
 
-int create_server(int port) {
+int create_server(char* port) {
 	int socket_server;
 
 	struct addrinfo hints, *servinfo;
@@ -18,25 +18,25 @@ int create_server(int port) {
 
 	if(socket_server == -1) {
 		log_error(logger, "Could not create fd for socket");
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 	}
 
 	int errSOckOpt = setsockopt(socket_server, SOL_SOCKET, SO_REUSEPORT, &(int){1}, sizeof(int));
 	if(errSOckOpt == -1) {
 		log_error(logger, "Could not associate multiple sockets to one port");
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 	}
 
 	int bindErr = bind(socket_server, servinfo->ai_addr, servinfo->ai_addrlen);
 	if(bindErr == -1) {
 		log_error(logger, "Could not associate a socket to port");
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 	}
 
 	int listenErr = listen(socket_server, SOMAXCONN);
 	if(listenErr == -1) {
-		log_error(logger, "Could not listen on port %d", port);
-		return EXIT_FAILURE;
+		log_error(logger, "Could not listen on port %s", port);
+		exit(EXIT_FAILURE);
 	}
 
 	freeaddrinfo(servinfo);

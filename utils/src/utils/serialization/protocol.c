@@ -2,6 +2,9 @@
 
 
 //FUNCIONES PARA SERIALIZAR
+/*
+* @brief reminder to call buffer_destroy to free memory
+*/
 t_buffer *buffer_create(uint32_t size){
     t_buffer *buffer = malloc(sizeof(t_buffer));
     buffer->offset = 0;
@@ -15,16 +18,16 @@ void buffer_destroy(t_buffer *buffer){
     free(buffer);
 }
 
-void buffer_add(t_buffer *buffer, void *data, uint32_t tamanio){
-    void *new_stream = realloc(buffer->stream, buffer->size + tamanio);
+void buffer_add(t_buffer *buffer, void *data, uint32_t size){
+    void *new_stream = realloc(buffer->stream, buffer->size + size);
 	if (new_stream == NULL)
 	{
 		return;
 	}
 	buffer->stream = new_stream;
-	memcpy(buffer->stream + buffer->offset, data, tamanio);
-	buffer->size += tamanio;
-	buffer->offset += tamanio;
+	memcpy(buffer->stream + buffer->offset, data, size);
+	buffer->size += size;
+	buffer->offset += size;
 }
 
 void buffer_add_uint32(t_buffer *buffer, uint32_t data){

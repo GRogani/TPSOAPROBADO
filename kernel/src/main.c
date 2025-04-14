@@ -5,6 +5,14 @@
 
 t_log* logger;
 
+void shutdown_hook(t_kernel_config* kernel_config, t_config* config, t_log* logger) {
+    free(kernel_config->memory_port);
+    free(kernel_config->port);
+    free(kernel_config);
+    config_destroy(config);
+    log_destroy(logger);
+}
+
 int main(int argc, char* argv[]) {
     t_kernel_config* kernel_config = malloc(sizeof(t_kernel_config));
 
@@ -13,7 +21,7 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    t_config* config = init_and_validate(kernel_config);
+    t_config* config = init_config_and_validate(kernel_config);
 
     t_log* logger = init_logger(
         "kernel.log",
@@ -22,16 +30,12 @@ int main(int argc, char* argv[]) {
     );
 
     log_info(logger, "Creating server...");
-    int port = 3001;
-    int socket_server = create_server(port);
 
-    shutdownHook(kernel_config, config, logger);
+    int socket_server = create_server(kernel_config->port);
+    log_info(logger, "awaiting for new clients...");
+    int socket_client = accept_connection(socket_server);
+
+    shutdown_hook(kernel_config, config, logger);
 
     return 0;
-}
-
-void shutdownHook(t_kernel_config* kernel_config, t_config* config, t_log* logger) {
-    free(kernel_config);
-    config_destroy(config);
-    log_destroy(logger);
 }

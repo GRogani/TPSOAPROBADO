@@ -1,11 +1,12 @@
 #ifndef UTILS_SOCKET_SERVER
 #define UTILS_SOCKET_SERVER
 
-#include <stdlib.h>
-#include <stdio.h>
+#include "../logger/logger.h"
+#include<stdlib.h>
+#include<stdio.h>
 #include<sys/socket.h>
 #include<netdb.h>
-#include <string.h>
+#include<string.h>
 
 extern t_log* logger;
 
@@ -14,7 +15,7 @@ extern t_log* logger;
 * @param port port to listen by the server
 * @return connection connection of the socket server
 */
-int create_server(int port);
+int create_server(char* port);
 
 /**
 * @brief Waits for a new client to be connected
