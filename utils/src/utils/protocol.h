@@ -1,5 +1,5 @@
-#ifndef UTILS_PROTOCOLO_H_
-#define UTILS_PROTOCOLO_H_
+#ifndef UTILS_PROTOCOL_H_
+#define UTILS_PROTOCOL_H_
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -10,35 +10,40 @@
 /**
  * @enum OPCODE
  * @brief Códigos de operación para paquetes de comunicación
- * 
- * Actualmente solo soporta HANDSHAKE para el establecimiento inicial de conexión
+ * @note - `HANDSHAKE`
  */
 typedef enum {
-    HANDSHAKE  ///< Operación inicial de handshake/autenticación
+    HANDSHAKE  // Operación inicial de handshake/autenticación
 } OPCODE;
 
 /**
  * @struct t_buffer
- * @brief Buffer para serialización/deserialización de datos
+ * @brief Buffer para serialización/deserialización de datos.
+ * @note - `size` Tamaño total del buffer en bytes.
  * 
+ *  - `stream` Puntero al stream de datos serializados.
+ * 
+ *  - `offset` Offset actual para operaciones de lectura/escritura.
  * Mantiene un stream de bytes con posición actual para lectura/escritura secuencial
  */
 typedef struct t_buffer {
-    uint32_t size;           ///< Tamaño total del buffer en bytes
-    void* stream;       ///< Puntero al stream de datos serializados
-    uint32_t offset;    ///< Offset actual para operaciones de lectura/escritura
+    uint32_t size;           // Tamaño total del buffer en bytes
+    void* stream;       // Puntero al stream de datos serializados
+    uint32_t offset;    // Offset actual para operaciones de lectura/escritura
 } t_buffer;
 
 /**
- * @struct t_paquete
+ * @struct t_package
  * @brief Paquete completo de comunicación
+ * @note
+ * - `opcode` Tipo de operación (ej. HANDSHAKE)
  * 
- * Contiene un código de operación y los datos asociados en formato buffer
+ * - `buffer` Datos serializados asociados al paquete
  */
-typedef struct t_paquete {
-    OPCODE codigo_operacion;  ///< Tipo de operación (ej. HANDSHAKE)
-    t_buffer* buffer;         ///< Datos serializados asociados al paquete
-} t_paquete;
+typedef struct t_package {
+    OPCODE opcode;  // Tipo de operación (ej. HANDSHAKE)
+    t_buffer* buffer;         // Datos serializados asociados al paquete
+} t_package;
 
 /**
  * @brief Crea un nuevo buffer

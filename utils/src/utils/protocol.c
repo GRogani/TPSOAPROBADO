@@ -1,18 +1,20 @@
-#include "protocolo.h"
+#include "protocol.h"
 
 t_buffer *buffer_create(uint32_t size){
-    if (size == 0) 
-    {
-        LOG_ERROR("El tamaño del buffer no puede ser cero.\n");
-        return NULL; // return null o romper todo con un exit o abort??
-    }
+    // if (size == 0) 
+    // {
+    //     LOG_WARN("El tamaño del buffer a crear es cero.\n");
+    //     return NULL;            
+    // }
 
     t_buffer *buffer = safe_malloc(sizeof(t_buffer));
 
     buffer->offset = 0;
     buffer->size = size;
 
-    buffer->stream = safe_malloc(buffer->size); // Deberia inicializarce en 0 el stream???; con calloc() o no hay problema???
+    if (size !=0)
+        buffer->stream = safe_calloc(1 ,buffer->size);  // Ahi deje el calloc/ reserva 1 buffer inicializado en 0
+    else buffer->stream = NULL;
 
     return buffer;
 }
@@ -30,12 +32,16 @@ void buffer_destroy(t_buffer *buffer){
 }
 
 void buffer_add(t_buffer *buffer, void *data, uint32_t size){
-    void *new_stream = safe_realloc(buffer->stream, buffer->size + size);
-	buffer->stream = new_stream;
-	memcpy(buffer->stream + buffer->offset, data, size);
-	buffer->size += size;
-	buffer->offset += size;
+    if (buffer->offset + size > buffer->size) {
+        uint32_t new_size = buffer->offset + size;
+        buffer->stream = safe_realloc(buffer->stream, new_size);
+        buffer->size = new_size;
+    }
+
+    memcpy(buffer->stream + buffer->offset, data, size);
+    buffer->offset += size;
 }
+
 
 void buffer_add_uint32(t_buffer *buffer, uint32_t data){
     buffer_add(buffer, &data, sizeof(uint32_t));
