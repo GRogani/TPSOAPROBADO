@@ -7,8 +7,8 @@ typedef enum {
     FIFO,
     SJF,
     SRT
-} t_planification_algorithm;
+} PLANIFICATION_ALGORITHM;
 
-t_planification_algorithm planification_from_string(char*);
+PLANIFICATION_ALGORITHM planification_from_string(char*);
 
 #endif

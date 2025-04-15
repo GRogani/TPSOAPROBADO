@@ -16,7 +16,7 @@ typedef struct {
 	char* port;
     char* memory_ip;
     char* memory_port;
-    t_planification_algorithm planification_algorithm;
+    PLANIFICATION_ALGORITHM planification_algorithm;
     int sleep_time;
     t_log_level log_level;
 } t_kernel_config;
