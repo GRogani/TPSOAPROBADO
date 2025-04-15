@@ -3,6 +3,8 @@
 #include <utils/socket/client.h>
 #include <utils/logger/logger.h>
 
+t_log* logger;
+
 int main(int argc, char* argv[]) {
 t_config* config_cpu = init_config("cpu.config");
 
