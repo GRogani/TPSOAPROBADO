@@ -1,21 +1,43 @@
+name: TESTS
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Clonar repositorio
+      uses: actions/checkout@v3
 
-      - name: Set up Docker container with dependencies
-        run: |
-          docker run --rm -v $(pwd):/workspace -w /workspace ubuntu:20.04 bash -c "
-            apt update && \
-            apt install -y gcc make git curl && \
-            curl -sL https://github.com/mumuki/cspec/archive/refs/tags/v1.0.0.tar.gz | tar xz && \
-            cd cspec-1.0.0 && \
-            make && \
-            sudo make install && \
-            cd /workspace && \
-            make -C utils && \
-            make -C utils test && \
-            ./utils/bin/utils_tests"
+    - name: Instalar dependencias de sistema
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential git cmake libreadline-dev
+
+    - name: Clonar y compilar cspec
+      run: |
+        git clone https://github.com/mumuki/cspec.git
+        cd cspec
+        make
+        sudo make install
+
+    - name: Clonar y compilar so-commons-library
+      run: |
+        git clone https://github.com/sisoputnfrba/so-commons-library.git commons
+        cd commons
+        make
+        sudo make install
+
+    - name: Compilar proyecto
+      run: |
+        make -C utils
+
+    - name: Ejecutar tests
+      run: |
+        make -C utils test
+        ./bin/utils_tests  # Ejecutar el binario generado por los tests
