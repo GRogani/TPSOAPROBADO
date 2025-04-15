@@ -1,0 +1,25 @@
+name: CI Utils Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  utils-tests:
+    runs-on: ubuntu-latest
+    name: Ejecutar tests de utils
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Instalar dependencias
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential libcspecs-dev
+
+      - name: Ejecutar tests de utils
+        working-directory: utils
+        run: make test
