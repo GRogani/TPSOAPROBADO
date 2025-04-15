@@ -33,23 +33,24 @@ jobs:
         make
         sudo make install
 
-    - name: Compilar proyecto
+    - name: Compilar todos los módulos
       run: |
-        make -C utils
+        for dir in utils kernel io memoria cpu; do
+          if [ -f "$dir/Makefile" ]; then
+            echo "Compilando módulo $dir"
+            make -C $dir test
+          fi
+        done
 
     - name: Ejecutar tests
       run: |
-        set -e  # Fail on first error
-
+        set -e
         TEST_EXECUTABLES=$(find . -type f -path "*/bin/*_tests")
-
         if [ -z "$TEST_EXECUTABLES" ]; then
           echo "No se encontraron ejecutables de tests."
           exit 1
         fi
-
         for test_exec in $TEST_EXECUTABLES; do
-          echo "Ejecutando tests: $test_exec"
+          echo "Ejecutando $test_exec"
           $test_exec
         done
-
