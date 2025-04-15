@@ -1,39 +1,42 @@
-name: CI Utils Tests
+name: TESTS
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
 
 jobs:
-  utils-tests:
+  build-and-test:
     runs-on: ubuntu-latest
-    name: Ejecutar tests de utils
 
     steps:
-      - name: Clonar repositorio
-        uses: actions/checkout@v3
+    - name: Clonar repositorio
+      uses: actions/checkout@v3
 
-      - name: Instalar dependencias de sistema
-        run: |
-          sudo apt update
-          sudo apt install -y build-essential git cmake
+    - name: Instalar dependencias de sistema
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential git cmake libreadline-dev
 
-      - name: Instalar cspec (mumuki)
-        run: |
-          git clone https://github.com/mumuki/cspec.git
-          cd cspec
-          make
-          sudo make install
+    - name: Clonar y compilar cspec
+      run: |
+        git clone https://github.com/mumuki/cspec.git
+        cd cspec
+        make
+        sudo make install
 
-      - name: Instalar so-commons-library
-        run: |
-          git clone https://github.com/sisoputnfrba/so-commons-library.git
-          cd so-commons-library
-          make
-          sudo make install
+    - name: Clonar y compilar so-commons-library
+      run: |
+        git clone https://github.com/sisoputnfrba/so-commons-library.git commons
+        cd commons
+        make
+        sudo make install
 
-      - name: Ejecutar tests de utils
-        working-directory: utils
-        run: make test
+    - name: Compilar proyecto
+      run: |
+        make -C utils
+
+    - name: Ejecutar tests
+      run: |
+        make -C utils test
