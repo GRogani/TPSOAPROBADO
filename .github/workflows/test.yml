@@ -39,14 +39,17 @@ jobs:
 
     - name: Ejecutar tests
       run: |
-        TEST_EXECUTABLE=$(find ./utils/bin -type f -name '*_tests')
-        if [ -z "$TEST_EXECUTABLE" ]; then
-          echo "No se encontró el ejecutable de tests."
+        set -e  # Fail on first error
+
+        TEST_EXECUTABLES=$(find . -type f -path "*/bin/*_tests")
+
+        if [ -z "$TEST_EXECUTABLES" ]; then
+          echo "No se encontraron ejecutables de tests."
           exit 1
         fi
-        ./$TEST_EXECUTABLE
-        if [ $? -ne 0 ]; then
-          echo "Los tests han fallado."
-          exit 1
-        fi
-        echo "Todos los tests han pasado."
+
+        for test_exec in $TEST_EXECUTABLES; do
+          echo "Ejecutando tests: $test_exec"
+          $test_exec
+        done
+
