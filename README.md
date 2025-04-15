@@ -1,3 +1,6 @@
+### Status
+[![Tests](https://github.com/Mi-Grupo-1234/tp-2025-1c-Mi-Grupo-1234/actions/workflows/TESTS.yml/badge.svg)](https://github.com/Mi-Grupo-1234/tp-2025-1c-Mi-Grupo-1234/actions/workflows/TESTS.yml)
+
 # tp-scaffold
 
 Esta es una plantilla de proyecto diseñada para generar un TP de Sistemas
