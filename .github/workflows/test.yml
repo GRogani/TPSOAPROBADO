@@ -37,7 +37,10 @@ jobs:
       run: |
         make -C utils
 
+    - name: Verificar la existencia del binario
+      run: |
+        ls -l bin/
+
     - name: Ejecutar tests
       run: |
-        make -C utils test
         ./bin/utils_tests  # Ejecutar el binario generado por los tests
