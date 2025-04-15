@@ -1,0 +1,14 @@
+#ifndef ENUM_PLANIFICATION_ALGORITHM
+#define ENUM_PLANIFICATION_ALGORITHM
+
+#define PLANIFICATION_ENUM_SIZE 3
+
+typedef enum {
+    FIFO,
+    SJF,
+    SRT
+} PLANIFICATION_ALGORITHM;
+
+PLANIFICATION_ALGORITHM planification_from_string(char*);
+
+#endif
