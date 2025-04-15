@@ -6,5 +6,10 @@ t_config* init_config(char* configFileName)
 
 	config = config_create(configFileName);
 
+	if(config == NULL) {
+		// add log from macro
+		exit(EXIT_FAILURE);
+	}
+
 	return config;
 }
