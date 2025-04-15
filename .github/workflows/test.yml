@@ -15,10 +15,17 @@ jobs:
       - name: Clonar repositorio
         uses: actions/checkout@v3
 
-      - name: Instalar dependencias
+      - name: Instalar dependencias de compilación
         run: |
           sudo apt update
-          sudo apt install -y build-essential libcspecs-dev
+          sudo apt install -y build-essential git
+
+      - name: Instalar cspec desde Mumuki
+        run: |
+          git clone https://github.com/mumuki/cspec.git
+          cd cspec
+          make
+          sudo make install
 
       - name: Ejecutar tests de utils
         working-directory: utils
