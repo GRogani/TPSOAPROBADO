@@ -3,7 +3,6 @@
 t_config* init_config_and_validate(t_kernel_config* kernel_config) {
     t_config* config = init_config("kernel.config");
 
-    int kernel_port = config_get_int_value(config, "PORT");
     char* memory_ip = config_get_string_value(config, "MEMORY_IP");
 	int memory_port = config_get_int_value(config, "MEMORY_PORT");
 	char* planification_algorithm = config_get_string_value(config, "PLANIFICATION_ALGORITHM");
@@ -25,10 +24,15 @@ t_config* init_config_and_validate(t_kernel_config* kernel_config) {
 
     kernel_config->log_level = log_level_enum;
     kernel_config->memory_port = string_itoa(memory_port);
-    kernel_config->port = string_itoa(kernel_port);
     kernel_config->sleep_time = sleep_time;
     kernel_config->memory_ip = memory_ip;
     kernel_config->planification_algorithm = planification_enum;
 
     return config;
+}
+
+
+void destroy_kernel_config(t_kernel_config* kernel_config) {
+    free(kernel_config->memory_port);
+    free(kernel_config);
 }

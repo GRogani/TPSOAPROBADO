@@ -13,8 +13,7 @@
 
 
 typedef struct {
-	char* port;
-    char* memory_ip;
+	char* memory_ip;
     char* memory_port;
     t_planification_algorithm planification_algorithm;
     int sleep_time;
@@ -22,6 +21,8 @@ typedef struct {
 } t_kernel_config;
 
 t_config* init_config_and_validate(t_kernel_config* kernel_config);
+
+void destroy_kernel_config(t_kernel_config* kernel_config);
 
 
 #endif
