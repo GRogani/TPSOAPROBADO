@@ -39,10 +39,14 @@ jobs:
 
     - name: Ejecutar tests
       run: |
-        make -C utils test
         TEST_EXECUTABLE=$(find ./utils/bin -type f -name '*_tests')
         if [ -z "$TEST_EXECUTABLE" ]; then
           echo "No se encontró el ejecutable de tests."
           exit 1
         fi
         ./$TEST_EXECUTABLE
+        if [ $? -ne 0 ]; then
+          echo "Los tests han fallado."
+          exit 1
+        fi
+        echo "Todos los tests han pasado."
