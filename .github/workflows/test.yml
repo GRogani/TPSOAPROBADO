@@ -1,36 +1,21 @@
-name: Build and Test
-
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Set up GCC and dependencies
-      - name: Set up GCC and dependencies
+      - name: Set up Docker container with dependencies
         run: |
-          sudo apt update
-          sudo apt install -y gcc make libcspecs-dev libreadline-dev
-
-      # Build the utils library
-      - name: Build utils library
-        run: |
-          make -C utils
-
-      # Run tests for utils
-      - name: Run tests for utils
-        run: |
-          make -C utils test
-          echo "======= Running utils tests ======="
-          ./utils/bin/utils_tests
+          docker run --rm -v $(pwd):/workspace -w /workspace ubuntu:20.04 bash -c "
+            apt update && \
+            apt install -y gcc make git curl && \
+            curl -sL https://github.com/mumuki/cspec/archive/refs/tags/v1.0.0.tar.gz | tar xz && \
+            cd cspec-1.0.0 && \
+            make && \
+            sudo make install && \
+            cd /workspace && \
+            make -C utils && \
+            make -C utils test && \
+            ./utils/bin/utils_tests"
