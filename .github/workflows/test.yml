@@ -15,15 +15,22 @@ jobs:
       - name: Clonar repositorio
         uses: actions/checkout@v3
 
-      - name: Instalar dependencias de compilación
+      - name: Instalar dependencias de sistema
         run: |
           sudo apt update
-          sudo apt install -y build-essential git
+          sudo apt install -y build-essential git cmake
 
-      - name: Instalar cspec desde Mumuki
+      - name: Instalar cspec (mumuki)
         run: |
           git clone https://github.com/mumuki/cspec.git
           cd cspec
+          make
+          sudo make install
+
+      - name: Instalar so-commons-library
+        run: |
+          git clone https://github.com/sisoputnfrba/so-commons-library.git
+          cd so-commons-library
           make
           sudo make install
 
