@@ -1,5 +1,5 @@
-#ifndef KERNEL_CONFIG
-#define KERNEL_CONFIG
+#ifndef KERNEL_CONFIG_H
+#define KERNEL_CONFIG_H
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -9,7 +9,7 @@
 #include <commons/string.h>
 
 #include "utils/config/config.h"
-#include <enum/planification-algorithm.enum.h>
+#include "enum/Eplanification_algorithm.h"
 
 
 typedef struct {
