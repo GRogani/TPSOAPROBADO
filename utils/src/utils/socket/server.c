@@ -1,6 +1,9 @@
 #include "server.h"
 
 int create_server(char* port) {
+
+	log_info(get_logger(), "Creating server...");
+
 	int socket_server;
 
 	struct addrinfo hints, *servinfo;
@@ -17,25 +20,25 @@ int create_server(char* port) {
                         servinfo->ai_protocol);
 
 	if(socket_server == -1) {
-		log_error(logger, "Could not create fd for socket");
+		log_error(get_logger(), "Could not create fd for socket");
 		exit(EXIT_FAILURE);
 	}
 
 	int errSOckOpt = setsockopt(socket_server, SOL_SOCKET, SO_REUSEPORT, &(int){1}, sizeof(int));
 	if(errSOckOpt == -1) {
-		log_error(logger, "Could not associate multiple sockets to one port");
+		log_error(get_logger(), "Could not associate multiple sockets to one port");
 		exit(EXIT_FAILURE);
 	}
 
 	int bindErr = bind(socket_server, servinfo->ai_addr, servinfo->ai_addrlen);
 	if(bindErr == -1) {
-		log_error(logger, "Could not associate a socket to port");
+		log_error(get_logger(), "Could not associate a socket to port");
 		exit(EXIT_FAILURE);
 	}
 
 	int listenErr = listen(socket_server, SOMAXCONN);
 	if(listenErr == -1) {
-		log_error(logger, "Could not listen on port %s", port);
+		log_error(get_logger(), "Could not listen on port %s", port);
 		exit(EXIT_FAILURE);
 	}
 
@@ -46,6 +49,8 @@ int create_server(char* port) {
 
 int accept_connection(int socket_server)
 {
+	log_info(get_logger(), "Awaiting for new clients...");
 	int client_socket = accept(socket_server, NULL, NULL);
+	log_info(get_logger(), "Client connected.");
 	return client_socket;
 }

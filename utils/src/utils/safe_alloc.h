@@ -1,9 +1,9 @@
-#ifndef SAFE_ALLOC_H
-#define SAFE_ALLOC_H
+#ifndef UTLIS_SAFE_ALLOC_H
+#define UTILS_SAFE_ALLOC_H
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "log_error_macro.h"
+#include "macros/log_error.h"
 
 /**
  * @brief Intenta asignar memoria dinámica de forma segura.
@@ -42,4 +42,4 @@ void* safe_realloc(void* pointer, size_t size);
  */
 void* safe_calloc(size_t count, size_t size);
 
-#endif // SAFE_ALLOC_H
+#endif
