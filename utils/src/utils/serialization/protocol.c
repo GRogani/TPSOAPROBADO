@@ -103,18 +103,18 @@ void* buffer_read_pointer(t_buffer *buffer) {
 }
 
 //Funciones para crear paquetes
-t_package *package_create(cod_op cod_op, t_buffer *buffer){
+t_package *package_create(OPCODE cod_op, t_buffer *buffer){
     t_package *package = malloc(sizeof(t_package));
-    package->codigo_operacion = cod_op;
+    package->opcode = cod_op;
     package->buffer = buffer;
     return package;
 }
 
 void *package_get_stream(t_package *package){
-    void* to_send = malloc(sizeof(cod_op) + package->buffer->size + sizeof(uint32_t));
+    void* to_send = malloc(sizeof(OPCODE) + package->buffer->size + sizeof(uint32_t));
     int offset = 0;
-    memcpy(to_send + offset, &package->codigo_operacion, sizeof(cod_op));
-    offset += sizeof(cod_op);
+    memcpy(to_send + offset, &package->opcode, sizeof(OPCODE));
+    offset += sizeof(OPCODE);
     memcpy(to_send + offset, &package->buffer->size, sizeof(uint32_t));
     offset += sizeof(uint32_t);
     memcpy(to_send + offset, package->buffer->stream, package->buffer->size);
