@@ -1,5 +1,5 @@
-#ifndef ENUM_IO_OPCODE
-#define ENUM_IO_OPCODE
+#ifndef ENUM_IO_OPCODE_H
+#define ENUM_IO_OPCODE_H
 
 #define IO_OPCODE_ENUM_SIZE 1
 

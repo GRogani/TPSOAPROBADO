@@ -1,40 +1,19 @@
-#ifndef GLOBAL_SHARED_MAIN
-#define GLOBAL_SHARED_MAIN
+#ifndef KERNEL_MAIN_H
+#define KERNEL_MAIN_H
 
-#define PUERTO_IO_ESCUCHA "30002"
-#define PUERTO_CPU_DISPATCH_ESCUCHA "30003"
-#define PUERTO_CPU_INTERRUPT_ESCUCHA "30004"
+#include <signal.h>
+#include <commons/config.h>
+#include <commons/log.h>
 
-#include <utils/logger/logger.h>
-#include <commons/collections/list.h>
-#include <commons/collections/queue.h>
-#include <config/config.h>
-#include <utils/socket/server.h>
-#include <pthread.h>
+#include "utils/config/t_configs.h"
+#include "utils/logger/logger.h"
+#include "./shutdown/shutdown.h"
+#include "./io/handle-io-server.h"
+#include "./cpu/handle-cpu-servers.h"
+#include "globals.h"
 
-
-typedef struct {
-    char* device_name;
-    int socket_id;
-} t_io_connection;
-
-typedef struct {
-    char* device_name;
-    int pid;
-} t_io_queue;
-
-typedef struct {
-    int interrupt_socket_id;
-    int dispatch_socket_id;
-} t_cpu_connection;
-
-t_log* logger;
-
-t_list* io_connections_list;
-t_queue* io_requests_queue;
-t_list* cpu_connections_list;
-
-t_kernel_config* kernel_config;
-
+void initialize_global_vars();
+void create_servers_cpu();
+void create_server_io();
 
 #endif

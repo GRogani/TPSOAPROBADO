@@ -1,14 +1,13 @@
-#ifndef UTILS_SOCKET_SERVER
-#define UTILS_SOCKET_SERVER
+#ifndef UTILS_SOCKET_SERVER_H
+#define UTILS_SOCKET_SERVER_H
 
 #include "../logger/logger.h"
-#include<stdlib.h>
-#include<stdio.h>
-#include<sys/socket.h>
-#include<netdb.h>
-#include<string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <string.h>
 
-extern t_log* logger;
 
 /**
 * @brief Creates a server and listen at the given port

@@ -1,7 +1,7 @@
 #include "handle-io-client.h"
 
-void handle_io_client(int socket_client)
-{
+void handle_io_client()
+{/*
     while (1)
     {
         // recibir el buffer
@@ -23,4 +23,4 @@ void handle_io_client(int socket_client)
             }
         }
     }
-}
+*/}

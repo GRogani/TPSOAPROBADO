@@ -1,0 +1,49 @@
+#ifndef UTILS_T_CONFIG_H
+#define UTILS_T_CONFIG_H
+
+#include "../../enums/Eplanification_algorithm.h"
+#include <commons/log.h>
+
+typedef struct t_kernel_config{
+    char* memory_ip;
+    char* memory_port;
+    PLANIFICATION_ALGORITHM planification_algorithm;
+    int sleep_time;
+    t_log_level log_level;
+} t_kernel_config;
+
+typedef struct t_memoria_config {
+    int PUERTO_ESCUCHA;
+    int TAM_MEMORIA;
+    int TAM_PAGINA;
+    int ENTRADAS_POR_TABLA;
+    int CANTIDAD_NIVELES;
+    int RETARDO_MEMORIA;
+    int RETARDO_SWAP;
+    char* PATH_SWAPFILE;
+    t_log_level LOG_LEVEL;
+    char* DUMP_PATH;
+} t_memoria_config;
+
+typedef struct t_cpu_config {
+    char* IP_MEMORIA;
+    char* PUERTO_MEMORIA;
+    char* IP_KERNEL;
+    char* PUERTO_KERNEL_DISPATCH;
+    char* PUERTO_KERNEL_INTERRUPT;
+    int ENTRADAS_TLB;
+    char* REEMPLAZO_TLB;
+    int ENTRADAS_CACHE;
+    char* REEMPLAZO_CACHE;
+    int RETARDO_CACHE;
+    t_log_level LOG_LEVEL;
+} t_cpu_config;
+
+typedef struct t_io_config {
+    char* IP_KERNEL;
+    char* PUERTO_KERNEL;
+    t_log_level LOG_LEVEL;
+} t_io_config;
+
+
+#endif

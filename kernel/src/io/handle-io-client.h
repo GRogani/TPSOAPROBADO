@@ -1,9 +1,8 @@
-#ifndef IO_CLIENT_HANDLER
-#define IO_CLIENT_HANDLER
+#ifndef IO_CLIENT_HANDLER_H
+#define IO_CLIENT_HANDLER_H
 
-#include "../enum/io-opcode.enum.h"
-#include <main.h>
+#include "enum/opcode.enum.h"
 
-void handle_io_client(int socket_client);
+void handle_io_client();
 
 #endif

@@ -1,6 +1,6 @@
-#include "io-opcode.enum.h"
+#include "opcode.enum.h"
 
-static char *enum_names[OPCPDE] = {"FIFO"};
+static char *enum_names[IO_OPCODE_ENUM_SIZE] = {"HANDSHAKE"};
 
 t_io_opcode io_opcode_from_string(char *opcode) {
 	for (int i = 0; i < IO_OPCODE_ENUM_SIZE; i++) {

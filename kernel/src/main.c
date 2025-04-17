@@ -1,113 +1,66 @@
-#include <signal.h>
-#include <io/handle-io-server.h>
-#include <cpu/handle-cpu-servers.h>
+#include <main.h>
 
-#include<main.h>
-
-t_log* logger;
+t_config* config;
+t_kernel_config kernel_config;
 t_list* io_connections_list;
 t_queue* io_requests_queue;
 t_list* cpu_connections_list;
-t_kernel_config* kernel_config;
-
-void shutdown_hook(t_kernel_config* kernel_config, t_config* config, t_log* logger) {
-    list_destroy_and_destroy_elements(io_connections_list, io_connections_destroyer);
-    list_destroy_and_destroy_elements(cpu_connections_list, cpu_connections_destroyer);
-    queue_destroy_and_destroy_elements(io_requests_queue, io_queue_destroyer);
-
-    destroy_kernel_config(kernel_config);
-    
-    config_destroy(config);
-    log_destroy(logger);
-
-    printf("All memory cleared successfully");
-}
 
 int main(int argc, char* argv[]) {
-    t_config* config = init_config_and_validate(kernel_config);
-
     initialize_global_vars();
 
-    signal(SIGINT, shutdown_hook); // Ctrl+C
-    signal(SIGTERM, shutdown_hook); // kill -15 PID
+    signal(SIGINT, shutdown_hook);
+    signal(SIGTERM, shutdown_hook);
 
 
     create_server_io();
     create_servers_cpu();
-    create_root_process();
 
 
-    while(1) pause();
+    while(1) pause(); // TODO: use joinable threads and remove this line. detachable threads could die and you will never notice
+    return 0;
 }
 
 void create_server_io() {
-    log_info(logger, "Creating detachable thread for I/O server");
-
-    err = pthread_create(NULL, NULL, create_io_server, NULL);
+    log_info(get_logger(), "Creating detachable thread for I/O server");
+    pthread_t t1;
+    int err = pthread_create(&t1, NULL, create_io_server, NULL);
     if(err) {
-        log_error(logger, "Failed to create detachable thread for I/O server");
+        log_error(get_logger(), "Failed to create detachable thread for I/O server");
         exit(EXIT_FAILURE);
     }
 }
 
 void create_servers_cpu() {
-    log_info(logger, "Creating detachable thread for CPUs servers");
-
-    err = pthread_create(NULL, NULL, create_cpu_servers, NULL);
+    log_info(get_logger(), "Creating detachable thread for CPUs servers");
+    pthread_t t2;
+    int err = pthread_create(&t2, NULL, create_cpu_servers, NULL);
     if(err) {
-        log_error(logger, "Failed to create detachable thread for CPU servers");
+        log_error(get_logger(), "Failed to create detachable thread for CPU servers");
         exit(EXIT_FAILURE);
     }
-}
-
-void create_root_process() {
-    // crear thread detachable
-    // crear semaforo para esperar el init de la cpu.
-}
-
-void io_connections_destroyer(t_io_connection *connection) {
-    free(connection->device_name);
-    free(connection);
-}
-
-void io_queue_destroyer(t_io_queue *io_request) {
-    free(io_request->device_name);
-    free(io_request);
-}
-
-void cpu_connections_destroyer(t_cpu_connection *connection) {
-    free(connection);
 }
 
 void initialize_global_vars() {
-    logger = init_logger(
+    config = init_config("kernel.config");
+    kernel_config = init_kernel_config(config);
+
+    init_logger(
         "kernel.log",
         "[Main]",
-        kernel_config->log_level
+        kernel_config.log_level
     );
 
-    if(logger == NULL) {
-        printf("Logger failed to initialize.");
-        exit(EXIT_FAILURE);
-    }
-
-    kernel_config = malloc(sizeof(t_kernel_config));
-
-    if (kernel_config == NULL) {
-        log_error(logger, "Failed to allocate memory for kernel config.");
-        exit(EXIT_FAILURE);
-    }
-
     io_connections_list = list_create();
-    io_requests_queue = queue_create();
     cpu_connections_list = list_create();
+    io_requests_queue = queue_create();
 
     if(
         io_connections_list == NULL || 
         io_requests_queue == NULL ||
         cpu_connections_list == NULL
     ) {
-        log_error(logger, "Some of the lists/queues failed to create");
+        log_error(get_logger(), "Some of the lists/queues failed to create");
         exit(EXIT_FAILURE);
     }
 
