@@ -20,7 +20,8 @@ typedef struct
 {
 	cod_op codigo_operacion;
 	t_buffer* buffer;
-} t_paquete;
+} t_package;
+
 
 //FUNCIONES PARA SERIALIZAR
 t_buffer* buffer_create(uint32_t size);
@@ -36,4 +37,9 @@ uint32_t buffer_read_uint32(t_buffer *buffer);
 char *buffer_read_string(t_buffer *buffer, uint32_t *length);
 void* buffer_read_pointer(t_buffer *buffer);
 
+//FUNCIONES PARA CREAR Y LIBERAR PAQUETES
+t_package* package_create(cod_op cod_op, t_buffer* buffer);
+void* package_get_stream(t_package* package);
+void stream_destroy(void* stream);
+void package_destroy(t_package* package);
 #endif

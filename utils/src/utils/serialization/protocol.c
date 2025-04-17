@@ -82,3 +82,30 @@ void* buffer_read_pointer(t_buffer *buffer) {
     return (void*)ptr_as_integer; // Convertir de vuelta a un puntero
 }
 
+//Funciones para crear paquetes
+t_package *package_create(cod_op cod_op, t_buffer *buffer){
+    t_package *package = malloc(sizeof(t_package));
+    package->codigo_operacion = cod_op;
+    package->buffer = buffer;
+    return package;
+}
+
+void *package_get_stream(t_package *package){
+    void* to_send = malloc(sizeof(cod_op) + package->buffer->size + sizeof(uint32_t));
+    int offset = 0;
+    memcpy(to_send + offset, &package->codigo_operacion, sizeof(cod_op));
+    offset += sizeof(cod_op);
+    memcpy(to_send + offset, &package->buffer->size, sizeof(uint32_t));
+    offset += sizeof(uint32_t);
+    memcpy(to_send + offset, package->buffer->stream, package->buffer->size);
+    return to_send;
+}
+
+void stream_destroy(void *stream){
+    free(stream);
+}
+
+void package_destroy(t_package *package){
+    buffer_destroy(package->buffer);
+    free(package);
+}
