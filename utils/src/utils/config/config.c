@@ -7,7 +7,7 @@ t_config* init_config(char* configFileName)
 	config = config_create(configFileName);
 
 	if(config == NULL) {
-		// add log from macro
+		LOG_ERROR("No se puedo crear el config.");
 		exit(EXIT_FAILURE);
 	}
 
