@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <commons/log.h>
-#include "../macros/log_error.h"
+#include "../../macros/log_error.h"
 
 /**
  * @brief Inicializa el logger global del proceso.
