@@ -34,7 +34,7 @@ void create_cpu_servers() {
         }
 
         log_info(get_logger(), "CPU connection added to the list!");
-        log_info(get_logger(), "Creating thread to handle connection of the CPU...");
+        log_info(get_logger(), "Creating thread to handle connection of the CPU with client dispatch: %d. interrupt: %d", socket_dispatch_connection, socket_interrupt_connection);
         
     }
     

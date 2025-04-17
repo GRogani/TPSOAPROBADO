@@ -12,7 +12,7 @@ void create_io_server() {
             break;
         }
 
-        log_info(get_logger(), "I/O connected successfully. creating thread for client...");
+        log_info(get_logger(), "I/O connected successfully. creating thread for client %d...", socket_client);
         pthread_t t;
         int err = pthread_create(&t, NULL, handle_io_client, NULL);
         if(err) {

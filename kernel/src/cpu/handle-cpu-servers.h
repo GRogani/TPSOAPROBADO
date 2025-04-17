@@ -3,6 +3,7 @@
 
 #include <utils/socket/server.h>
 #include <sys/socket.h>
+#include <unistd.h> // para socket close()
 #include "globals.h"
 
 #define PUERTO_CPU_DISPATCH_ESCUCHA "30003"
