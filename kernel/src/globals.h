@@ -22,10 +22,10 @@ typedef struct t_cpu_connection {
     int dispatch_socket_id;
 } t_cpu_connection;
 
-extern t_config* config; // defined by main
-extern t_kernel_config kernel_config; // defined by main
-extern t_list* io_connections_list; // defined by main
-extern t_queue* io_requests_queue; // defined by main
-extern t_list* cpu_connections_list; // defined by main
+extern t_config* config;
+extern t_kernel_config kernel_config;
+extern t_list* io_connections_list;
+extern t_queue* io_requests_queue;
+extern t_list* cpu_connections_list;
 
 #endif
