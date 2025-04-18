@@ -1,16 +1,5 @@
 #include "shutdown.h"
 
-void shutdown_kernel(t_kernel_config kernel_config, t_config* config) {
-    log_info(get_logger(), "Shutting down kernel...");
-
-    free(kernel_config.port);
-    free(kernel_config.memory_ip);
-    free(kernel_config.memory_port);
-
-    config_destroy(config);
-    destroy_logger();
-}
-
 void shutdown_cpu(t_cpu_config cpu_config, t_config* config) {
     log_info(get_logger(), "Shutting down CPU...");
 

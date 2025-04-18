@@ -1,9 +1,6 @@
 #include "server.h"
 
 int create_server(char* port) {
-
-	log_info(get_logger(), "Creating server...");
-
 	int socket_server;
 
 	struct addrinfo hints, *servinfo;
