@@ -1,11 +1,6 @@
-#include "protocol.h"
+#include "buffer.h"
 
 t_buffer *buffer_create(uint32_t size){
-    // if (size == 0) 
-    // {
-    //     LOG_WARN("El tamaño del buffer a crear es cero.\n");
-    //     return NULL;            
-    // }
 
     t_buffer *buffer = safe_malloc(sizeof(t_buffer));
 
