@@ -14,7 +14,7 @@ typedef struct t_kernel_config{
 } t_kernel_config;
 
 typedef struct t_memoria_config {
-    int PUERTO_ESCUCHA;
+    char* PUERTO_ESCUCHA;
     int TAM_MEMORIA;
     int TAM_PAGINA;
     int ENTRADAS_POR_TABLA;

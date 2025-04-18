@@ -31,6 +31,7 @@ void shutdown_memoria(t_memoria_config memoria_config, t_config* config) {
 
     free(memoria_config.PATH_SWAPFILE);
     free(memoria_config.DUMP_PATH);
+    free(memoria_config.PUERTO_ESCUCHA);
 
     config_destroy(config);
     destroy_logger();
