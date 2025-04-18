@@ -5,7 +5,6 @@
 #include <commons/log.h>
 
 typedef struct t_kernel_config{
-	char* port;
     char* memory_ip;
     char* memory_port;
     PLANIFICATION_ALGORITHM planification_algorithm;
@@ -14,7 +13,7 @@ typedef struct t_kernel_config{
 } t_kernel_config;
 
 typedef struct t_memoria_config {
-    int PUERTO_ESCUCHA;
+    char* PUERTO_ESCUCHA;
     int TAM_MEMORIA;
     int TAM_PAGINA;
     int ENTRADAS_POR_TABLA;

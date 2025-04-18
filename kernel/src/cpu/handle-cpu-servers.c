@@ -1,0 +1,61 @@
+#include "handle-cpu-servers.h"
+
+void create_cpu_servers() {
+    int socket_server_dispatch = create_server(PUERTO_CPU_DISPATCH_ESCUCHA);
+    log_info(get_logger(), "CPU dispatch server available on port %s", PUERTO_CPU_DISPATCH_ESCUCHA);
+
+    int socket_server_interrupt = create_server(PUERTO_CPU_INTERRUPT_ESCUCHA);
+    log_info(get_logger(), "CPU interrupt server available on port %s", PUERTO_CPU_INTERRUPT_ESCUCHA);
+
+    while (1) {
+        int socket_dispatch_connection = accept_connection(socket_server_dispatch);
+        if(socket_dispatch_connection == -1) {
+            log_error(get_logger(), "Error accepting dispatch connection");
+            break;
+        }
+
+        int socket_interrupt_connection = accept_connection(socket_server_interrupt);
+        if(socket_dispatch_connection == -1) {
+            log_error(get_logger(), "Error accepting interrupt connection");
+            
+            // cerramos todas las conexiones, no se puede conectar una cpu
+            // a un solo socket, tiene que ser si o si a los dos
+            close(socket_dispatch_connection);
+            
+            break;
+        }
+
+        log_info(get_logger(), "CPU connected successfully. Adding connection to list of connected CPUs");
+        
+        int err = add_cpu_connection(socket_dispatch_connection, socket_interrupt_connection);
+        if(err) {
+            log_error(get_logger(), "Error adding connections to list");
+            break;
+        }
+
+        log_info(get_logger(), "CPU connection added to the list!");
+        log_info(get_logger(), "Creating thread to handle connection of the CPU with client dispatch: %d. interrupt: %d", socket_dispatch_connection, socket_interrupt_connection);
+        
+    }
+    
+
+}
+
+int add_cpu_connection(int socket_dispatch, int socket_interrupt) {
+    t_cpu_connection *cpu_connection = malloc(sizeof(t_cpu_connection));
+
+    if(cpu_connection == NULL) {
+        // no hay espacio en memoria para agregar la conexion.
+        // cerramos las conexiones recientes, no hacemos más nada.
+        close(socket_dispatch);
+        close(socket_interrupt);
+        return 0;
+    }
+
+    cpu_connection->dispatch_socket_id = socket_dispatch;
+    cpu_connection->interrupt_socket_id = socket_interrupt;
+
+    list_add(cpu_connections_list, cpu_connection);
+
+    return 1;
+}

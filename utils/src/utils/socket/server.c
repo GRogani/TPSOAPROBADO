@@ -1,9 +1,6 @@
 #include "server.h"
 
 int create_server(char* port) {
-
-	log_info(get_logger(), "Creating server...");
-
 	int socket_server;
 
 	struct addrinfo hints, *servinfo;
@@ -13,7 +10,12 @@ int create_server(char* port) {
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	getaddrinfo(NULL, port, &hints, &servinfo);
+	int getaddrinfoErr = getaddrinfo(NULL, port, &hints, &servinfo);
+	if (getaddrinfoErr != 0)
+	{
+		log_error(get_logger(), "getaddrinfo failed");
+		return -1;
+	}
 
 	socket_server = socket(servinfo->ai_family,
                         servinfo->ai_socktype,
@@ -21,25 +23,32 @@ int create_server(char* port) {
 
 	if(socket_server == -1) {
 		log_error(get_logger(), "Could not create fd for socket");
-		exit(EXIT_FAILURE);
+		freeaddrinfo(servinfo);
+		return -1;
 	}
 
-	int errSOckOpt = setsockopt(socket_server, SOL_SOCKET, SO_REUSEPORT, &(int){1}, sizeof(int));
-	if(errSOckOpt == -1) {
+	int errSockOpt = setsockopt(socket_server, SOL_SOCKET, SO_REUSEPORT, &(int){1}, sizeof(int));
+	if(errSockOpt == -1) {
 		log_error(get_logger(), "Could not associate multiple sockets to one port");
-		exit(EXIT_FAILURE);
+		close(socket_server);
+		freeaddrinfo(servinfo);
+		return -1;
 	}
 
 	int bindErr = bind(socket_server, servinfo->ai_addr, servinfo->ai_addrlen);
 	if(bindErr == -1) {
 		log_error(get_logger(), "Could not associate a socket to port");
-		exit(EXIT_FAILURE);
+		close(socket_server);
+		freeaddrinfo(servinfo);
+		return -1;
 	}
 
 	int listenErr = listen(socket_server, SOMAXCONN);
 	if(listenErr == -1) {
 		log_error(get_logger(), "Could not listen on port %s", port);
-		exit(EXIT_FAILURE);
+		close(socket_server);
+		freeaddrinfo(servinfo);
+		return -1;
 	}
 
 	freeaddrinfo(servinfo);
@@ -50,7 +59,14 @@ int create_server(char* port) {
 int accept_connection(int socket_server)
 {
 	log_info(get_logger(), "Awaiting for new clients...");
+
 	int client_socket = accept(socket_server, NULL, NULL);
+	if (client_socket == -1)
+	{
+		log_error(get_logger(), "accept failed");
+	}
+
 	log_info(get_logger(), "Client connected.");
+	
 	return client_socket;
 }

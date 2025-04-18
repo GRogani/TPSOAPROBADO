@@ -6,15 +6,7 @@
 #include <string.h>
 #include "../safe_alloc.h"
 #include "../../macros/log_error.h"
-
-/**
- * @enum OPCODE
- * @brief Códigos de operación para paquetes de comunicación
- * @note - `HANDSHAKE`
- */
-typedef enum {
-    HANDSHAKE  // Operación inicial de handshake/autenticación
-} OPCODE;
+#include "enums/Eopcodes.h"
 
 /**
  * @struct t_buffer
@@ -33,22 +25,9 @@ typedef struct t_buffer {
 } t_buffer;
 
 /**
- * @struct t_package
- * @brief Paquete completo de comunicación
- * @note
- * - `opcode` Tipo de operación (ej. HANDSHAKE)
- * 
- * - `buffer` Datos serializados asociados al paquete
- */
-typedef struct t_package {
-    OPCODE opcode;  // Tipo de operación (ej. HANDSHAKE)
-    t_buffer* buffer;         // Datos serializados asociados al paquete
-} t_package;
-
-/**
  * @brief Crea un nuevo buffer
  * @param size Tamaño inicial en bytes
- * @return t_buffer* Puntero al buffer creado, NULL en caso de error
+ * @return t_buffer* Puntero al buffer creado
  * 
  * @note El buffer creado debe liberarse con buffer_destroy()
  */
