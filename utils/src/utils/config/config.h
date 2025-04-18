@@ -1,10 +1,10 @@
 #ifndef UTILS_CONFIG_H
 #define UTILS_CONFIG_H
 
+#include <stdlib.h>
 #include <commons/config.h>
 #include <commons/log.h>
-#include <stdlib.h>
-#include "../../macros/log_error.h"
+#include <macros/log_error.h>
 #include "t_configs.h"
 
 t_config* init_config(char* configFileName);

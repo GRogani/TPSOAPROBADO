@@ -33,7 +33,6 @@ t_kernel_config init_kernel_config(t_config* config) {
         exit(EXIT_FAILURE);
     }
 
-    conf.port = config_get_string_value(config, "PORT");
     conf.memory_ip = config_get_string_value(config, "MEMORY_IP");
     conf.memory_port = config_get_string_value(config, "MEMORY_PORT");
 
