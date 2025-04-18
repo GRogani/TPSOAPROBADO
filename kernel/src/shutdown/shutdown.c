@@ -9,11 +9,8 @@ void shutdown_hook() {
     list_destroy_and_destroy_elements(cpu_connections_list, cpu_connections_destroyer);
     queue_destroy_and_destroy_elements(io_requests_queue, io_queue_destroyer);
     
-    free(kernel_config.memory_ip);
-    free(kernel_config.memory_port);
-
     config_destroy(config);
-    destroy_logger();
+    destroy_logger(get_logger());
 
     LOG_DEBUG("Kernel died gracefuly");
     
