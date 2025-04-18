@@ -23,11 +23,6 @@ context (ProtocolUtils) {
             should_ptr(buffer->stream) not be null;
         } end
 
-        // it("should return NULL when creating buffer of size 0") {
-        //     buffer = buffer_create(0);
-        //     should_ptr(buffer) be null;
-        // } end
-
         it("should handle very large buffer creation") {
             buffer = buffer_create(1 << 24); // 16MB buffer
             should_ptr(buffer) not be null;
@@ -57,6 +52,7 @@ context (ProtocolUtils) {
             should_int(buffer->offset) be equal to(sizeof(uint32_t));
             
             buffer->offset = 0; // Reset offset to read
+            
             uint32_t result = buffer_read_uint32(buffer);
             should_int(result) be equal to(original);
             should_int(buffer->offset) be equal to(sizeof(uint32_t));
