@@ -44,7 +44,7 @@ t_kernel_config init_kernel_config(t_config* config) {
 t_memoria_config init_memoria_config(t_config* config) {
     t_memoria_config conf;
 
-    conf.PUERTO_ESCUCHA = config_get_int_value(config, "PUERTO_ESCUCHA");
+    conf.PUERTO_ESCUCHA = config_get_string_value(config, "PUERTO_ESCUCHA");
     conf.TAM_MEMORIA = config_get_int_value(config, "TAM_MEMORIA");
     conf.TAM_PAGINA = config_get_int_value(config, "TAM_PAGINA");
     conf.ENTRADAS_POR_TABLA = config_get_int_value(config, "ENTRADAS_POR_TABLA");
