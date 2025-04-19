@@ -112,9 +112,4 @@ char *buffer_read_string(t_buffer *buffer, uint32_t *length);
  */
 void* buffer_read_pointer(t_buffer *buffer);
 
-//FUNCIONES PARA CREAR Y LIBERAR PAQUETES
-t_package* package_create(OPCODE cod_op, t_buffer* buffer);
-void* package_get_stream(t_package* package);
-void stream_destroy(void* stream);
-void package_destroy(t_package* package);
 #endif
