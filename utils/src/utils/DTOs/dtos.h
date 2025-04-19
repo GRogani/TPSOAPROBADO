@@ -8,6 +8,7 @@
 
 
 char* read_handshake(t_package* package);
-
+t_package* create_handshake(char* yourName);
+int send_handshake(int socket, char* yourName);
 
 #endif

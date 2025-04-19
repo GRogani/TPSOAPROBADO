@@ -41,9 +41,8 @@ void* test_server_send_package(void* _) {
         return NULL;
     }
 
-    send_
+    send_handshake(client_socket, TEST_MESSAGE);
 
-    package_destroy(pkg);
     close(client_socket);
     close(server_socket);
     return NULL;
