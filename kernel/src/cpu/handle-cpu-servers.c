@@ -1,4 +1,10 @@
 #include "handle-cpu-servers.h"
+#include <utils/serialization/send.h>
+
+typedef struct HandshakeDto {
+    char* device_name;
+    char* device_required_space;
+} HandshakeDto;
 
 void create_cpu_servers() {
     int socket_server_dispatch = create_server(PUERTO_CPU_DISPATCH_ESCUCHA);
@@ -35,6 +41,14 @@ void create_cpu_servers() {
 
         log_info(get_logger(), "CPU connection added to the list!");
         log_info(get_logger(), "Creating thread to handle connection of the CPU with client dispatch: %d. interrupt: %d", socket_dispatch_connection, socket_interrupt_connection);
+
+
+        HandshakeDto* handshakeDto = malloc(sizeof(HandshakeDto));
+        int opcode = receiveMessageFromStruct(socket_dispatch_connection, handshakeDto, 2);
+
+        log_info(get_logger(), "Opcode received: %d", opcode);
+        log_info(get_logger(), "Device name: %s", handshakeDto->device_name);
+        log_info(get_logger(), "Device required space: %s", handshakeDto->device_required_space);
         
     }
     
@@ -49,7 +63,7 @@ int add_cpu_connection(int socket_dispatch, int socket_interrupt) {
         // cerramos las conexiones recientes, no hacemos más nada.
         close(socket_dispatch);
         close(socket_interrupt);
-        return 0;
+        return 1;
     }
 
     cpu_connection->dispatch_socket_id = socket_dispatch;
@@ -57,5 +71,5 @@ int add_cpu_connection(int socket_dispatch, int socket_interrupt) {
 
     list_add(cpu_connections_list, cpu_connection);
 
-    return 1;
+    return 0;
 }

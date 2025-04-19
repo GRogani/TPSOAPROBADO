@@ -10,7 +10,7 @@ t_package* package_create(OPCODE opcode, t_buffer* buffer)
 
 void package_destroy(t_package* package) 
 {
-    if (package) {
+    if (package != NULL) {
         buffer_destroy(package->buffer);
         free(package);
     } else {
@@ -91,9 +91,11 @@ t_package* recv_package(int socket)
     t_buffer* buffer = buffer_create(buffer_stream_size); // Crea un buffer con el tamaño recibido
     buffer_add(buffer, buffer_stream_data, buffer_stream_size); // Agrega los datos serializados al buffer
 
+    buffer->offset = 0;
+
     t_package* package = package_create(opcode, buffer);
 
-    free(buffer_stream_data); // liberar memoria de los datos serializados
+    free(buffer_stream_data); // liberar memoria de los datos serializados -> esto no te elimina la info que devolves?
 
     return package;
 }

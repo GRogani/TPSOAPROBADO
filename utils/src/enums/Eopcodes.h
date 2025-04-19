@@ -9,6 +9,7 @@
 typedef uint32_t OPCODE;
 enum {
     HANDSHAKE = 0,
+    OTHER = 1,
 };
 
 
