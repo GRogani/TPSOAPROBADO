@@ -96,4 +96,3 @@ void* buffer_read_pointer(t_buffer *buffer) {
     buffer_read(buffer, &ptr_as_integer, sizeof(uintptr_t)); // Leer el puntero como entero
     return (void*)ptr_as_integer; // Convertir de vuelta a un puntero
 }
-
