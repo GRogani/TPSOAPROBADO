@@ -1,133 +1,118 @@
 #include "Tsocket.h"
 
-void* test_server1(void* _) {
-    int server_socket = create_server(TEST_PORT);
-    int client_socket = accept_connection(server_socket);
+#define TEST_PORT "42069"
+#define TEST_MESSAGE "Tralalero Tralala"
+#define TEST_MESSAGE_LEN 18
 
+void* test_server_recv_package(void* _) {
+    int server_socket = create_server(TEST_PORT);
+    if (server_socket == -1) return NULL;
+
+    int client_socket = accept_connection(server_socket);
+    if (client_socket == -1) return NULL;
+
+    t_package* received = recv_package(client_socket);
+    if (!received) return NULL;
+
+    should_ptr(received) not be equal to(NULL);
+    should_int(received->opcode) be equal to(HANDSHAKE);
+
+    char* message = read_handshake(received);
+
+    should_int(strlen(message) + 1) be equal to(TEST_MESSAGE_LEN);
+    should_string(message) be equal to(TEST_MESSAGE);
+
+    free(message);
+    package_destroy(received);
     close(client_socket);
     close(server_socket);
     return NULL;
 }
 
 
-void* test_server2(void* _) {
+void* test_server_send_package(void* _) {
     int server_socket = create_server(TEST_PORT);
+    if (server_socket == -1) {
+        return NULL;
+    }
+
     int client_socket = accept_connection(server_socket);
+    if (client_socket == -1) {
+        return NULL;
+    }
 
-    char buffer[64];
-    recv(client_socket, buffer, sizeof(buffer), 0);
-    log_info(get_logger(), "Received: %s", buffer);
+    send_
 
+    package_destroy(pkg);
     close(client_socket);
     close(server_socket);
     return NULL;
 }
 
-void* test_server3(void* _) {
-    int server_socket = create_server(TEST_PORT);
-    int client_socket1 = accept_connection(server_socket);
-    int client_socket2 = accept_connection(server_socket);
-    close(client_socket1);
-    close(client_socket2);
-    close(server_socket);
-    return NULL;
-}
-
-context(socket_tests)
+context(socket_package_tests)
 {
-    describe("1 Client x 1 Server connection.")
+    describe("Send and receive t_package between sockets")
     {
         before {
-            init_logger("test.log", "[TESTS]", LOG_LEVEL_INFO);
+            init_logger("test.log", "[TESTS]", LOG_LEVEL_ERROR);
         } end
 
         after {
             destroy_logger();
         } end
 
-        it("should create 1 client socket and connect to test server")
+        it("should send a serialized package from client and receive on server")
         {
             pthread_t server_thread;
-            pthread_create(&server_thread, NULL, test_server1, NULL);
-            
-            sleep(.5);
-            int client_socket = create_connection(TEST_PORT, "127.0.0.1");
+            pthread_create(&server_thread, NULL, test_server_recv_package, NULL);
 
-            sleep(1);
-            int client_socket2 = create_connection(TEST_PORT, "127.0.0.1"); // esta la rechaza o tendria que
-
-            should_int(client_socket) not be equal to(-1);
-            should_int(client_socket2) be equal to(-1);
-
-            close(client_socket);
-            close(client_socket2);
-
-            pthread_join(server_thread, NULL);
-
-        } end
-
-        it("should reject the connection if no server is up")
-        {
-            int client_socket = create_connection(TEST_PORT, "127.0.0.1");
-
-            should_int(client_socket) be equal to(-1);
-
-            close(client_socket);
-        } end
-
-        it("should handle send and receive calls") {
-            pthread_t server_thread;
-            pthread_create(&server_thread, NULL, test_server2, NULL);
-
-            sleep(.5);
+            sleep(1); // esperar que el server este escuchando
 
             int client_socket = create_connection(TEST_PORT, "127.0.0.1");
-
             should_int(client_socket) not be equal to(-1);
 
-            char* message = "Tralalero Tralala";
+            t_buffer* buffer = buffer_create(TEST_MESSAGE_LEN);
+            buffer_add_string(buffer, TEST_MESSAGE_LEN, TEST_MESSAGE);
 
-            sleep(.5);
-            int bytes_sent = send(client_socket, message, strlen(message) + 1, 0);
+            t_package* pkg = package_create(HANDSHAKE, buffer);
 
+            // Podes imprimir con read_handshake antes de enviar
+            char* msg = read_handshake(pkg);
+            free(msg);
+
+            int bytes_sent = send_package(client_socket, pkg);
             should_bool(bytes_sent > 0) be equal to(true);
 
+            package_destroy(pkg);
             close(client_socket);
             pthread_join(server_thread, NULL);
         } end
 
 
+
+        it("should receive a serialized package sent by server")
+        {
+            pthread_t server_thread;
+            pthread_create(&server_thread, NULL, test_server_send_package, NULL);
+
+            sleep(1);
+
+            int client_socket = create_connection(TEST_PORT, "127.0.0.1");
+            should_int(client_socket) not be equal to(-1);
+
+            t_package* received = recv_package(client_socket);
+            should_ptr(received) not be equal to(NULL);
+            should_int(received->opcode) be equal to(HANDSHAKE);
+
+            char* mensaje = read_handshake(received);
+            should_int(strlen(mensaje) + 1) be equal to(TEST_MESSAGE_LEN);
+            should_string(mensaje) be equal to(TEST_MESSAGE);
+
+            free(mensaje);
+            package_destroy(received);
+            close(client_socket);
+            pthread_join(server_thread, NULL);
+        } end
+
     } end
-    
-    // Este anda raro jajajaja despues lo veo bien
-    // describe("N Client x 1 Server connection.")
-    // {
-    //     before {
-    //         init_logger("test.log", "[TESTS]", LOG_LEVEL_INFO);
-    //     } end
-
-    //     after {
-    //         destroy_logger();
-    //     } end
-
-    //     it("should create N client sockets and connect to test server")
-    //     {
-    //         pthread_t server_thread;
-    //         pthread_create(&server_thread, NULL, test_server3, NULL);
-            
-    //         sleep(.5);
-
-    //         int client_socket1 = create_connection(TEST_PORT, "127.0.0.1");
-    //         int client_socket2 = create_connection(TEST_PORT, "127.0.0.1");
-
-    //         should_int(client_socket1) not be equal to(-1);
-    //         should_int(client_socket2) not be equal to(-1);
-    //         should_int(client_socket1) not be equal to(client_socket2);
-
-    //         close(client_socket1);
-    //         close(client_socket2);
-    //         pthread_join(server_thread, NULL);
-    //     } end
-
-    // } end
 }

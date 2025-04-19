@@ -16,6 +16,9 @@
 #include "src/utils/config/config.h"
 #include "src/utils/config/t_configs.h"
 
+// DTOs
+#include "src/utils/DTOs/dtos.h"
+
 // Serialization
 #include "src/utils/serialization/buffer.h"
 #include "src/utils/serialization/package.h"

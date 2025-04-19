@@ -4,7 +4,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../utils.h"
+#include "utils/logger/logger.h"
+#include "utils/serialization/buffer.h"
+#include "utils/socket/client.h"
+#include "utils/socket/server.h"
 
 /**
  * @struct t_package
@@ -55,5 +58,6 @@ int send_package(int socket, t_package* package);
  * @return Paquete recibido, o NULL si hubo error
  */
 t_package* recv_package(int socket);
+
 
 #endif 

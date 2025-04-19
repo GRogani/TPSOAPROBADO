@@ -97,4 +97,3 @@ t_package* recv_package(int socket)
 
     return package;
 }
-
