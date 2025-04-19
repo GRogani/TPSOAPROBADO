@@ -6,8 +6,10 @@
  * @brief Códigos de operación para paquetes de comunicación
  * @note - `HANDSHAKE`
  */
-typedef enum OPCODE{
-    HANDSHAKE  // Operación inicial de handshake/autenticación
-} OPCODE;
+typedef uint32_t OPCODE;
+enum {
+    HANDSHAKE = 0,
+};
+
 
 #endif
