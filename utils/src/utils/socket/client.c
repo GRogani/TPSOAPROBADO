@@ -28,7 +28,7 @@ int create_connection(char* port, char* ip) {
 
 	int connectErr = connect(socket_client, server_info->ai_addr, server_info->ai_addrlen);
 	if (connectErr == -1) {
-		log_error(get_logger(), "Could not create connection to server.\tIP:%s PORT:%s", ip, port);
+		//log_error(get_logger(), "Could not create connection to server.\tIP:%s PORT:%s", ip, port);
 		return -1;
 	}
 

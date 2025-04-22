@@ -1,13 +1,11 @@
 #ifndef IO_MAIN_H
 #define IO_MAIN_H
 
+#include <pthread.h>
 #include <commons/config.h>
 #include <commons/log.h>
-#include "utils/config/t_configs.h"
-#include "utils/config/config.h"
-#include "utils/logger/logger.h"
-#include "utils/shutdown.h"
-#include "utils/socket/client.h"
+#include "../utils.h"
+#include "io_threads.h"
 
 
 #endif
