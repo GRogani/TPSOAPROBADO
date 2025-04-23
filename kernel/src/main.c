@@ -1,62 +1,34 @@
 #include <main.h>
 
+t_kernel_config kernel_config;  // esta bien que sea global porque no va a cambiar en ejecucion
+                                // siewmpre es mejor pasar por parametro igual
 int main(int argc, char* argv[]) {
-    initialize_global_vars();
 
-    signal(SIGINT, shutdown_hook);
-    signal(SIGTERM, shutdown_hook);
+    t_config* config = init_config("kernel.config");
 
-
-    create_server_io();
-    create_servers_cpu();
-
-
-    while(1) pause(); // TODO: use joinable threads and remove this line. detachable threads could die and you will never notice
-    return 0;
-}
-
-void create_server_io() {
-    log_info(get_logger(), "Creating detachable thread for I/O server");
-    pthread_t t1;
-    int err = pthread_create(&t1, NULL, create_io_server, NULL);
-    if(err) {
-        log_error(get_logger(), "Failed to create detachable thread for I/O server");
-        exit(EXIT_FAILURE);
-    }
-}
-
-void create_servers_cpu() {
-    log_info(get_logger(), "Creating detachable thread for CPUs servers");
-    pthread_t t2;
-    int err = pthread_create(&t2, NULL, create_cpu_servers, NULL);
-    if(err) {
-        log_error(get_logger(), "Failed to create detachable thread for CPU servers");
-        exit(EXIT_FAILURE);
-    }
-}
-
-void initialize_global_vars() {
-    config = init_config("kernel.config");
     kernel_config = init_kernel_config(config);
 
-    init_logger(
-        "kernel.log",
-        "[Main]",
-        kernel_config.log_level
-    );
+    initialize_global_lists(); // <--- para esas listas va a haber que aplicar semaforos
 
-    io_connections_list = list_create();
-    cpu_connections_list = list_create();
-    io_requests_queue = queue_create();
+    init_logger("kernel.log", "[Main]", kernel_config.log_level);
 
-    if(
-        io_connections_list == NULL || 
-        io_requests_queue == NULL ||
-        cpu_connections_list == NULL
-    ) {
-        log_error(get_logger(), "Some of the lists/queues failed to create");
-        exit(EXIT_FAILURE);
-    }
 
+    pthread_t io_server_hanlder;
+    pthread_t cpu_server_hanlder;
+    // serian los threads principales
+    create_servers_threads(&io_server_hanlder, &cpu_server_hanlder);
     
+    //create_client_thread() para memoria o renombrar create_threads y que ahi esten todos
+    // o create_main_threads()...
+    
+
+    pthread_join(io_server_hanlder, NULL);    // esperamos a que terminen los threads principales   
+    pthread_join(cpu_server_hanlder, NULL);   // no tendiran que joinear nunca igual
+    close(io_server_hanlder);           // pero en caso de exit dejo eso
+    close(cpu_server_hanlder); 
+    shutdown_hook(config);         
+    // signal(SIGINT, shutdown_hook);
+    // signal(SIGTERM, shutdown_hook);
+    //while(1) pause(); // TODO: use joinable threads and remove this line. detachable threads could die and you will never notice
+    return 0;
 }

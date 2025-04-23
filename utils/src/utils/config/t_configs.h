@@ -10,6 +10,9 @@ typedef struct t_kernel_config{
     PLANIFICATION_ALGORITHM planification_algorithm;
     int sleep_time;
     t_log_level log_level;
+    char* cpu_dispatch_port;
+    char* cpu_interrupt_port;
+    char* io_port;
 } t_kernel_config;
 
 typedef struct t_memoria_config {

@@ -7,10 +7,11 @@
 
 #include "utils/config/t_configs.h"
 #include "utils/logger/logger.h"
-#include "./shutdown/shutdown.h"
-#include "./io/handle-io-server.h"
-#include "./cpu/handle-cpu-servers.h"
-#include "globals.h"
+#include "shutdown/shutdown.h"
+#include "handlers/cpu_server.h"
+#include "handlers/io_server.h"
+#include "lists/lists.h"
+#include "threads/create_threads.h"
 
 void initialize_global_vars();
 void create_servers_cpu();
