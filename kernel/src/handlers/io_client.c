@@ -6,8 +6,6 @@ void* handle_io_client(void* socket)
     t_package* package;
     while (1)
     {
-        // recibir el buffer
-        // obtener la i nfo del buffer
         package = recv_package(*client_socket);
 
         switch(package->opcode)

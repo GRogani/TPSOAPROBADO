@@ -23,8 +23,6 @@ void* cpu_server_handler(void* args) {
         if(socket_dispatch_connection == -1) {
             log_error(get_logger(), "Error accepting interrupt connection");
             
-            // cerramos todas las conexiones, no se puede conectar una cpu
-            // a un solo socket, tiene que ser si o si a los dos
             close(socket_dispatch_connection);
             
             break;
@@ -45,13 +43,11 @@ void* cpu_server_handler(void* args) {
     
     return 0;
 }
-// TODO: Asegurar muta exclusion cuando se agrega a lista
+
 int add_cpu_connection(int socket_dispatch, int socket_interrupt) {
     t_cpu_connection *cpu_connection = malloc(sizeof(t_cpu_connection));
 
     if(cpu_connection == NULL) {
-        // no hay espacio en memoria para agregar la conexion.
-        // cerramos las conexiones recientes, no hacemos más nada.
         close(socket_dispatch);
         close(socket_interrupt);
         return 0;

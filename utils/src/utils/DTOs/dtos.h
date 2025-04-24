@@ -6,9 +6,14 @@
 #include "utils/serialization/buffer.h"
 
 
+t_package* create_handshake(char* yourName);
 
 char* read_handshake(t_package* package);
-t_package* create_handshake(char* yourName);
+
+/**
+ * @brief Manda un mensaje de handshake
+ * @note srteam: `[HANDSHAKE]-[size of stream]-[strlen+1 + "string"]`
+*/
 int send_handshake(int socket, char* yourName);
 
 #endif
