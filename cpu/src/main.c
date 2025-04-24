@@ -10,6 +10,14 @@ int main(int argc, char* argv[])
     int fd_memory = create_connection(config_get_string_value(config_cpu, "PUERTO_MEMORIA"), config_get_string_value(config_cpu, "IP_MEMORIA"));
     int fd_kernel_dispatch = create_connection(config_get_string_value(config_cpu, "PUERTO_KERNEL_DISPATCH"), config_get_string_value(config_cpu, "IP_KERNEL_DISPATCH"));
     int fd_kernel_interrupt = create_connection(config_get_string_value(config_cpu, "PUERTO_KERNEL_INTERRUPT"), config_get_string_value(config_cpu, "IP_KERNEL_INTERRUPT"));
+    
+    while (1)
+    {
+       int* PIDPC = receive_PID_PC(fd_kernel_dispatch);
+       instruction_t* instruction = fetch(fd_memory, PIDPC[1]);
+    }
+    
+
 
     close(fd_memory);
     close(fd_kernel_dispatch);
