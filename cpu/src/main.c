@@ -13,8 +13,9 @@ int main(int argc, char* argv[])
     
     while (1)
     {
-       int* PIDPC = receive_PID_PC(fd_kernel_dispatch);
-       instruction_t* instruction = fetch(fd_memory, PIDPC[1]);
+       int pid = receive_pid(fd_kernel_dispatch);
+       int pc = receive_pc(fd_kernel_dispatch);       
+       instruction_t* instruction = fetch(fd_memory, pc);
     }
     
 

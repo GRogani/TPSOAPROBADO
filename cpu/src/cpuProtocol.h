@@ -18,12 +18,15 @@ EXIT
 } cod_instruction;
 
 typedef struct{
-    cod_instruction instruction;
+    cod_instruction cod_instruction;
     t_list* operands;
 } instruction_t;
 
-void request_instruction(int socket, int PC);
-int* receive_PID_PC(int socket);
-instruction_t* receive_instruction(int socket);
-
+void request_instruction(int socket_memory, int PC);
+int receive_PID(int socket_dispatch_kernel);
+int receive_PC(int socket_dispatch_kernel);
+instruction_t* receive_instruction(int socket_memory);
+void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* valor_write);
+void read_memory_request(int socket_memory, uint32_t direccion_fisica, uint32_t size);
+char* read_memory_response(int socket_memory);
 #endif

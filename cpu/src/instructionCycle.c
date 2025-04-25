@@ -10,19 +10,27 @@ instruction_t* fetch(int socket, int PC) {
     return instruction;
 }
 
-int decode_execute(instruction_t* instruction) {
-    switch (instruction->instruction) {
+int decode_execute(instruction_t* instruction, int socket_memory, int* pc) {
+    switch (instruction->cod_instruction) {
         case NOOP:
             // No operation
             break;
         case WRITE:
-            // Handle WRITE operation
+             uint32_t direccion_logica_write = (uint32_t) list_get(instruction->operands, 0);
+             char* valor_write = (char*)list_get(instruction->operands, 1);
+             void* direccion_fisica_write = MMU(direccion_logica_write);
+            write_memory_request(socket_memory, (uint32_t) direccion_fisica_write, valor_write);
             break;
         case READ:
-            // Handle READ operation
+            uint32_t direccion_logica_read = (uint32_t) list_get(instruction->operands, 0);
+            uint32_t size = (uint32_t) list_get(instruction->operands, 1);
+            void* direccion_fisica_read = MMU(direccion_logica_read);
+            read_memory_request(socket_memory, direccion_fisica_read, size);
+            char* data = read_memory_response(socket_memory);
+            //TODO IMPRIMIR EN LOG OBLIGATORIO
             break;
         case GOTO:
-            // Handle GOTO operation
+            *pc = list_get(instruction->operands, 0);
             break;
         case IO:
             // Handle IO operation
@@ -41,4 +49,9 @@ int decode_execute(instruction_t* instruction) {
             return -1;
     }
     return 0;
+}
+
+void* MMU(uint32_t direccion_logica) {
+    //TODO Simulate MMU logic
+    return (void*) direccion_logica;
 }

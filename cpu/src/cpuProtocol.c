@@ -1,25 +1,46 @@
 #include "cpuProtocol.h"
 
-int* receive_PID_PC(int socket) {
+int receive_PID(int socket_dispatch_kernel) {
     t_package* package = recv_package(socket);
     if (package == NULL) {
         LOG_ERROR("Failed to receive package");
         return NULL;
     }
 
-    if (package->opcode != CPU_PID_PC) {
+    if (package->opcode != CPU_PID) {
         LOG_ERROR("Received package with unexpected opcode: %d", package->opcode);
         package_destroy(package);
         return NULL;
     }
 
-    uint32_t pid, pc;
+    uint32_t pid;
     buffer_read(package->buffer, &pid, sizeof(uint32_t));
+
+    int result = malloc(sizeof(int));
+    result = pid;
+
+    package_destroy(package);
+    return result;
+}
+
+int receive_PC(int socket_dispatch_kernel) {
+    t_package* package = recv_package(socket);
+    if (package == NULL) {
+        LOG_ERROR("Failed to receive package");
+        return NULL;
+    }
+
+    if (package->opcode != CPU_PC) {
+        LOG_ERROR("Received package with unexpected opcode: %d", package->opcode);
+        package_destroy(package);
+        return NULL;
+    }
+
+    uint32_t pc;
     buffer_read(package->buffer, &pc, sizeof(uint32_t));
 
-    int* result = malloc(2 * sizeof(int));
-    result[0] = pid;
-    result[1] = pc;
+    int result = malloc(sizeof(int));
+    result = pc;
 
     package_destroy(package);
     return result;
@@ -61,4 +82,41 @@ instruction_t* receive_instruction(int socket) {
 
     package_destroy(package);
     return instruction;
+}
+
+void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* valor_write) {
+    t_buffer* buffer = buffer_create(sizeof(uint32_t) + strlen(valor_write) + 1);
+    buffer_add_uint32(buffer, direccion_fisica);
+    buffer_add_string(buffer, valor_write);
+    t_package* package = package_create(CPU_WRITE_MEMORY_REQUEST, buffer);
+    send_package(socket_memory, package);
+    package_destroy(package);
+}
+
+void read_memory_request(int socket_memory, uint32_t direccion_fisica, uint32_t size) {
+    t_buffer* buffer = buffer_create(sizeof(uint32_t) + sizeof(uint32_t));
+    buffer_add_uint32(buffer, direccion_fisica);
+    buffer_add_uint32(buffer, size);
+    t_package* package = package_create(CPU_READ_MEMORY_REQUEST, buffer);
+    send_package(socket_memory, package);
+    package_destroy(package);
+}
+
+char* read_memory_response(int socket_memory) {
+    t_package* package = recv_package(socket_memory);
+    if (package == NULL) {
+        LOG_ERROR("Failed to receive package");
+        return NULL;
+    }
+
+    if (package->opcode != CPU_READ_MEMORY_RESPONSE) {
+        LOG_ERROR("Received package with unexpected opcode: %d", package->opcode);
+        package_destroy(package);
+        return NULL;
+    }
+
+    char* data = buffer_read_string(package->buffer, package->buffer->size);
+
+    package_destroy(package);
+    return data;
 }
