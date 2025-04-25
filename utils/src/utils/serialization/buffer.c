@@ -5,10 +5,10 @@ t_buffer *buffer_create(uint32_t size){
     t_buffer *buffer = safe_malloc(sizeof(t_buffer));
 
     buffer->offset = 0;
-    buffer->size = size;
+    buffer->stream_size = size;
 
     if (size !=0)
-        buffer->stream = safe_calloc(1 ,buffer->size);  // Ahi deje el calloc/ reserva 1 buffer inicializado en 0
+        buffer->stream = safe_calloc(1 ,buffer->stream_size);  // Ahi deje el calloc/ reserva 1 buffer inicializado en 0
     else buffer->stream = NULL;
 
     return buffer;
@@ -27,10 +27,10 @@ void buffer_destroy(t_buffer *buffer){
 }
 
 void buffer_add(t_buffer *buffer, void *data, uint32_t size){
-    if (buffer->offset + size > buffer->size) {
+    if (buffer->offset + size > buffer->stream_size) {
         uint32_t new_size = buffer->offset + size;
         buffer->stream = safe_realloc(buffer->stream, new_size);
-        buffer->size = new_size;
+        buffer->stream_size = new_size;
     }
 
     memcpy(buffer->stream + buffer->offset, data, size);
@@ -66,9 +66,9 @@ void buffer_read(t_buffer *buffer, void *data, uint32_t size){
     }
 
 	// Verificar límites de lectura
-	if (buffer->offset + size > buffer->size)
+	if (buffer->offset + size > buffer->stream_size)
 	{
-        LOG_WARN("Se quiere leer más de lo permitido ojito. Offset: %u, Size: %u, Buffer size: %u\n", buffer->offset, size, buffer->size);
+        LOG_WARN("Se quiere leer más de lo permitido ojito. Offset: %u, Size: %u, Buffer size: %u\n", buffer->offset, size, buffer->stream_size);
 		return;
 	}
 
@@ -86,7 +86,7 @@ uint32_t buffer_read_uint32(t_buffer *buffer){
 
 char *buffer_read_string(t_buffer *buffer, uint32_t *length){
     *length = buffer_read_uint32(buffer);
-    char *string = malloc(*length);
+    char *string = safe_malloc(*length);
     buffer_read(buffer, string, *length);
     return string;
 }
@@ -96,4 +96,3 @@ void* buffer_read_pointer(t_buffer *buffer) {
     buffer_read(buffer, &ptr_as_integer, sizeof(uintptr_t)); // Leer el puntero como entero
     return (void*)ptr_as_integer; // Convertir de vuelta a un puntero
 }
-

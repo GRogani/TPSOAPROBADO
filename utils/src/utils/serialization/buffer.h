@@ -19,7 +19,7 @@
  * Mantiene un stream de bytes con posición actual para lectura/escritura secuencial
  */
 typedef struct t_buffer {
-    uint32_t size;           // Tamaño total del buffer en bytes
+    uint32_t stream_size;           // Tamaño total del buffer en bytes
     void* stream;       // Puntero al stream de datos serializados
     uint32_t offset;    // Offset actual para operaciones de lectura/escritura
 } t_buffer;

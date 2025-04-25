@@ -8,6 +8,8 @@
 #include "config/t_configs.h"
 #include "logger/logger.h"
 
+//shutdown_kernel: VER EN MODULO KERNEL
+
 /**
  * @brief Libera los recursos del CPU y destruye su logger.
  * @param cpu_config Configuración del CPU.

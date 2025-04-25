@@ -11,6 +11,17 @@ int main(int argc, char* argv[]) {
     //=================INIT CONEXIONES===============
     int fd_conexion_IO = create_connection(io_config.PUERTO_KERNEL, io_config.IP_KERNEL);
     init_handshake(argv, fd_conexion_IO);
+    
+    int kernel_socket;
+    void* args[] = { &kernel_socket, (void*) io_config.PUERTO_KERNEL, (void*) io_config.IP_KERNEL };
+    pthread_t connection_thread;
+    pthread_create(&connection_thread, NULL, create_kernel_connection, args);
+
+    pthread_join(connection_thread, NULL);
+
+    // si, ese thread de arriba no hace falta.
+
+    send_handshake(kernel_socket, "IO");
 
     waiting_requests(fd_conexion_IO);
     shutdown_io(io_config, config_file);
