@@ -7,5 +7,6 @@
 #include "../utils.h"
 #include "io_threads.h"
 
+void waiting_requests(int kernel_socket, char* id_IO);
 
 #endif

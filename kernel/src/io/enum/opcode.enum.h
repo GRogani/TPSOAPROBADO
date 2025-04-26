@@ -5,6 +5,7 @@
 
 typedef enum {
     HANDSHAKE,
+    IO,
 } t_io_opcode;
 
 t_io_opcode io_opcode_from_string(char*);
