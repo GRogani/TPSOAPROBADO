@@ -23,10 +23,10 @@ int send_handshake(int socket, char* yourName);
 
 t_IO* read_IO_operation_request(t_package* package);
 t_package* create_IO_operation_request(int32_t pid, int32_t time);
-int send_IO_operation_request(int socket);
+int send_IO_operation_request(int socket, int32_t pid, int32_t time);
 
 char* read_IO_operation_completed(t_package* package);
-int send_IO_operation_completed(int kernel_socket);
+int send_IO_operation_completed(int kernel_socket, char* yourName);
 t_package* create_IO_operation_completed(char* yourName);
 
 #endif

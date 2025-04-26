@@ -43,7 +43,7 @@ t_package* create_IO_operation_request(int32_t pid, int32_t time) {
     return package_create(IO, buffer);
 }
 
-char* read_IO_operation_request(t_package* package){
+char* read_IO_operation_completed(t_package* package){
     package->buffer->offset = 0;
     uint32_t bytes_read;
     char* result = buffer_read_string(package->buffer, &bytes_read);
@@ -54,7 +54,7 @@ char* read_IO_operation_request(t_package* package){
 int send_IO_operation_completed(int kernel_socket, char* yourName){
     t_package* package = safe_malloc(sizeof(t_package));
     package = create_IO_operation_completed(yourName);
-    int bytes_sent = send_package(socket, package);
+    int bytes_sent = send_package(kernel_socket, package);
     package_destroy(package);
     return bytes_sent;
 }

@@ -1,5 +1,4 @@
 #include "handle-io-server.h"
-#include "handshake.c"
 
 void create_io_server() {
     int socket_server = create_server(PUERTO_IO_ESCUCHA);

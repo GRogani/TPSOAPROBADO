@@ -6,7 +6,6 @@
 #include <string.h>
 #include "../safe_alloc.h"
 #include "../../macros/log_error.h"
-#include "enums/Eopcodes.h"
 
 /**
  * @struct t_buffer

@@ -8,7 +8,7 @@ void handle_io_client(void* socket_IO)
         t_package* package = safe_malloc(sizeof(t_package));
         package = recv_package(*(int *) socket_IO);
         // obtener la info del buffer
-        t_io_opcode opcode = package->opcode;
+        OPCODE opcode = package->opcode;
         switch (opcode)
         {
             case HANDSHAKE:
@@ -16,7 +16,7 @@ void handle_io_client(void* socket_IO)
                 char* id_IO = read_handshake(package);
                 log_info(get_logger(), "IO [%d] connected.", id_IO);
                 // add connection to list
-                list_add(io_connections_list, id_IO);
+                // list_add(io_connections_list, id_IO);
                 package_destroy(package);
                 break;
             }
