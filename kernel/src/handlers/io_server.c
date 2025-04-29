@@ -1,8 +1,10 @@
-#include "handle-io-server.h"
+#include "io_server.h"
 
-void create_io_server() {
-    int socket_server = create_server(PUERTO_IO_ESCUCHA);
-    log_info(get_logger(), "IO server available on port %s", PUERTO_IO_ESCUCHA);
+void* io_server_handler(void* args) {
+    extern t_kernel_config kernel_config; // en main
+
+    int socket_server = create_server(kernel_config.io_port);
+    log_info(get_logger(), "IO server available on port %s", kernel_config.io_port);
 
     while (1)
     {
@@ -14,12 +16,13 @@ void create_io_server() {
 
         log_info(get_logger(), "I/O connected successfully. creating thread for client %d...", socket_client);
         pthread_t t;
-        int err = pthread_create(&t, NULL, handle_io_client, NULL);
+        int err = pthread_create(&t, NULL, handle_io_client, &socket_client);
         if(err) {
             log_error(get_logger(), "Failed to create detachable thread for I/O server");
             exit(EXIT_FAILURE);
         }
     }
     
+    return 0;
 
 }
