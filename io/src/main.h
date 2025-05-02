@@ -8,5 +8,6 @@
 #include "io_threads.h"
 
 void waiting_requests(int kernel_socket, char* id_IO);
+void* processing_operation(void* args);
 
 #endif

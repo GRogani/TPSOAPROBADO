@@ -1,6 +1,6 @@
 #include "io_client.h"
 
-void* handler_io_client(void* socket)
+void* handle_io_client(void* socket)
 {
     t_package* package = safe_malloc(sizeof(t_package));
     while (1)

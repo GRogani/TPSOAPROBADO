@@ -16,7 +16,7 @@ void* io_server_handler(void* args) {
 
         log_info(get_logger(), "I/O connected successfully. creating thread for client %d...", socket_client);
         pthread_t t;
-        int err = pthread_create(&t, NULL, handler_io_client, &socket_client);
+        int err = pthread_create(&t, NULL, handle_io_client, &socket_client);
         if(err) {
             log_error(get_logger(), "Failed to create detachable thread for I/O server");
             exit(EXIT_FAILURE);
