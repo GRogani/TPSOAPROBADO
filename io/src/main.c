@@ -34,9 +34,8 @@ void waiting_requests(int kernel_socket, char* id_IO){
         io = read_IO_operation_request(package);
 
         // TODO: cómo manejo el caso de de que llegue un msj en un sleep???
-        uint32_t args[] = {io->pid, io->time};
         pthread_t t;
-        int err = pthread_create(&t, NULL, processing_operation, args);
+        int err = pthread_create(&t, NULL, processing_operation, io);
         if(err) {
             log_error(get_logger(), "Failed to create detachable thread for PROCESSING I/O OPERATION.");
             exit(EXIT_FAILURE);
@@ -49,13 +48,11 @@ void waiting_requests(int kernel_socket, char* id_IO){
     }
 }
 
-void* processing_operation(void* args) {
-    uint32_t* vec = (uint32_t*) args;
-    uint32_t pid = vec[0];
-    uint32_t time = vec[1];
-    log_info(get_logger(), "## PID: %d - Inicio de IO - Tiempo: %d", pid, time);
-    usleep(time);
-    log_info(get_logger(), "## PID: %d - Fin de IO", pid);
+void* processing_operation(void* io) {
+    // uint32_t* vec = (uint32_t*) args;
+    log_info(get_logger(), "## PID: %d - Inicio de IO - Tiempo: %d", ((t_IO*) io)->pid, ((t_IO*) io)->time);
+    usleep(((t_IO*) io)->time);
+    log_info(get_logger(), "## PID: %d - Fin de IO", ((t_IO*) io)->pid);
     pthread_exit(0);
     return NULL;
 }
