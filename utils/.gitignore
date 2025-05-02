@@ -1,3 +1,5 @@
+*.md
+.gitignore
 #tests binary
 bin/*_tests
 
