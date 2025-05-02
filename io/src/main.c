@@ -34,8 +34,10 @@ void waiting_requests(int kernel_socket, char* id_IO){
         t_IO* io = safe_malloc(sizeof(t_IO));
         io = read_IO_operation_request(package);
         */
-        int32_t pid = buffer_read_uint32(package->buffer);
-        int32_t tiempo = buffer_read_uint32(package->buffer);
+        package->buffer->offset = 0;
+        uint32_t pid = buffer_read_uint32(package->buffer);
+        uint32_t tiempo = buffer_read_uint32(package->buffer);
+        package->buffer->offset = 0;
         // Iniciando la operación I/O
         log_info(get_logger(), "## PID: %d - Inicio de IO - Tiempo: %d", pid, tiempo);
         usleep(tiempo);

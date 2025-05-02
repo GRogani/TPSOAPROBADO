@@ -27,7 +27,7 @@ int send_handshake(int socket, char* yourName)
     return bytes_sent;
 }
 
-int send_IO_operation_request(int socket, int32_t pid, int32_t time) {
+int send_IO_operation_request(int socket, uint32_t pid, uint32_t time) {
     t_package* package = safe_malloc(sizeof(t_package));
     package = create_IO_operation_request(pid, time);
     int bytes_sent = send_package(socket, package);
@@ -35,8 +35,8 @@ int send_IO_operation_request(int socket, int32_t pid, int32_t time) {
     return bytes_sent;
 }
 
-t_package* create_IO_operation_request(int32_t pid, int32_t time) {
-    uint32_t size = sizeof(int32_t) * 2;
+t_package* create_IO_operation_request(uint32_t pid, uint32_t time) {
+    uint32_t size = sizeof(uint32_t) * 2;
     t_buffer* buffer = buffer_create(size);
     buffer_add_uint32(buffer, pid);
     buffer_add_uint32(buffer, time);

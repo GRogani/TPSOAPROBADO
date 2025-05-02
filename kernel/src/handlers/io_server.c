@@ -16,14 +16,15 @@ void* io_server_handler(void* args) {
 
         log_info(get_logger(), "I/O connected successfully. creating thread for client %d...", socket_client);
         pthread_t t;
-        int err = pthread_create(&t, NULL, handle_io_client, &socket_client);
+        int err = pthread_create(&t, NULL, handler_io_client, &socket_client);
         if(err) {
             log_error(get_logger(), "Failed to create detachable thread for I/O server");
             exit(EXIT_FAILURE);
         }
-        pthread_join(t, NULL); //TODO: este join está bien? no tiene que seguir aceptando conexiones independiente del manejador de io?
-        // Caso de Prueba
+        // TODO: Caso de Prueba - la función creo que debería mandar un struct + localizarlo donde corresponde
         send_IO_operation_request(socket_client, 2, 10);
+        //TODO: este join está bien? no tiene que seguir aceptando conexiones independientemente del handler?
+        pthread_join(t, NULL);
     }
     
     return 0;
