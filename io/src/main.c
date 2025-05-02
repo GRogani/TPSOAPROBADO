@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 
     // si, ese thread de arriba no hace falta.
 
-    // El primer parámetro siempre es para el nombre del programa
+    // El primer parámetro argv[0] siempre es para el nombre del programa
     send_handshake(kernel_socket, argv[1]);
     waiting_requests(kernel_socket, argv[1]);
     shutdown_io(io_config, config_file);
@@ -29,17 +29,12 @@ void waiting_requests(int kernel_socket, char* id_IO){
     while(1){
         t_package* package = safe_malloc(sizeof(t_package));
         package = recv_package(kernel_socket);
-        /*
         t_IO* io = safe_malloc(sizeof(t_IO));
+        // TODO: en el struct no estoy pasando el ID del IO
         io = read_IO_operation_request(package);
-        */
-        package->buffer->offset = 0;
-        uint32_t pid = buffer_read_uint32(package->buffer);
-        uint32_t tiempo = buffer_read_uint32(package->buffer);
-        package->buffer->offset = 0;
 
         // TODO: cómo manejo el caso de de que llegue un msj en un sleep???
-        uint32_t args[] = {pid, tiempo};
+        uint32_t args[] = {io->pid, io->time};
         pthread_t t;
         int err = pthread_create(&t, NULL, processing_operation, args);
         if(err) {
