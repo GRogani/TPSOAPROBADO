@@ -42,6 +42,7 @@ void waiting_requests(int kernel_socket, char* id_IO){
         // Finalización de la operación I/O
         log_info(get_logger(), "## PID: %d - Fin de IO", pid);
         send_IO_operation_completed(kernel_socket, id_IO);
+        package_destroy(package);
     }
 }
 

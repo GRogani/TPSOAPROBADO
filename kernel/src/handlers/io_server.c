@@ -21,7 +21,7 @@ void* io_server_handler(void* args) {
             log_error(get_logger(), "Failed to create detachable thread for I/O server");
             exit(EXIT_FAILURE);
         }
-        pthread_join(t, NULL);
+        pthread_join(t, NULL); //TODO: este join está bien? no tiene que seguir aceptando conexiones independiente del manejador de io?
         // Caso de Prueba
         send_IO_operation_request(socket_client, 2, 10);
     }
