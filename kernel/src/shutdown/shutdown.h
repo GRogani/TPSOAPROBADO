@@ -3,6 +3,7 @@
 
 #include "../utils.h"
 #include "lists/lists.h"
+#include "repository/new_list.h"
 
 void shutdown_hook();
 
