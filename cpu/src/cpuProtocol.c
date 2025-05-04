@@ -25,7 +25,7 @@ int receive_PID(int socket_dispatch_kernel) {
 int receive_PC(int socket_dispatch_kernel) {
     t_package* package = recv_package(socket);
     if (package == NULL) {
-        LOG_ERROR("Failed to receive package");
+       log_error(get_logger(), "Failed to receive package");
         return NULL;
     }
 
