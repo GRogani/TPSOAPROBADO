@@ -17,7 +17,6 @@ int receive_PID(int socket_dispatch_kernel) {
     package->buffer->offset = 0;
     pid = buffer_read_uint32(package->buffer);
 
-    result = pid;
 
     package_destroy(package);
     return result;
