@@ -66,7 +66,8 @@ instruction_t* receive_instruction(int socket) {
     }
 
     instruction_t instruction;
-    buffer_read(package->buffer, &instruction->instruction, sizeof(cod_instruction));
+    package->buffer->offset = 0;
+    buffer_read(package->buffer, &instruction->cod_instruction, sizeof(cod_instruction));
 
     uint32_t operand_count;
     buffer_read(package->buffer, &operand_count, sizeof(uint32_t));
