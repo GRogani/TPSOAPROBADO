@@ -76,7 +76,7 @@ instruction_t* receive_instruction(int socket) {
     for (uint32_t i = 0; i < operand_count; i++) {
         uint32_t operand;
        operand = buffer_read_uint32(package->buffer);
-        list_add(instruction->operands, (void*)operand);
+        list_add(instruction.operands, (void*)operand);
     }
 
     package_destroy(package);
