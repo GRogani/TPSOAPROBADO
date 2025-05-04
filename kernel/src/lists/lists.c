@@ -2,7 +2,7 @@
 
 
 static t_list* io_connections_list;
-static t_queue* io_requests_list;
+static t_list* io_requests_link_list;
 static t_list* cpu_connections_list;
 static t_list* new_list;
 static t_list* ready_list;
@@ -22,13 +22,26 @@ t_list* get_new_list()
     return new_list;
 }
 
+t_list* get_io_connections_list()
+{
+    return io_connections_list;
+}
+
+t_list* get_io_requests_link_list()
+{
+    return io_requests_link_list;
+}
+
+
 void initialize_global_lists() {
 
+    initialize_repository_io_connections();
     io_connections_list = list_create();
+
     cpu_connections_list = list_create();
 
-    new_list = list_create();
     initialize_repository_new();
+    new_list = list_create();
 
     ready_list = list_create();
     exec_list = list_create();
@@ -37,11 +50,12 @@ void initialize_global_lists() {
     susp_ready_list = list_create();
     exit_list = list_create();
 
-    io_requests_list = queue_create();
+    initialize_repository_io_requests();
+    io_requests_link_list = list_create();
 
     if(
         io_connections_list == NULL || 
-        io_requests_list == NULL ||
+        io_requests_link_list == NULL ||
         cpu_connections_list == NULL ||
         new_list == NULL ||
         ready_list == NULL ||
@@ -62,7 +76,7 @@ void destroy_global_lists(){
 
     list_destroy_and_destroy_elements(io_connections_list, io_connections_destroyer);
     list_destroy_and_destroy_elements(cpu_connections_list, cpu_connections_destroyer);
-    list_destroy_and_destroy_elements(io_requests_list, io_requests_destroyer);
+    list_destroy_and_destroy_elements(io_requests_link_list, io_requests_destroyer);
 
 }
 
@@ -73,18 +87,18 @@ void io_connections_destroyer(void *ptr) {
     free(connection);
 }
 
-void io_requests_queue_destroyer(void *ptr) {
-    t_io_queue* queue = (t_io_queue*) ptr;
-    free(queue);
+void io_requests_list_destroyer(void *ptr) {
+    t_io_request* request_el = (t_io_request*) ptr;
+    free(request_el);
 }
 
 
 void io_requests_destroyer(void *ptr) {
-    t_io_requests* io_request = (t_io_requests*) ptr;
+    t_io_requests_link* io_request = (t_io_requests_link*) ptr;
     
-    queue_destroy_and_destroy_elements(io_request->requests_queue, io_requests_queue_destroyer);
+    list_destroy_and_destroy_elements(io_request->requests_list, io_requests_list_destroyer);
     
-    free(io_request->requests_queue); // aca deberia hacer un free de nuevo?
+    free(io_request->device_name);
     free(io_request);
 }
 

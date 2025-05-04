@@ -6,6 +6,9 @@
 #include <commons/collections/queue.h>
 #include "../utils.h"
 #include "repository/new_list.h"
+#include "repository/io_connections.h"
+#include "repository/io_requests.h"
+#include "repository/io_requests_list.h"
 
 typedef struct t_cpu_connection {
     int interrupt_socket_id;
@@ -14,23 +17,26 @@ typedef struct t_cpu_connection {
 } t_cpu_connection;
 
 typedef struct t_io_connection {
-    bool connected;
     char* device_name;
     int socket_id;
 } t_io_connection;
 
-typedef struct t_io_queue {
+typedef struct t_io_request {
     int pid;
+    int socket;
     bool processing;
-} t_io_queue;
+    int sleep_time;
+} t_io_request;
 
-typedef struct t_io_requests {
+typedef struct t_io_requests_link {
     char* device_name;
-    t_io_queue* requests_queue;
-} t_io_requests;
+    t_list* requests_list;
+} t_io_requests_link;
 
 t_list* get_cpu_connections_list();
 t_list* get_new_list();
+t_list* get_io_connections_list();
+t_list* get_io_requests_link_list();
 
 void initialize_global_lists();
 void destroy_global_lists();
