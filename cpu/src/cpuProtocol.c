@@ -70,7 +70,7 @@ instruction_t* receive_instruction(int socket) {
     buffer_read(package->buffer, &instruction->cod_instruction, sizeof(cod_instruction));
 
     uint32_t operand_count;
-    buffer_read(package->buffer, &operand_count, sizeof(uint32_t));
+    operand_count = buffer_read_uint32(package->buffer);
     //TODO creo que deberia agregar a la estructura de instruccion la cantidad de operandos, no se si es necesario, pero lo dejo por las dudas
     instruction->operands = list_create();
     for (uint32_t i = 0; i < operand_count; i++) {
