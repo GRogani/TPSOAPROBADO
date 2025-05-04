@@ -104,7 +104,7 @@ void read_memory_request(int socket_memory, uint32_t direccion_fisica, uint32_t 
 char* read_memory_response(int socket_memory) {
     t_package* package = recv_package(socket_memory);
     if (package == NULL) {
-        LOG_ERROR("Failed to receive package");
+       log_error(get_logger(), "Failed to receive package");
         return NULL;
     }
 
