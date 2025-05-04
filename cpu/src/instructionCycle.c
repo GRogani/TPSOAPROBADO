@@ -4,7 +4,7 @@ instruction_t* fetch(int socket, int PC) {
     request_instruction(socket, PC);
     instruction_t* instruction = receive_instruction(socket);
     if (instruction == NULL) {
-        LOG_ERROR("Failed to fetch instruction");
+       log_error(get_logger(), "Failed to fetch instruction");
         return NULL;
     }
     return instruction;
