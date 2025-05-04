@@ -39,7 +39,6 @@ int receive_PC(int socket_dispatch_kernel) {
     package->buffer->offset = 0;
     pc = buffer_read_uint32(package->buffer);
 
-    result = pc;
 
     package_destroy(package);
     return result;
