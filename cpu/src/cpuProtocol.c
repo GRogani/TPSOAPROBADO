@@ -60,7 +60,7 @@ instruction_t* receive_instruction(int socket) {
     }
 
     if (package->opcode != CPU_RESPONSE_INSTRUCTION) {
-        LOG_ERROR("Received package with unexpected opcode: %d", package->opcode);
+        log_error(get_logger(), "Received package with unexpected opcode: %d", package->opcode);
         package_destroy(package);
         return NULL;
     }
