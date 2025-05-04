@@ -36,7 +36,8 @@ int receive_PC(int socket_dispatch_kernel) {
     }
 
     uint32_t pc;
-    buffer_read(package->buffer, &pc, sizeof(uint32_t));
+    package->buffer->offset = 0;
+    pc = buffer_read_uint32(package->buffer);
 
     int result = malloc(sizeof(int));
     result = pc;
