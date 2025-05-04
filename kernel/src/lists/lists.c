@@ -50,7 +50,7 @@ void initialize_global_lists() {
     susp_ready_list = list_create();
     exit_list = list_create();
 
-    initialize_repository_io_requests();
+    initialize_repository_io_requests_list();
     io_requests_link_list = list_create();
 
     if(

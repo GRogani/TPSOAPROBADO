@@ -21,14 +21,14 @@ void create_io_request_element(t_list* list, int process_id, int sleep_time) {
     t_io_request* list_element = malloc(sizeof(t_io_request));
     list_element->pid = process_id;
     list_element->processing = false;
-    list_element->socket = -1;
+    list_element->socket_id = -1;
     list_element->sleep_time = sleep_time;
 
-    list_push(list, list_element); // la nueva request siempre se envia al final
+    list_add(list, list_element); // la nueva request siempre se envia al final
 }
 
 void* find_first_element_for_socket(t_list* list, int socket) {
-     bool request_socket_processing_matches(void* ptr) {
+    bool request_socket_processing_matches(void* ptr) {
 	    t_io_request* request = (t_io_request*) ptr;
 	    return request->socket_id == socket && request->processing;
 	};
@@ -45,16 +45,18 @@ void* find_first_element_without_assign(t_list* list) {
     return list_find(list, request_not_assigned_matches);
 }
 
-
-void* assign_connection_to_request(t_io_request* element_to_assign, int socket) {
-    if(element_to_assign == NULL) {
-        return element_to_assign;
+void* assign_connection_to_request(void* element_to_assign, int socket)
+{
+    t_io_request * io_request = (t_io_request *)element_to_assign;
+    if (io_request == NULL)
+    {
+        return io_request;
     }
 
-    element_to_assign->socket = socket;
-    element_to_assign->processing = true;
+    io_request->socket_id = socket;
+    io_request->processing = true;
     
-    return element_to_assign;
+    return io_request;
 }
 
 void unlock_io_requests_list() {

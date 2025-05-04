@@ -10,7 +10,7 @@ void handsake(void* args) {
     create_io_connection(thread_args->client_socket, thread_args->device_name);
 
     // verificar si existe la lista de requests, sino la creamos
-    void* request_link = find_io_requests_by_device_name(thread_args->device_name);
+    void* request_link = find_io_request_by_device_name(thread_args->device_name);
 
     if(request_link == NULL) {
         create_io_request_link(thread_args->device_name);

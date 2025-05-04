@@ -1,7 +1,6 @@
 #ifndef KERNEL_LISTS_H
 #define KERNEL_LISTS_H
 
-
 #include <commons/collections/list.h>
 #include <commons/collections/queue.h>
 #include "../utils.h"
@@ -23,7 +22,7 @@ typedef struct t_io_connection {
 
 typedef struct t_io_request {
     int pid;
-    int socket;
+    int socket_id;
     bool processing;
     int sleep_time;
 } t_io_request;

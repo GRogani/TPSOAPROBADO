@@ -15,7 +15,7 @@ void lock_io_requests_link();
 /**
  * @brief finds the link between the device_name and the connection. if the link exists, then returns the element. otherwise, returns NULL
 */
-void* find_io_requests_by_device_name(char*);
+void* find_io_request_by_device_name(char*);
 
 /**
  * @brief creates a link between the connection and the requests to that connection. Also creates the requests list for this connection. This list should be free by yourself

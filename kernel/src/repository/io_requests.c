@@ -52,7 +52,7 @@ void* get_free_connection(t_list* connections_socket_list, char* device_name) {
         int socket_id = (int) ptr;
 
         bool socket_matches(void* ptr) {
-            t_io_requests_link* request = (t_io_requests_link*) ptr;
+            t_io_request *request = (t_io_request*) ptr;
             return request->socket_id == socket_id;
 	    };
 
@@ -65,7 +65,7 @@ void* get_free_connection(t_list* connections_socket_list, char* device_name) {
         }
     }
 
-    list_iterate(connections, connections_iterator);
+    list_iterate(connections_socket_list, connections_iterator);
 
     return -1;
 }
