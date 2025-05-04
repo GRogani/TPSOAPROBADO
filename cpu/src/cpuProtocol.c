@@ -19,7 +19,7 @@ int receive_PID(int socket_dispatch_kernel) {
 
 
     package_destroy(package);
-    return result;
+    return pid;
 }
 
 int receive_PC(int socket_dispatch_kernel) {
