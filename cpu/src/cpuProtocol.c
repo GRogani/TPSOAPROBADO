@@ -80,7 +80,7 @@ instruction_t* receive_instruction(int socket) {
     }
 
     package_destroy(package);
-    return instruction;
+    return &instruction;
 }
 
 void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* valor_write) {
