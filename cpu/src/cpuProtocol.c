@@ -75,7 +75,7 @@ instruction_t* receive_instruction(int socket) {
     instruction->operands = list_create();
     for (uint32_t i = 0; i < operand_count; i++) {
         uint32_t operand;
-        buffer_read(package->buffer, &operand, sizeof(uint32_t));
+       operand = buffer_read_uint32(package->buffer);
         list_add(instruction->operands, (void*)operand);
     }
 
