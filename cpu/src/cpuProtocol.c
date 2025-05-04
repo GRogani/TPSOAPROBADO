@@ -65,7 +65,7 @@ instruction_t* receive_instruction(int socket) {
         return NULL;
     }
 
-    instruction_t* instruction = malloc(sizeof(instruction_t));
+    instruction_t instruction;
     buffer_read(package->buffer, &instruction->instruction, sizeof(cod_instruction));
 
     uint32_t operand_count;
