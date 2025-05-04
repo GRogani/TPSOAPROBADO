@@ -41,7 +41,7 @@ int receive_PC(int socket_dispatch_kernel) {
 
 
     package_destroy(package);
-    return result;
+    return pc;
 }
 
 void request_instruction(int socket, int PC) {
