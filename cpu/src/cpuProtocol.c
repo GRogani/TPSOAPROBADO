@@ -30,7 +30,7 @@ int receive_PC(int socket_dispatch_kernel) {
     }
 
     if (package->opcode != CPU_PC) {
-        LOG_ERROR("Received package with unexpected opcode: %d", package->opcode);
+       log_error(get_logger(), "Received package with unexpected opcode: %d", package->opcode);
         package_destroy(package);
         return NULL;
     }
