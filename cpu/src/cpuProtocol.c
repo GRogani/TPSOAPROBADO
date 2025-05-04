@@ -93,7 +93,7 @@ void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* va
 }
 
 void read_memory_request(int socket_memory, uint32_t direccion_fisica, uint32_t size) {
-    t_buffer* buffer = buffer_create(sizeof(uint32_t) + sizeof(uint32_t));
+    t_buffer* buffer = buffer_create( 2 * sizeof(uint32_t));
     buffer_add_uint32(buffer, direccion_fisica);
     buffer_add_uint32(buffer, size);
     t_package* package = package_create(CPU_READ_MEMORY_REQUEST, buffer);
