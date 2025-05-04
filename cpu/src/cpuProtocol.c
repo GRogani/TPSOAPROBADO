@@ -55,7 +55,7 @@ void request_instruction(int socket, int PC) {
 instruction_t* receive_instruction(int socket) {
     t_package* package = recv_package(socket);
     if (package == NULL) {
-        LOG_ERROR("Failed to receive package");
+        log_error(get_logger(), "Failed to receive package");
         return NULL;
     }
 
