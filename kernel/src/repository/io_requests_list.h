@@ -7,10 +7,10 @@
 #include <unistd.h>
 #include <lists/lists.h>
 
-bool initialize_repository_io_requests_list();
-bool destroy_repository_io_requests_list();
+bool initialize_repository_io_requests_list(sem_t*);
+bool destroy_repository_io_requests_list(sem_t*);
 
-void lock_io_requests_list();
+void lock_io_requests_list(sem_t*);
 
 /**
  * @brief devuelve el primer elemento de la lista, que esté asignado al socket provisto. si no hay elementos asignados, entonces devuelve NULL.
@@ -29,6 +29,6 @@ void create_io_request_element(t_list*, int, int);
 */
 void* assign_connection_to_request(void*, int);
 
-void unlock_io_requests_list();
+void unlock_io_requests_list(sem_t*);
 
 #endif

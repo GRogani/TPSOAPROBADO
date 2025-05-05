@@ -1,20 +1,21 @@
 #include "io_requests_list.h"
 
-static sem_t sem_io_requests_list;
-
-bool initialize_repository_io_requests_list() {
-    if (sem_init(&sem_io_requests_list, 0, 1) != 0) {
+bool initialize_repository_io_requests_list(sem_t* sem_io_requests_list)
+{
+    if (sem_init(sem_io_requests_list, 0, 1) != 0) {
         LOG_ERROR("sem_init for IO_REQUESTS_LIST failed");
         exit(EXIT_FAILURE);
     }
 }
 
-bool destroy_repository_io_requests_list() {
-    sem_destroy(&sem_io_requests_list);
+bool destroy_repository_io_requests_list(sem_t* sem_io_requests_list)
+{
+    sem_destroy(sem_io_requests_list);
 }
 
-void lock_io_requests_list() {
-    sem_wait(&sem_io_requests_list);
+void lock_io_requests_list(sem_t* sem_io_requests_list)
+{
+    sem_wait(sem_io_requests_list);
 }
 
 void create_io_request_element(t_list* list, int process_id, int sleep_time) {
@@ -59,6 +60,7 @@ void* assign_connection_to_request(void* element_to_assign, int socket)
     return io_request;
 }
 
-void unlock_io_requests_list() {
-    sem_post(&sem_io_requests_list);
+void unlock_io_requests_list(sem_t* sem_io_requests_list)
+{
+    sem_post(sem_io_requests_list);
 }

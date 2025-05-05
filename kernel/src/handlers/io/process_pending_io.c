@@ -3,42 +3,51 @@
 void process_pending_io(void* args) {
     t_pending_io_thread_args* thread_args = (t_pending_io_thread_args*) args;
 
+    log_info(get_logger(), "Processing pending IO for device %s", thread_args->device_name);
+
     lock_io_requests_link();
-    lock_io_requests_list();
 
     t_io_requests_link* request_link = find_io_request_by_device_name(thread_args->device_name);
     if(request_link == NULL) {
-        LOG_ERROR("Could not found request_link element!!");
-        goto free_args;
+        log_error(get_logger(), "Could not found request_link element!!");
+        goto free_request_link;
     }
+
+    lock_io_requests_list(&request_link->io_requests_list_semaphore);
 
     void* request_element = find_first_element_for_socket(request_link->requests_list, thread_args->client_socket);
 
     if(request_element == NULL) {
+        log_info(get_logger(), "There is no requests assigned to the connection, trying to assign...");
         t_io_request* element_not_assigned = find_first_element_without_assign(request_link->requests_list);
 
         if(element_not_assigned == NULL) {
-            // no hay elementos para asignar
-            goto free_args;
+            log_info(get_logger(), "There is no pending requests for device %s", thread_args->device_name);
+            goto free_all;
         }
 
         int err = send_io_request(thread_args->client_socket, element_not_assigned->pid, element_not_assigned->sleep_time);
         if(err == -1) {
-            LOG_ERROR("Could not sent socket %d request io message for process %d", thread_args->client_socket, element_not_assigned->pid);
-            goto free_args;
+            log_error(get_logger(), "Could not sent socket %d request io message for process %d", thread_args->client_socket, element_not_assigned->pid);
+            goto free_all;
         }
 
         assign_connection_to_request(request_link->requests_list, thread_args->client_socket);
-
-    } else {
-        // si hay algun elemento asignado al socket, no debemos hacer nada porque el device ya está ejecutando.
+        log_info(get_logger(), "Assigned connection %d to request %d", thread_args->client_socket, element_not_assigned->pid);
     }
 
-    goto free_args;
+    // si hay algun elemento asignado al socket, no debemos hacer nada porque el device ya está ejecutando.
+
+    goto free_all;
 
 
-    free_args:
-        unlock_io_requests_list();
+    free_all:
+        unlock_io_requests_list(&request_link->io_requests_list_semaphore);
+        goto free_request_link;
+        return;
+    
+
+    free_request_link: 
         unlock_io_requests_link();
         free(thread_args->device_name);
         free(thread_args);

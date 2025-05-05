@@ -21,7 +21,7 @@ void* find_io_request_by_device_name(char* device_name) {
     bool device_name_matches(void* ptr) {
 	    t_io_requests_link* request = (t_io_requests_link*) ptr;
 	    return strcmp(request->device_name, device_name) == 0;
-	};
+    };
 
     void* el_found = list_find(get_io_requests_link_list(), device_name_matches);
 
@@ -29,16 +29,18 @@ void* find_io_request_by_device_name(char* device_name) {
 }
 
 void create_io_request_link(char* device_name) {
-    t_io_requests_link* io_requests = malloc(sizeof(t_io_requests_link));
-    if(io_requests == NULL) {
+    t_io_requests_link* io_request = malloc(sizeof(t_io_requests_link));
+    if(io_request == NULL) {
         return -1;
     }
 
-    initialize_repository_io_requests_list();
     t_list* requests_list = list_create();
 
-    io_requests->device_name = device_name;
-    io_requests->requests_list = requests_list;
+    io_request->device_name = strdup(device_name); // duplicamos el string porque lo va a liberar el handshake
+    io_request->requests_list = requests_list;
+    initialize_repository_io_requests_list(&io_request->io_requests_list_semaphore);
+
+    list_add(get_io_requests_link_list(), io_request);
 }
 
 /*

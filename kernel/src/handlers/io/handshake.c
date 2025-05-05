@@ -11,10 +11,13 @@ void handsake(void* args) {
     // creamos la nueva instancia de conexion
     create_io_connection(thread_args->client_socket, thread_args->device_name);
 
+    log_info(get_logger(), "Connection created for device %s", thread_args->device_name);
+
     // verificar si existe la lista de requests, sino la creamos
     void* request_link = find_io_request_by_device_name(thread_args->device_name);
 
     if(request_link == NULL) {
+        log_info(get_logger(), "First time for this device %s, creating link with requests list", thread_args->device_name);
         create_io_request_link(thread_args->device_name);
     }
     
@@ -38,11 +41,10 @@ void thread_for_process_next_io(int socket, char* device_name) {
     }
 
     thread_args->client_socket = socket;
-    // aca copiamos el valor, porque lo va a liberar el handshake si le pasamos el mismo espacio de memoria
     thread_args->device_name = strdup(device_name);
 
     pthread_t process_pending_io_thread;
-    int err_io_client = pthread_create(&process_pending_io_thread, NULL, process_pending_io, &thread_args);
+    int err_io_client = pthread_create(&process_pending_io_thread, NULL, process_pending_io, thread_args);
     if (err_io_client != 0) 
     {
         log_error(get_logger(), "Failed to create PROCESS_PENDING_IO thread");
