@@ -52,7 +52,7 @@ void request_instruction(int socket, int PC) {
     package_destroy(package);
 }
 
-instruction_t* receive_instruction(int socket) {
+t_package* receive_instruction(int socket) {
     t_package* package = recv_package(socket);
     if (package == NULL) {
         log_error(get_logger(), "Failed to receive package");
@@ -65,22 +65,7 @@ instruction_t* receive_instruction(int socket) {
         return NULL;
     }
 
-    instruction_t instruction;
-    package->buffer->offset = 0;
-    buffer_read(package->buffer, &instruction->cod_instruction, sizeof(cod_instruction));
-
-    uint32_t operand_count;
-    operand_count = buffer_read_uint32(package->buffer);
-    //TODO creo que deberia agregar a la estructura de instruccion la cantidad de operandos, no se si es necesario, pero lo dejo por las dudas
-    instruction.operands = list_create();
-    for (uint32_t i = 0; i < operand_count; i++) {
-        uint32_t operand;
-       operand = buffer_read_uint32(package->buffer);
-        list_add(instruction.operands, (void*)operand);
-    }
-
-    package_destroy(package);
-    return &instruction;
+    return package;
 }
 
 void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* valor_write) {

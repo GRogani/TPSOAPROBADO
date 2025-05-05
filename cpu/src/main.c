@@ -15,7 +15,13 @@ int main(int argc, char* argv[])
     {
        int pid = receive_pid(fd_kernel_dispatch);
        int pc = receive_pc(fd_kernel_dispatch);       
-       instruction_t* instruction = fetch(fd_memory, pc);
+       t_package* instruction_package = fetch(fd_memory, pc);
+       instruction_t* instruction = decode(instruction_package);
+       int interrupt =  0;
+       while(interrupt == 0){
+           execute(instruction, instruction_package, fd_memory, fd_kernel_dispatch, &pc);
+           interrupt = check_interrupt(fd_kernel_interrupt, pid);
+       }
     }
     
 

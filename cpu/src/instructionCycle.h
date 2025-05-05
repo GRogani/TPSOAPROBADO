@@ -7,8 +7,9 @@
 #include <utils/logger/logger.h>
 #include "cpuProtocol.h"
 
-instruction_t* fetch(int socket, int PC);
-int decode_execute(instruction_t* instruction, int socket_memory, int* pc);
-
+t_package* fetch(int socket, int PC);
+instruction_t* decode(t_package* package);
+int execute(instruction_t* instruction,t_package* instruction_package, int socket_memory, int* pc);
+int check_interrupt(int socket_interrupt, int pid_on_execute, int pc_on_execute);
 
 #endif
