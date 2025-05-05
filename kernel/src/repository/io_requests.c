@@ -34,6 +34,7 @@ void create_io_request_link(char* device_name) {
         return -1;
     }
 
+    initialize_repository_io_requests_list();
     t_list* requests_list = list_create();
 
     io_requests->device_name = device_name;
@@ -41,10 +42,10 @@ void create_io_request_link(char* device_name) {
 }
 
 /*
-* @brief returns the first connection free (not in use) or NULL if there's no connection free
-* should be used with find_and_lock_io_connections_list_by_device_name which returns io sockets for the provided device_name
-* @returns socket_id as integer if connection found, otherwise, returns -1 if no connection free found
-*/
+ * @brief returns the first connection free (not in use) or NULL if there's no connection free
+ * should be used with find_and_lock_io_connections_list_by_device_name which returns io sockets for the provided device_name.  Should be used when validating before creating io_request.
+ * @returns socket_id as integer if connection found, otherwise, returns -1 if no connection free found
+ */
 void* get_free_connection(t_list* connections_socket_list, char* device_name) {
     t_io_requests_link* io_request_link = find_io_request_by_device_name(device_name);
 

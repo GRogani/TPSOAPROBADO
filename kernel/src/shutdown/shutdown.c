@@ -8,6 +8,9 @@ void shutdown_hook(t_config* config) {
     destroy_global_lists();
 
     destroy_repository_new();
+    destroy_repository_io_connections();
+    destroy_repository_io_requests_link();
+    destroy_repository_io_requests_list();
     
     config_destroy(config);
 

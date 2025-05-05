@@ -1,6 +1,8 @@
 #include "handshake.h"
 
 void handsake(void* args) {
+    // TODO: deberiamos enviar un handshake de retorno?
+
     t_handshake_thread_args* thread_args = (t_handshake_thread_args*) args;
 
     lock_io_connection_list();
@@ -36,7 +38,8 @@ void thread_for_process_next_io(int socket, char* device_name) {
     }
 
     thread_args->client_socket = socket;
-    thread_args->device_name = strdup(device_name); // aca copiamos el valor, porque lo va a liberar el handshake si le pasamos el mismo espacio de memoria
+    // aca copiamos el valor, porque lo va a liberar el handshake si le pasamos el mismo espacio de memoria
+    thread_args->device_name = strdup(device_name);
 
     pthread_t process_pending_io_thread;
     int err_io_client = pthread_create(&process_pending_io_thread, NULL, process_pending_io, &thread_args);

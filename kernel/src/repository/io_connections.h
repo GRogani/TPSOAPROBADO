@@ -19,7 +19,7 @@ void lock_io_connection_list();
 void* find_and_lock_io_connection_list_by_socket(int);
 
 /*
-* @brief should free the returned list by itself after finishing its use.
+* @brief should free the returned list by itself after finishing its use. Should be used when validating before creating io_request.
 * @returns list of sockets found for the device_name
 */
 t_list* find_and_lock_io_connections_list_by_device_name(char*);
