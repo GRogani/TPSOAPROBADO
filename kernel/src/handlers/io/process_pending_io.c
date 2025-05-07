@@ -1,7 +1,8 @@
 #include "process_pending_io.h"
 
-void process_pending_io(void* args) {
-    t_pending_io_thread_args* thread_args = (t_pending_io_thread_args*) args;
+void process_pending_io(t_pending_io_args args)
+{
+    t_pending_io_args thread_args = (t_pending_io_args) args;
 
     log_info(get_logger(), "Processing pending IO for device %s", thread_args->device_name);
 
@@ -50,6 +51,5 @@ void process_pending_io(void* args) {
     free_request_link: 
         unlock_io_requests_link();
         free(thread_args->device_name);
-        free(thread_args);
         return;
-}
+    }

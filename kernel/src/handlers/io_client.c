@@ -41,23 +41,18 @@ void* handle_io_client(void* socket)
 void process_handshake(t_package* package, int socket) {
     log_info(get_logger(), "Processing HANDSHAKE from client");
     char* device_name = read_handshake(package);
+
     package_destroy(package);
 
-    t_handshake_thread_args* thread_args = malloc(sizeof(t_handshake_thread_args));
-    if(thread_args == NULL) {
-        // aca que deberiamos hacer? cerrar la conexion? es un error bastante critico que no podamos asignar memoria.
-        log_error(get_logger(), "Failed to alloc memory for thread_args on io_client handshake");
-        free(device_name);
-        return;
-    }
-
+    t_handshake_thread_args thread_args;
     thread_args->client_socket = socket;
     thread_args->device_name = device_name;
 
     pthread_t io_client_thread;
-    int err_io_client = pthread_create(&io_client_thread, NULL, handsake, thread_args);
+    int err_io_client = pthread_create(&io_client_thread, NULL, handsake, &thread_args);
     if (err_io_client != 0) 
     {
         log_error(get_logger(), "Failed to create IO client HANDSHAKE thread");
-    }    
+    }
+    pthread_detach(io_client_thread);
 }

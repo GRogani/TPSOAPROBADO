@@ -3,7 +3,7 @@
 void handsake(void* args) {
     // TODO: deberiamos enviar un handshake de retorno?
 
-    t_handshake_thread_args* thread_args = (t_handshake_thread_args*) args;
+    t_handshake_thread_args thread_args = (t_handshake_thread_args) args;
 
     lock_io_connection_list();
     lock_io_requests_link();
@@ -25,28 +25,16 @@ void handsake(void* args) {
     unlock_io_connections_list();
 
     if(request_link != NULL) {
-        thread_for_process_next_io(socket, thread_args->device_name);
+        call_process_pending_io(socket, thread_args->device_name);
     }
 
     free(thread_args->device_name);
-    free(thread_args);
 }
 
-void thread_for_process_next_io(int socket, char* device_name) {
-    t_pending_io_thread_args* thread_args = malloc(sizeof(t_pending_io_thread_args));
-    if(thread_args == NULL) {
-        log_error(get_logger(), "Could not allocate memory for thread args og process_next_io");
-        // que hacemos aca? cerramos la conexion?
-        return;
-    }
+void call_process_pending_io(int socket, char* device_name) {
+    t_pending_io_args args;
+    args->client_socket = socket;
+    args->device_name = strdup(device_name);
 
-    thread_args->client_socket = socket;
-    thread_args->device_name = strdup(device_name);
-
-    pthread_t process_pending_io_thread;
-    int err_io_client = pthread_create(&process_pending_io_thread, NULL, process_pending_io, thread_args);
-    if (err_io_client != 0) 
-    {
-        log_error(get_logger(), "Failed to create PROCESS_PENDING_IO thread");
-    }
+    process_pending_io(args);
 }

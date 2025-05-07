@@ -10,6 +10,6 @@ typedef struct t_handshake_thread_args {
 } t_handshake_thread_args;
 
 void handsake(void*);
-void thread_for_process_next_io(int, char*);
+void call_process_pending_io(int, char *);
 
 #endif
