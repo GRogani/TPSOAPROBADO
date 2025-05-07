@@ -1,6 +1,6 @@
 #include "dtos.h"
 
-char* read_handshake(t_package* package)
+char* read_io_handshake(t_package* package)
 {
     package->buffer->offset = 0;
     uint32_t bytes_read;
@@ -9,7 +9,7 @@ char* read_handshake(t_package* package)
     return result;
 }
 
-t_package* create_handshake(char* yourName)
+t_package* create_io_handshake(char* yourName)
 {
 
     uint32_t len = strlen(yourName) + 1;
@@ -19,7 +19,7 @@ t_package* create_handshake(char* yourName)
 
 }
 
-int send_handshake(int socket, char* yourName)
+int send_io_handshake(int socket, char *yourName)
 {
     t_package* pkg = create_handshake(yourName);
     int bytes_sent = send_package(socket, pkg);
