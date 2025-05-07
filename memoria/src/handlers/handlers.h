@@ -3,6 +3,7 @@
 
 #include <pthread.h>
 #include "../utils.h"
+#include "handshake.h"
 
 /// @brief Crea el hilo principal del servidor que escucha conexiones entrantes.
 /// @param listener_thread Puntero al identificador del hilo creado.

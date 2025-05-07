@@ -14,7 +14,11 @@ int create_server_thread(pthread_t* listener_thread)
 }
 
 void* client_listener(void* arg) {
-    int server_fd = create_server(memoria_config.PUERTO_ESCUCHA);
+    int server_fd;
+    do{
+        server_fd = create_server(memoria_config.PUERTO_ESCUCHA);
+    }while(server_fd < 0);
+
     log_info(get_logger(), "Memoria server listening on port: %s", memoria_config.PUERTO_ESCUCHA);
 
     while (1) {
@@ -22,11 +26,12 @@ void* client_listener(void* arg) {
         if (client_fd < 0) continue;
 
         pthread_t handler_thread;
-
         pthread_create(&handler_thread, NULL, client_handler, &client_fd);
         pthread_detach(handler_thread);
     }
 
+    pthread_exit(0);
+    close(server_fd);
     return NULL;
 }
 
@@ -38,20 +43,16 @@ void* client_handler(void* client_fd_ptr) {
     while(1)
     {
         package = recv_package(client_fd);
-        if (package == NULL) {
-            log_error(get_logger(), "Failed reciving package");
-            close(client_fd);
-            return NULL;
-        }
+        if (package == NULL) continue;
 
         switch (package->opcode) 
         {
             case HANDSHAKE:
-                log_info(get_logger(), "Handshake recived");
+                process_handshake(package);
                 break;
             default:
                 log_warning(get_logger(), "Unknown Opcode");
-                close(client_fd);
+                package_destroy(package);
                 break;
         }
     }

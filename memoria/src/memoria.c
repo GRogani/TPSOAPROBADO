@@ -2,23 +2,27 @@
 
 t_memoria_config memoria_config;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) 
+{
 
     /* ---------------- CONFIG ---------------- */
 
     t_config *config_file = init_config("memoria.config");
     memoria_config = init_memoria_config(config_file);
-
+    init_user_memory(memoria_config.TAM_MEMORIA);
 
     /* ---------------- LOGGER ---------------- */
     init_logger("memoria.log", "Memoria", memoria_config.LOG_LEVEL);
     
     /* ---------------- CONEXIONES ---------------- */
-    int socket_server = create_server(memoria_config.PUERTO_ESCUCHA);
+    pthread_t listener_thread;
+    while(create_server_thread(&listener_thread) != 0);
+    
 
-    int socket_client = accept_connection(socket_server);
 
-    shutdown_memoria(memoria_config, config_file);
+    pthread_join(listener_thread, NULL);
+    close(listener_thread);
+    shutdown_memoria(config_file);
    
     return 0;
 
