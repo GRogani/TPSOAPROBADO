@@ -84,7 +84,7 @@ uint32_t buffer_read_uint32(t_buffer *buffer){
     return data;
 }
 
-char *buffer_read_string(t_buffer *buffer, uint32_t *length){
+char *buffer_read_string(t_buffer *buffer, uint32_t *length){//TODO REVISAR
     *length = buffer_read_uint32(buffer);
     char *string = safe_malloc(*length);
     buffer_read(buffer, string, *length);

@@ -11,14 +11,26 @@ t_package* fetch(int socket, int PC) {
 }
 
 instruction_t* decode(t_package* package) {
-    //TODO no termino de entender como deserializar la instruccion
     instruction_t* instruction = malloc(sizeof(instruction_t));
     instruction->cod_instruction = buffer_read_uint32(package->buffer);
     instruction->operands = list_create();
-
-    while (package->buffer->offset < package->buffer->size) {
-        uint32_t operand = buffer_read_uint32(package->buffer);
-        list_add(instruction->operands, (void*) operand);
+    
+    switch(instruction->cod_instruction){
+        case NOOP:
+            break;
+        case WRITE:
+            instruction->operand_numeric1 = buffer_read_uint32(package->buffer);
+            instruction->operand_string_size = buffer_read_uint32(package->buffer);
+            instruction->operand_string = buffer_read_string(package->buffer, instruction->operand_string_size);
+        case READ:
+            instruction->operand_numeric1 = buffer_read_uint32(package->buffer);
+            instruction->operand_numeric2 = buffer_read_uint32(package->buffer);
+            break;
+        case GOTO:
+            instruction->operand_numeric1 = buffer_read_uint32(package->buffer);
+            break;
+        default:
+            break;
     }
 
     return instruction;
@@ -30,21 +42,21 @@ int execute(instruction_t* instruction, t_package* instruction_package, int sock
             // No operation
             break;
         case WRITE:
-             uint32_t direccion_logica_write = (uint32_t) list_get(instruction->operands, 0);
-             char* valor_write = (char*)list_get(instruction->operands, 1);
-             void* direccion_fisica_write = MMU(direccion_logica_write);
-            write_memory_request(socket_memory, (uint32_t) direccion_fisica_write, valor_write);
+             uint32_t logic_dir_write = instruction->operand_numeric1;
+             char* valor_write = instruction->operand_string;
+             void* physic_dir_write = MMU(logic_dir_write);
+            write_memory_request(socket_memory, (uint32_t) physic_dir_write, valor_write);
             break;
         case READ:
-            uint32_t direccion_logica_read = (uint32_t) list_get(instruction->operands, 0);
-            uint32_t size = (uint32_t) list_get(instruction->operands, 1);
-            void* direccion_fisica_read = MMU(direccion_logica_read);
-            read_memory_request(socket_memory, direccion_fisica_read, size);
+            uint32_t logic_dir_read = instruction->operand_numeric1;
+            uint32_t size = instruction->operand_numeric2;
+            void* physic_dir_read = MMU(logic_dir_read);
+            read_memory_request(socket_memory, physic_dir_read, size);
             char* data = read_memory_response(socket_memory);
             log_info(get_logger(), "Data read from memory: %s", data);
             break;
         case GOTO:
-            *pc = list_get(instruction->operands, 0);
+            *pc = instruction->operand_numeric1;
             return 0;
             break;
         case IO:
@@ -95,7 +107,21 @@ int check_interrupt(int socket_interrupt, int pid_on_execute, int pc_on_execute)
 
 }
 
-void* MMU(uint32_t direccion_logica) {
-    //TODO Simulate MMU logic
-    return (void*) direccion_logica;
+int MMU(uint32_t logic_dir) {
+    t_config* config_memoria = init_config("../memoria/memoria.config");
+    int levels = config_get_int_value(config_memoria, "CANTIDAD_NIVELES");
+    int entrys_by_table = config_get_int_value(config_memoria, "ENTRADAS_POR_TABLA");
+    int size_pag = config_get_int_value(config_memoria, "TAM_PAGINA");
+
+    int num_page = logic_dir / size_pag;
+    int offset = logic_dir % size_pag;
+    int physic_dir = 0;
+    
+    for(int actual_level = 1; actual_level <= levels; actual_level++) {
+        int divisor = pow(entrys_by_table, levels - actual_level);
+        int entry = (num_page / divisor) % entrys_by_table;
+        physic_dir = physic_dir * entrys_by_table + entry;
+    }
+    
+    return physic_dir * size_pag + offset;
 }

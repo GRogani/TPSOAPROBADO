@@ -19,7 +19,10 @@ EXIT
 
 typedef struct{
     cod_instruction cod_instruction;
-    t_list* operands;
+    uint32_t operand_numeric1;
+    uint32_t operand_numeric2;
+    uint32_t operand_string_size;
+    char* operand_string1;
 } instruction_t;
 
 void request_instruction(int socket_memory, int PC);

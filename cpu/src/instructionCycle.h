@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <utils/logger/logger.h>
 #include "cpuProtocol.h"
+#include <commons/config.h>
+#include <math.h>
 
 t_package* fetch(int socket, int PC);
 instruction_t* decode(t_package* package);
