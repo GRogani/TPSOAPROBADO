@@ -22,10 +22,8 @@ void* client_listener(void* arg) {
         if (client_fd < 0) continue;
 
         pthread_t handler_thread;
-        int* client_fd_ptr = safe_malloc(sizeof(int));
-        *client_fd_ptr = client_fd;
 
-        pthread_create(&handler_thread, NULL, client_handler, client_fd_ptr);
+        pthread_create(&handler_thread, NULL, client_handler, &client_fd);
         pthread_detach(handler_thread);
     }
 
