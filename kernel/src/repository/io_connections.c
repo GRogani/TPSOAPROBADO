@@ -13,47 +13,73 @@ bool destroy_repository_io_connections() {
     sem_destroy(&sem_io_connections);
 }
 
-void lock_io_connection_list() {
+void lock_io_connections() {
     sem_wait(&sem_io_connections);
 }
 
-void* find_and_lock_io_connection_list_by_socket(int socket) {
+void* find_io_connection_by_socket(int socket) {
     sem_wait(&sem_io_connections);
+
+    char *stringified_socket = string_itoa(socket);
     
-    bool socket_matches(void* ptr) {
-	    t_io_connection* connection = (t_io_connection*) ptr;
-	    return connection->socket_id == socket;
-	};
+    t_io_connection* element = (get_io_connections_dict(), stringified_socket);
+    if(element == NULL) {
+        free(stringified_socket);
+        return NULL;
+    }
 
-    void* el_found = list_find(get_io_connections_list(), socket_matches);
-
-    return el_found;
+    free(stringified_socket);
+    return element;
 }
 
-t_list* find_and_lock_io_connections_list_by_device_name(char* device_name) {
-    sem_wait(&sem_io_connections);
+t_list* find_io_connection_by_device_name(char* device_name) {
+    t_list* connections_list = dictionary_elements(get_io_connections_dict());
 
-    t_list* connections_found_list = list_create();
+    bool filter_by_device_name(void* ptr) {
+        t_io_connection* connection = (t_io_connection*) ptr;
+        return strcmp(connection->device_name, device_name) == 0;
+    }
 
-    void build_list(void* ptr) {
-	    t_io_connection* connection = (t_io_connection*) ptr;
-
-        if(strcmp(connection->device_name, device_name) == 0) {
-	        list_add(connections_found_list, connection->socket_id);
-        }
-	}
-
-	list_iterate(get_io_connections_list(), build_list);
+    t_list* connections_found_list = list_filter(connections_list, filter_by_device_name);
+    list_destroy(connections_list); // Destroy the intermediate list to avoid memory leaks
     
     return connections_found_list;
 }
 
-void create_io_connection(int socket, char* device_name) {
-    t_io_connection* connection = malloc(sizeof(t_io_connection));
-    connection->socket_id = socket;
-    connection->device_name = device_name;
+void* find_free_connection_from_device_name(char *device_name)
+{
+    t_list *connections_list = dictionary_elements(get_io_connections_dict());
 
-    list_add(get_io_connections_list(), connection);
+    bool find_free_connection(void* ptr) {
+        t_io_connection* connection = (t_io_connection*) ptr;
+        return strcmp(connection->device_name, device_name) == 0 && connection->current_process_executing == -1;
+    }
+
+    void* connection_found = list_find(connections_list, find_free_connection);
+    list_destroy(connections_list);
+
+    return connection_found;
+}
+
+void create_io_connection(int socket, char* device_name) {
+    t_io_connection* connection = safe_malloc(sizeof(t_io_connection));
+
+    connection->device_name = device_name;
+    connection->current_process_executing = -1;
+
+    char* stringified_socket = string_itoa(socket);
+
+    dictionary_put(get_io_connections_dict(), stringified_socket, connection);
+}
+
+void update_io_connection_current_processing(int socket, int process_id) {
+    char* stringified_socket = string_itoa(socket);
+    t_io_connection* connection = dictionary_get(get_io_connections_dict(), stringified_socket);
+    free(stringified_socket);
+
+    if (connection != NULL) {
+        connection->current_process_executing = process_id;
+    }
 }
 
 void connection_destroyer(void* ptr) {
@@ -63,15 +89,15 @@ void connection_destroyer(void* ptr) {
 }
 
 void delete_io_connection(int socket) {
+    char* stringified_socket = string_itoa(socket);
+    t_io_connection* connection = dictionary_remove(get_io_connections_dict(), stringified_socket);
+    free(stringified_socket);
 
-    bool socket_matches(void* ptr) {
-        t_io_connection* connection = (t_io_connection*) ptr;
-	    return connection->socket_id == socket;
+    if (connection != NULL) {
+        connection_destroyer(connection);
     }
-
-    list_remove_and_destroy_by_condition(get_io_connections_list(), socket_matches, connection_destroyer);
 }
 
-void unlock_io_connections_list() {
+void unlock_io_connections() {
     sem_post(&sem_io_connections);
 }

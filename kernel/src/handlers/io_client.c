@@ -25,13 +25,13 @@ void* handle_io_client(void* socket)
                 }
             }
         } else {
-            lock_io_connection_list();
+            lock_io_connections();
             lock_io_requests_link();
 
             // TODO: handle closed connection
             close(*client_socket);
 
-            unlock_io_connections_list();
+            unlock_io_connections();
             unlock_io_requests_link();
             break;
         }
@@ -40,16 +40,16 @@ void* handle_io_client(void* socket)
 
 void process_handshake(t_package* package, int socket) {
     log_info(get_logger(), "Processing HANDSHAKE from client");
-    char* device_name = read_handshake(package);
+    char* device_name = read_io_handshake(package);
 
     package_destroy(package);
 
-    t_handshake_thread_args thread_args;
+    t_handshake_thread_args* thread_args = safe_malloc(sizeof(t_handshake_thread_args));
     thread_args->client_socket = socket;
     thread_args->device_name = device_name;
 
     pthread_t io_client_thread;
-    int err_io_client = pthread_create(&io_client_thread, NULL, handsake, &thread_args);
+    int err_io_client = pthread_create(&io_client_thread, NULL, handsake, thread_args);
     if (err_io_client != 0) 
     {
         log_error(get_logger(), "Failed to create IO client HANDSHAKE thread");

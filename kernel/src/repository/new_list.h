@@ -1,7 +1,7 @@
 #ifndef KERNEL_NEW_LIST_REPOSITORY_H
 #define KERNEL_NEW_LIST_REPOSITORY_H
 
-#include "lists/lists.h"
+#include "collections/collections.h"
 #include <stdio.h>
 #include <pthread.h>
 #include <semaphore.h>

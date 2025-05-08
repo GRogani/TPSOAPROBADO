@@ -1,7 +1,7 @@
 #ifndef IO_CLIENT_HANDSHAKE_H
 #define IO_CLIENT_HANDSHAKE_H
 
-#include <lists/lists.h>
+#include <collections/collections.h>
 #include "process_pending_io.h"
 
 typedef struct t_handshake_thread_args {

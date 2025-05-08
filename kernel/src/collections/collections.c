@@ -1,7 +1,8 @@
-#include "lists.h"
+#include "collections.h"
 
-static t_list *io_connections_list;
-static t_list *io_requests_link_list;
+static t_dictionary *io_connections_dict;
+static t_dictionary *io_requests_link_dict;
+
 static t_list *cpu_connections_list;
 static t_list *new_list;
 static t_list *ready_list;
@@ -21,21 +22,21 @@ t_list *get_new_list()
     return new_list;
 }
 
-t_list *get_io_connections_list()
+t_dictionary *get_io_connections_dict()
 {
-    return io_connections_list;
+    return io_connections_dict;
 }
 
-t_list *get_io_requests_link_list()
+t_dictionary *get_io_requests_link_dict()
 {
-    return io_requests_link_list;
+    return io_requests_link_dict;
 }
 
 void initialize_global_lists()
 {
 
     initialize_repository_io_connections();
-    io_connections_list = list_create();
+    io_connections_dict = dictionary_create();
 
     cpu_connections_list = list_create();
 
@@ -50,11 +51,11 @@ void initialize_global_lists()
     exit_list = list_create();
 
     initialize_repository_io_requests_link();
-    io_requests_link_list = list_create();
+    io_requests_link_dict = dictionary_create();
 
     if (
-        io_connections_list == NULL ||
-        io_requests_link_list == NULL ||
+        io_connections_dict == NULL ||
+        io_requests_link_dict == NULL ||
         cpu_connections_list == NULL ||
         new_list == NULL ||
         ready_list == NULL ||
@@ -71,9 +72,9 @@ void initialize_global_lists()
 
 void destroy_global_lists()
 {
-    list_destroy_and_destroy_elements(io_connections_list, io_connections_destroyer);
+    dictionary_destroy_and_destroy_elements(io_connections_dict, io_connections_destroyer);
     list_destroy_and_destroy_elements(cpu_connections_list, cpu_connections_destroyer);
-    list_destroy_and_destroy_elements(io_requests_link_list, io_requests_destroyer);
+    dictionary_destroy_and_destroy_elements(io_requests_link_dict, io_requests_destroyer);
 }
 
 void destroy_global_repositories()
@@ -86,11 +87,10 @@ void destroy_global_repositories()
 void io_connections_destroyer(void *ptr)
 {
     t_io_connection *connection = (t_io_connection *)ptr;
-    free(connection->device_name);
     free(connection);
 }
 
-void io_requests_list_destroyer(void *ptr)
+void io_requests_queue_destroyer(void *ptr)
 {
     t_io_request *request_el = (t_io_request *)ptr;
     free(request_el);
@@ -100,12 +100,11 @@ void io_requests_destroyer(void *ptr)
 {
     t_io_requests_link *io_request = (t_io_requests_link *)ptr;
 
-    destroy_repository_io_requests_list(
-        &io_request->io_requests_list_semaphore);
+    destroy_repository_io_requests_queue(
+        &io_request->io_requests_queue_semaphore);
 
-    list_destroy_and_destroy_elements(io_request->requests_list, io_requests_list_destroyer);
+    queue_destroy_and_destroy_elements(io_request->io_requests_queue, io_requests_queue_destroyer);
 
-    free(io_request->device_name);
     free(io_request);
 }
 
