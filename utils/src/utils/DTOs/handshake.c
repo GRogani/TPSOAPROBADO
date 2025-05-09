@@ -37,7 +37,7 @@ t_IO* read_IO_operation_request(t_package* package) {
 }
 
 int send_IO_operation_request(int socket, uint32_t pid, uint32_t time) {
-    t_package* package = safe_malloc(sizeof(t_package));
+    t_package* package ;
     package = create_IO_operation_request(pid, time);
     int bytes_sent = send_package(socket, package);
     package_destroy(package);

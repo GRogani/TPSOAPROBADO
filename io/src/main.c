@@ -40,7 +40,7 @@ void waiting_requests(int kernel_socket, char* id_IO){
             log_error(get_logger(), "Failed to create detachable thread for PROCESSING I/O OPERATION.");
             exit(EXIT_FAILURE);
         }
-        LOG_DEBUG("Se procesó la operación de I/O Correctamente.");
+       log_info(get_logger(), "Se procesó la operación de I/O Correctamente.");
         pthread_join(t, NULL);
 
         send_IO_operation_completed(kernel_socket, id_IO);

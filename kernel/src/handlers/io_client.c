@@ -12,7 +12,7 @@ void* handle_io_client(void* socket)
             {
                 char* id_IO = read_handshake(package);
                 log_info(get_logger(), "IO [%s] conected.", id_IO);
-                LOG_DEBUG("Handshake recibido");
+               log_info(get_logger(), "Handshake recibido");
                 package_destroy(package);
                 break;
             }
