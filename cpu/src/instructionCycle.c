@@ -3,7 +3,7 @@
 t_package* fetch(int socket, int PC) {
     request_instruction(socket, PC);
     t_package* instruction_package = receive_instruction(socket);
-    if (instruction == NULL) {
+    if (instruction_package == NULL) {
        log_error(get_logger(), "Failed to fetch instruction");
         return NULL;
     }
@@ -11,9 +11,8 @@ t_package* fetch(int socket, int PC) {
 }
 
 instruction_t* decode(t_package* package) {
-    instruction_t* instruction = malloc(sizeof(instruction_t));
+    instruction_t* instruction = safe_malloc(sizeof(instruction_t));
     instruction->cod_instruction = buffer_read_uint32(package->buffer);
-    instruction->operands = list_create();
     
     switch(instruction->cod_instruction){
         case NOOP:

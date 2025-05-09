@@ -1,47 +1,19 @@
 #include "cpuProtocol.h"
 
-int receive_PID(int socket_dispatch_kernel) {
-    t_package* package = recv_package(socket);
-    if (package == NULL) {
-        log_error(get_logger() ,"Failed to receive package");
-        return NULL;
-    }
-
-    if (package->opcode != CPU_PID) {
-       log_error(get_logger() ,"Received package with unexpected opcode: %d", package->opcode);
-        package_destroy(package);
-        return NULL;
-    }
-
-    uint32_t pid;
-    package->buffer->offset = 0;
-    pid = buffer_read_uint32(package->buffer);
-
-
-    package_destroy(package);
-    return pid;
-}
-
-int receive_PC(int socket_dispatch_kernel) {
-    t_package* package = recv_package(socket);
+t_package* receive_PID_PC_Package(int socket_dispatch_kernel) {
+    t_package* package = recv_package(socket_dispatch_kernel);
     if (package == NULL) {
        log_error(get_logger(), "Failed to receive package");
         return NULL;
     }
 
-    if (package->opcode != CPU_PC) {
+    if (package->opcode != PID_PC_PACKAGE) {
        log_error(get_logger(), "Received package with unexpected opcode: %d", package->opcode);
         package_destroy(package);
         return NULL;
     }
 
-    uint32_t pc;
-    package->buffer->offset = 0;
-    pc = buffer_read_uint32(package->buffer);
-
-
-    package_destroy(package);
-    return pc;
+    return package;
 }
 
 void request_instruction(int socket, int PC) {
@@ -71,7 +43,7 @@ t_package* receive_instruction(int socket) {
 void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* valor_write) {
     t_buffer* buffer = buffer_create(sizeof(uint32_t) + strlen(valor_write) + 1);
     buffer_add_uint32(buffer, direccion_fisica);
-    buffer_add_string(buffer, valor_write);
+    buffer_add_string(buffer, strlen(valor_write), valor_write);
     t_package* package = package_create(CPU_WRITE_MEMORY_REQUEST, buffer);
     send_package(socket_memory, package);
     package_destroy(package);
@@ -99,7 +71,7 @@ char* read_memory_response(int socket_memory) {
         return NULL;
     }
 
-    char* data = buffer_read_string(package->buffer, package->buffer->size);
+    char* data = buffer_read_string(package->buffer, package->buffer->stream_size);
 
     package_destroy(package);
     return data;

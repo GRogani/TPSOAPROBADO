@@ -22,13 +22,12 @@ typedef struct{
     uint32_t operand_numeric1;
     uint32_t operand_numeric2;
     uint32_t operand_string_size;
-    char* operand_string1;
+    char* operand_string;
 } instruction_t;
 
 void request_instruction(int socket_memory, int PC);
-int receive_PID(int socket_dispatch_kernel);
-int receive_PC(int socket_dispatch_kernel);
-instruction_t* receive_instruction(int socket_memory);
+t_package* receive_PID_PC_Package(int socket_dispatch_kernel);
+t_package* receive_instruction(int socket_memory);
 void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* valor_write);
 void read_memory_request(int socket_memory, uint32_t direccion_fisica, uint32_t size);
 char* read_memory_response(int socket_memory);
