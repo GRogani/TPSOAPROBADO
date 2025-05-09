@@ -4,7 +4,7 @@
 #include "utils/logger/logger.h"
 #include "utils/serialization/package.h"
 #include "utils/serialization/buffer.h"
-#include "../../io/src/data_request.h"
+#include "../../io/src/data_request.h" // TODO: ver cómo manejar estos includes que ensucian
 
 t_package* create_handshake(char* yourName);
 
