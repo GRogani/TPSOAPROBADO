@@ -1,4 +1,5 @@
 #include "main.h"
+#include "data_request.h"
 
 int main(int argc, char* argv[]) {
 
@@ -27,32 +28,30 @@ int main(int argc, char* argv[]) {
 
 void waiting_requests(int kernel_socket, char* id_IO){
     while(1){
-        t_package* package; //= safe_malloc(sizeof(t_package));
-        package = recv_package(kernel_socket);
-        t_IO* io = safe_malloc(sizeof(t_IO));
-        // TODO: en el struct no estoy pasando el ID del IO
-        io = read_IO_operation_request(package);
+        t_package* package = recv_package(kernel_socket);
+        t_request_IO* request = read_IO_operation_request(package);
 
         // TODO: cómo manejo el caso de de que llegue un msj en un sleep???
         pthread_t t;
-        int err = pthread_create(&t, NULL, processing_operation, io);
+        int err = pthread_create(&t, NULL, processing_operation, request);
         if(err) {
             log_error(get_logger(), "Failed to create detachable thread for PROCESSING I/O OPERATION.");
             exit(EXIT_FAILURE);
         }
-       log_info(get_logger(), "Se procesó la operación de I/O Correctamente.");
+        log_info(get_logger(), "Se procesó la operación de I/O Correctamente.");
         pthread_join(t, NULL);
 
         send_IO_operation_completed(kernel_socket, id_IO);
         package_destroy(package);
+        request_destroy(request);
     }
 }
 
 void* processing_operation(void* io) {
     // uint32_t* vec = (uint32_t*) args;
-    log_info(get_logger(), "## PID: %d - Inicio de IO - Tiempo: %d", ((t_IO*) io)->pid, ((t_IO*) io)->time);
-    usleep(((t_IO*) io)->time);
-    log_info(get_logger(), "## PID: %d - Fin de IO", ((t_IO*) io)->pid);
+    log_info(get_logger(), "## PID: %d - Inicio de IO - Tiempo: %d", ((t_request_IO*) io)->pid, ((t_request_IO*) io)->sleep_time);
+    usleep(((t_request_IO*) io)->sleep_time);
+    log_info(get_logger(), "## PID: %d - Fin de IO", ((t_request_IO*) io)->pid);
     pthread_exit(0);
     return NULL;
 }
