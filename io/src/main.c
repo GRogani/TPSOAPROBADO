@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
 
 void waiting_requests(int kernel_socket, char* id_IO){
     while(1){
-        t_package* package = safe_malloc(sizeof(t_package));
+        t_package* package; //= safe_malloc(sizeof(t_package));
         package = recv_package(kernel_socket);
         t_IO* io = safe_malloc(sizeof(t_IO));
         // TODO: en el struct no estoy pasando el ID del IO
