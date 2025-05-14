@@ -10,4 +10,16 @@
 #include "../../utils/src/utils/socket/client.h"
 #include "../../utils/src/utils/shutdown.h"
 
+#define MEMORIA_DISPONIBLE 1024
+
+t_log* logger;
+
+// INICIO BORRAR CUANDO SE CONFIGUREN LOS OPCODES
+typedef uint32_t OPCODE;
+enum {
+    HANDSHAKE = 0,
+    OBTENER_ESPACIO_LIBRE  = 3
+};
+// FIN BORRAR
 #endif
+
