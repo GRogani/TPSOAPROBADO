@@ -76,3 +76,39 @@ char* read_memory_response(int socket_memory) {
     package_destroy(package);
     return data;
 }
+
+t_package* recv_interrupt_package(int socket_interrupt) {
+OPCODE opcode;
+    uint32_t buffer_stream_size;
+
+    // recibir opcode
+    // aca ya se puede validar si vale la pena seguir solo con el opcode
+    if (recv(socket, &opcode, sizeof(OPCODE), MSG_DONTWAIT) <= 0) { 
+        return NULL; 
+    }
+
+    // recibir el buffer size
+    // quiza es muy grande se puede validar eso
+    if (recv(socket, &buffer_stream_size, sizeof(uint32_t), MSG_DONTWAIT) <= 0) {
+        return NULL; 
+    }
+
+    // hago espacio para buffer serializado
+    void* buffer_stream_data = safe_malloc(buffer_stream_size);
+
+    // guardo el buffer stream de data serializado / caso error libero memoria
+    if (recv(socket, buffer_stream_data, buffer_stream_size, MSG_DONTWAIT) <= 0) {
+        free(buffer_stream_data); 
+        return NULL;
+    }
+
+    t_buffer* buffer = buffer_create(buffer_stream_size); // Crea un buffer con el tamaño recibido
+    buffer_add(buffer, buffer_stream_data, buffer_stream_size); // Agrega los datos serializados al buffer
+
+    t_package* package = package_create(opcode, buffer);
+
+    free(buffer_stream_data); // liberar memoria de los datos serializados
+
+    return package;
+
+}

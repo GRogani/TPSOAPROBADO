@@ -79,7 +79,7 @@ int execute(instruction_t* instruction, t_package* instruction_package, int sock
 }
 
 int check_interrupt(int socket_interrupt, int pid_on_execute, int pc_on_execute) {
-    t_package* package = recv_package(socket_interrupt);
+    t_package* package = recv_interrupt_package(socket_interrupt);
     if(package->opcode == CPU_INTERRUPT_REQUEST) {
         log_info(get_logger(), "Received interrupt from kernel");
         int pid_received = buffer_read_uint32(package->buffer);

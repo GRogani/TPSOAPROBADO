@@ -31,4 +31,5 @@ t_package* receive_instruction(int socket_memory);
 void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* valor_write);
 void read_memory_request(int socket_memory, uint32_t direccion_fisica, uint32_t size);
 char* read_memory_response(int socket_memory);
+t_package* recv_interrupt_package(int socket_interrupt);
 #endif
