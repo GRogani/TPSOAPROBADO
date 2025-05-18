@@ -29,7 +29,7 @@ void handsake(void* thread_args)
         call_process_pending_io(args->client_socket, args->device_name);
     }
 
-    free(args->device_name);
+    // el device_name se utiliza para la connection. se libera cuando la connection se elimina.
     free(args);
 }
 

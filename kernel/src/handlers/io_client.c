@@ -26,13 +26,21 @@ void* handle_io_client(void* socket)
             }
         } else {
             lock_io_connections();
-            lock_io_requests_link();
+            
+            t_io_connection *io_connection = (t_io_connection *)find_io_connection_by_socket(*client_socket);
+            if(io_connection == NULL) {
+                log_error(get_logger(), "Failed to find IO connection by socket");
+                close(*client_socket);
+                pthread_exit(0);
+                return;
+            }
+            
+            log_error(get_logger(), "Client disconnected %s", io_connection->device_name);
 
             // TODO: handle closed connection
             close(*client_socket);
 
             unlock_io_connections();
-            unlock_io_requests_link();
             break;
         }
     }

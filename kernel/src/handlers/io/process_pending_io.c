@@ -32,6 +32,7 @@ void process_pending_io(t_pending_io_args args)
     }
     t_io_request *io_request = (t_io_request *)request;
 
+    // mandamos la solicitud al modulo IO
     int err = send_io_request(args.client_socket, io_request->pid, io_request->sleep_time);
     if (err == -1)
     {

@@ -18,15 +18,9 @@ void lock_io_connections() {
 }
 
 void* find_io_connection_by_socket(int socket) {
-    sem_wait(&sem_io_connections);
-
     char *stringified_socket = string_itoa(socket);
     
-    t_io_connection* element = (get_io_connections_dict(), stringified_socket);
-    if(element == NULL) {
-        free(stringified_socket);
-        return NULL;
-    }
+    t_io_connection* element = dictionary_get(get_io_connections_dict(), stringified_socket);
 
     free(stringified_socket);
     return element;
@@ -64,7 +58,7 @@ void* find_free_connection_from_device_name(char *device_name)
 void create_io_connection(int socket, char* device_name) {
     t_io_connection* connection = safe_malloc(sizeof(t_io_connection));
 
-    connection->device_name = device_name;
+    connection->device_name = device_name; // utilizamos el mismo puntero que el dto, asi que no lo liberamos.
     connection->current_process_executing = -1;
 
     char* stringified_socket = string_itoa(socket);
