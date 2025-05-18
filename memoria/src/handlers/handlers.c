@@ -30,7 +30,6 @@ void* client_listener(void* arg) {
         pthread_detach(handler_thread);
     }
 
-    pthread_exit(0);
     close(server_fd);
     return NULL;
 }
@@ -43,17 +42,25 @@ void* client_handler(void* client_fd_ptr) {
     while(1)
     {
         package = recv_package(client_fd);
-        if (package == NULL) continue;
 
-        switch (package->opcode) 
+        if(package != NULL)
         {
-            case HANDSHAKE:
-                process_handshake(package);
-                break;
-            default:
-                log_warning(get_logger(), "Unknown Opcode");
-                package_destroy(package);
-                break;
+            switch (package->opcode) 
+            {
+                case HANDSHAKE:
+                    process_handshake(package);
+                    break;
+                default:
+                    log_warning(get_logger(), "Unknown Opcode");
+                    package_destroy(package);
+                    break;
+            }
+        }
+        else
+        {
+            log_debug(get_logger(), "Client disconnected: %d", client_fd);
+            close(client_fd);
+            continue;
         }
     }
     return NULL;

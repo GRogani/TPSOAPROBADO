@@ -5,8 +5,8 @@ int main()
 
     int connection_fd = create_connection("30002", "127.0.0.1");
 
-
     send_handshake(connection_fd, "Ricardo Fort");
+    while(1){};
     close(connection_fd);
 
     return 0;
