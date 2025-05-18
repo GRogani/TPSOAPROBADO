@@ -21,6 +21,7 @@ void* io_server_handler(void* args) {
             log_error(get_logger(), "Failed to create detachable thread for I/O server");
             exit(EXIT_FAILURE);
         }
+        pthread_detach(t);
     }
     
     return 0;

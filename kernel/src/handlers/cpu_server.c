@@ -9,14 +9,11 @@ void* cpu_server_handler(void* args) {
     int socket_server_interrupt = create_server(kernel_config.cpu_interrupt_port);
     log_info(get_logger(), "CPU interrupt server available on port %s", kernel_config.cpu_interrupt_port);
 
-    while (1) {
+    while (1) {// TODO: pensar como dejar de aceptar conexiones si ya se apretó el enter.
         int socket_dispatch_connection = accept_connection(socket_server_dispatch);
         if(socket_dispatch_connection == -1) {
             log_error(get_logger(), "Error accepting dispatch connection");
-            
-        }
-        else{
-
+            break;
         }
 
         int socket_interrupt_connection = accept_connection(socket_server_interrupt);
@@ -30,33 +27,11 @@ void* cpu_server_handler(void* args) {
 
         log_info(get_logger(), "CPU connected successfully. Adding connection to list of connected CPUs");
         
-        int err = add_cpu_connection(socket_dispatch_connection, socket_interrupt_connection);
-        if(err) {
-            log_error(get_logger(), "Error adding connections to list");
-            break;
-        }
-
-        log_info(get_logger(), "CPU connection added to the list!");
-        log_info(get_logger(), "Creating thread to handle connection of the CPU with client dispatch: %d. interrupt: %d", socket_dispatch_connection, socket_interrupt_connection);
+        // TODO: crear 2 threads para manejar las conexiones para interrupt y dispatch
+        // wait(connection_handshake); -> inicializar el semaforo en -1 cada vez que se espera una conexion de la cpu, de esa forma, se libera cuando se emite 2 veces
+        // todo: agregar la cpu a la lista de conexiones
         
     }
     
     return 0;
-}
-
-int add_cpu_connection(int socket_dispatch, int socket_interrupt) {
-    t_cpu_connection *cpu_connection = malloc(sizeof(t_cpu_connection));
-
-    if(cpu_connection == NULL) {
-        close(socket_dispatch);
-        close(socket_interrupt);
-        return 0;
-    }
-
-    cpu_connection->dispatch_socket_id = socket_dispatch;
-    cpu_connection->interrupt_socket_id = socket_interrupt;
-
-    list_add(get_cpu_connections_list(), cpu_connection);
-
-    return 1;
 }

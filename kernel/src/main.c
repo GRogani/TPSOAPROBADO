@@ -17,6 +17,8 @@ int main(int argc, char* argv[]) {
    
     create_servers_threads(&io_server_hanlder, &cpu_server_hanlder);
 
+    // TODO: el cpu se crea y una vez que se aprieta enter, se cierra la escucha.
+
     pthread_join(io_server_hanlder, NULL);
     pthread_join(cpu_server_hanlder, NULL);
 
