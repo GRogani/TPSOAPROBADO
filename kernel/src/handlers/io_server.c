@@ -22,7 +22,10 @@ void* io_server_handler(void* args) {
             exit(EXIT_FAILURE);
         }
         // TODO: Caso de Prueba - la función creo que debería mandar un struct + localizarlo donde corresponde
-        send_IO_operation_request(socket_client, 2, 10);
+        // para ver si funciona bien el mutex del modulo de IO agrego otro send
+        send_IO_operation_request(socket_client, 2, 5 * 1000000); // para que no me gane a la siguiente operación
+        send_IO_operation_request(socket_client, 2, 100);
+        // pthread_detach(t);
         //TODO: este join está bien? no tiene que seguir aceptando conexiones independientemente del handler?
         pthread_join(t, NULL);
     }

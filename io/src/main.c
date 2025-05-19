@@ -30,9 +30,10 @@ void waiting_requests(int kernel_socket, char* id_IO){
     while(1){
         t_package* package = recv_package(kernel_socket);
         t_request_IO* request = read_IO_operation_request(package);
-
         if (io_busy) {
             LOG_DEBUG("OJO, estoy ocupado procesando una operación de I/O.");
+            package_destroy(package);
+            request_destroy(request);
             continue;
         } else {
             pthread_mutex_lock(&busy_mutex);
