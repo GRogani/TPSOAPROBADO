@@ -21,6 +21,7 @@ void* handle_io_client(void* socket)
                 char* id_IO = read_IO_operation_completed(package);
                 log_info(get_logger(), "IO [%s] operation completed.", id_IO);
                 package_destroy(package);
+                free(id_IO);
                 break;
             }
             default:
