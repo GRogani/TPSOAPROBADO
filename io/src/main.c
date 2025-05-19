@@ -31,27 +31,39 @@ void waiting_requests(int kernel_socket, char* id_IO){
         t_package* package = recv_package(kernel_socket);
         t_request_IO* request = read_IO_operation_request(package);
 
-        // TODO: cómo manejo el caso de de que llegue un msj en un sleep???
+        if (io_busy) {
+            LOG_DEBUG("OJO, estoy ocupado procesando una operación de I/O.");
+            continue;
+        } else {
+            pthread_mutex_lock(&busy_mutex);
+            io_busy = true;
+            pthread_mutex_unlock(&busy_mutex);
+        }
+        request->kernel_socket = kernel_socket;
+        request->device_name = id_IO;
         pthread_t t;
         int err = pthread_create(&t, NULL, processing_operation, request);
         if(err) {
             log_error(get_logger(), "Failed to create detachable thread for PROCESSING I/O OPERATION.");
             exit(EXIT_FAILURE);
         }
-        log_info(get_logger(), "Se procesó la operación de I/O Correctamente.");
-        pthread_join(t, NULL);
-
-        send_IO_operation_completed(kernel_socket, id_IO);
+        pthread_detach(t);
         package_destroy(package);
-        request_destroy(request);
     }
 }
 
 void* processing_operation(void* io) {
-    // uint32_t* vec = (uint32_t*) args;
     log_info(get_logger(), "## PID: %d - Inicio de IO - Tiempo: %d", ((t_request_IO*) io)->pid, ((t_request_IO*) io)->sleep_time);
     usleep(((t_request_IO*) io)->sleep_time);
     log_info(get_logger(), "## PID: %d - Fin de IO", ((t_request_IO*) io)->pid);
-    pthread_exit(0);
+    LOG_DEBUG("Estoy libre [%s]", ((t_request_IO*) io)->device_name);
+    // RESPONSE
+    send_IO_operation_completed(((t_request_IO*) io)->kernel_socket, ((t_request_IO*) io)->device_name);
+    
+    pthread_mutex_lock(&busy_mutex);
+    io_busy = false;
+    pthread_mutex_unlock(&busy_mutex);
+
+    request_destroy(((t_request_IO*) io));
     return NULL;
 }
