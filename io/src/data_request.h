@@ -1,8 +1,8 @@
 #ifndef DATA_REQUEST_H
 #define DATA_REQUEST_H
 
-#include <stdint.h>
 #include <stdlib.h>
+#include "utils/logger/logger.h"
 
 /**
  * @struct t_request_IO
