@@ -48,7 +48,10 @@ void process_pending_io(t_pending_io_args args)
         goto free_all;
     }
 
-    free(element);
+    // actualizamos el current_processing de la conexion (luego sirve por si se desconecta, para saber que proceso estaba ejecutando y pasarlo a EXIT)
+    (t_io_connection * connection_found)->current_process_executing = io_request->pid;
+
+        free(element);
     goto free_all;
 
     free_all:

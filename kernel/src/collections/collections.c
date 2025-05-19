@@ -38,6 +38,7 @@ void initialize_global_lists()
     initialize_repository_io_connections();
     io_connections_dict = dictionary_create();
 
+    initialize_repository_cpu_connections(); //TODO: es necesario que esta lista tenga semaforos? se crean elementos en un solo hilo y nunca mas se modifica. Podria ser un diccionario también.
     cpu_connections_list = list_create();
 
     initialize_repository_new();

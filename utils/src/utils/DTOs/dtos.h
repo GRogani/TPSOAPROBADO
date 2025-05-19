@@ -22,5 +22,8 @@ t_package* create_io_request(uint32_t pid, uint32_t sleep_time);
 */
 int send_io_request(int socket, uint32_t pid, uint32_t sleep_time);
 
+int read_io_completion(t_package*);
+t_package *create_io_completion(int);
+int send_io_completion(int, int);
 
 #endif

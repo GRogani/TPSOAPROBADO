@@ -7,10 +7,11 @@
  * @note - `HANDSHAKE`
  */
 typedef uint32_t OPCODE;
-enum {
+enum
+{
     HANDSHAKE = 0,
     REQUEST_IO = 1,
+    IO_COMPLETION = 2,
 };
-
 
 #endif

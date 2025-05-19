@@ -9,12 +9,16 @@
 #include "repository/io_connections.h"
 #include "repository/io_requests_link.h"
 #include "repository/io_requests_queue.h"
+#include "repository/cpu_connections.h"
 
 typedef struct t_cpu_connection
 {
     int interrupt_socket_id;
     int dispatch_socket_id;
     int id;
+    int current_process_executing;
+    sem_t cpu_exec_sem;
+    t_list* exec_list; // esta lista como es por CPU, no es necesario que sea compartida o "general".
 } t_cpu_connection;
 
 typedef struct t_io_connection
