@@ -77,12 +77,12 @@ void process_io_completion(t_package *package, int socket)
 
     package_destroy(package);
 
-    t_handshake_thread_args *thread_args = safe_malloc(sizeof(t_handshake_thread_args));
+    t_completion_thread_args *thread_args = safe_malloc(sizeof(t_completion_thread_args));
     thread_args->client_socket = socket;
     thread_args->pid = pid;
 
     pthread_t io_client_thread;
-    int err_io_client = pthread_create(&io_client_thread, NULL, handsake, thread_args);
+    int err_io_client = pthread_create(&io_client_thread, NULL, io_completion, thread_args);
     if (err_io_client != 0)
     {
         log_error(get_logger(), "Failed to create IO client HANDSHAKE thread");

@@ -22,7 +22,6 @@ int main(int argc, char* argv[]) {
     // el cpu se crea y una vez que se aprieta enter, se cierra la escucha.
     process_enter(cpu_server_hanlder);
 
-    pthread_join(cpu_server_hanlder, NULL);
     pthread_join(io_server_hanlder, NULL);
 
     close(io_server_hanlder);          
@@ -34,7 +33,7 @@ int main(int argc, char* argv[]) {
 
 }
 
-void process_enter(pthread_t *cpu_thread)
+void process_enter(pthread_t cpu_server_hanlder)
 {
     printf("Presione Enter para comenzar...\n");
     int c;
@@ -42,13 +41,14 @@ void process_enter(pthread_t *cpu_thread)
         c = getchar();
     } while (c != '\n' && c != EOF);
 
-    wait_cpu_connected();
-    
-    // cerramos el hilo de cpu server para dejar de escuchar conexiones. NO cerramos el socket.
-    pthread_exit(cpu_thread);
+    finish_cpu_server(cpu_server_hanlder); // hacemos que el while deje de correr para siempre.
 
-    // destruimos el semaforo, no lo vamos a usar mas
-    destroy_cpu_connected_sem();
+    wait_cpu_connected(); // esperamos a que termine de conectarse el cpu si es que se estaba conectando.
+
+    // aca deberiamos hacer algo para cerrar el server de escucha de cpu.
+
+    // TODO: validar si hay algun cpu conectado. Si no hay ninguno, tirar error y salir.
 
     // ejecutamos a mano la syscall init_proc para el proceso 0
+    log_info(get_logger(), "Ejecutando syscall init_proc para el proceso 0");
 }

@@ -11,5 +11,4 @@ void io_disconnected(void* args) {
     * 4. si no existe, el IO no estaba procesando nada. No hacemos nada.
     * 5. eliminamos la conexion de la lista de conexiones.
     */
-  */
 }

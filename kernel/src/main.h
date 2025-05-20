@@ -14,8 +14,7 @@
 #include "threads/create_threads.h"
 #include "semaphore/semaphore.h"
 
-void initialize_global_vars();
-void create_servers_cpu();
-void create_server_io();
+int main(int, char*[]);
+void process_enter(pthread_t cpu_server_hanlder);
 
 #endif

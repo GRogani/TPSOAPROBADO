@@ -3,6 +3,7 @@
 
 #include "collections/collections.h"
 #include "commons/string.h"
+#include "cpu.h"
 #include <stdio.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -12,6 +13,11 @@ bool initialize_repository_cpu_connections();
 bool destroy_repository_cpu_connections();
 
 void lock_cpu_connections();
+
+void* get_cpu_connection_by_id(char *id);
+char *create_cpu_connection(int socket_interrupt, int socket_dispatch);
+void remove_cpu_connection(char *id);
+
 void unlock_cpu_connections();
 
 #endif

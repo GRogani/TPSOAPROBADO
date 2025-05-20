@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <unistd.h>
+#include "../utils.h"
 
 void initialize_global_semaphores();
 
@@ -14,5 +15,11 @@ void destroy_cpu_connected_sem();
 
 void wait_cpu_connected();
 void signal_cpu_connected();
+
+void initialize_can_start_sem();
+void destroy_can_start_sem();
+
+void wait_can_start();
+void signal_can_start();
 
 #endif

@@ -2,8 +2,9 @@
 #define IO_CLIENT_HANDLER_H
 
 #include <pthread.h>
-#include "../utils.h"
-#include "./io/handshake.h"
+#include "../../utils/utils.h"
+#include "./handshake.h"
+#include "./io_completion.h"
 
 void* handle_io_client(void*);
 void process_handshake(t_package*, int);
