@@ -3,7 +3,7 @@
 
 #include <cspecs/cspec.h>
 #include <stdint.h>
-#include "utils/logger/logger.h"
+#include "../utils.h"
 
 
 

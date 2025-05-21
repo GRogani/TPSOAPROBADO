@@ -2,15 +2,24 @@
 
 int main(int argc, char* argv[]) 
 {
-    t_config* config_cpu = init_config("cpu.config");
+    t_config* config_file = init_config("cpu.config");
+    t_cpu_config config_cpu = init_cpu_config(config_file);
+    init_logger("cpu.log", "CPU", config_cpu.LOG_LEVEL);
 
-    t_log_level level = log_level_from_string(config_get_string_value(config_cpu,"LOG_LEVEL"));
-    init_logger("cpu.log", "CPU", level);
+    int fd_memory = -1;
+    int fd_kernel_dispatch = -1;
+    int fd_kernel_interrupt = -1;
 
-    int fd_memory = create_connection(config_get_string_value(config_cpu, "PUERTO_MEMORIA"), config_get_string_value(config_cpu, "IP_MEMORIA"));
-    int fd_kernel_dispatch = create_connection(config_get_string_value(config_cpu, "PUERTO_KERNEL_DISPATCH"), config_get_string_value(config_cpu, "IP_KERNEL"));
-    int fd_kernel_interrupt = create_connection(config_get_string_value(config_cpu, "PUERTO_KERNEL_INTERRUPT"), config_get_string_value(config_cpu, "IP_KERNEL"));
-    
+    while( (fd_memory * fd_kernel_dispatch * fd_kernel_interrupt) < 0 )
+    {
+        create_connections(config_cpu, &fd_memory, &fd_kernel_dispatch, &fd_kernel_interrupt);
+        if( (fd_memory * fd_kernel_dispatch * fd_kernel_interrupt) < 0)
+        {
+            log_info(get_logger(), "Retrying connections...");
+            sleep(3);
+        }
+    }
+
     while (1)
     {
        t_package* package_pid_pc = receive_PID_PC_Package(fd_kernel_dispatch);
@@ -33,6 +42,16 @@ int main(int argc, char* argv[])
     close(fd_memory);
     close(fd_kernel_dispatch);
     close(fd_kernel_interrupt);
-    config_destroy(config_cpu);
+    config_destroy(config_file);
     return 0;
+}
+
+void create_connections(t_cpu_config config_cpu, int* fd_memory, int* fd_kernel_dispatch, int* fd_kernel_interrupt)
+{
+    if(*fd_memory < 0)
+        *fd_memory = create_connection(config_cpu.PUERTO_MEMORIA, config_cpu.IP_MEMORIA);
+    if(*fd_kernel_dispatch < 0)    
+        *fd_kernel_dispatch = create_connection(config_cpu.PUERTO_KERNEL_DISPATCH, config_cpu.IP_KERNEL);
+    if(*fd_kernel_interrupt < 0)
+        *fd_kernel_interrupt = create_connection(config_cpu.PUERTO_KERNEL_INTERRUPT, config_cpu.IP_KERNEL);
 }
