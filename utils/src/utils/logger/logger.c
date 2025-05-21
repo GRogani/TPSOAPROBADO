@@ -13,9 +13,6 @@ void init_logger(char* log_file_name, char* process_name, t_log_level log_level)
 
     if (logger_instance == NULL) 
         LOG_ERROR("Fallo al crear el logger\n");
-
-    // else if (LOG_DEBUG_MODE)
-    //     LOG_DEBUG("Logger creado en %p\n", logger_instance);
     
     return;
 }

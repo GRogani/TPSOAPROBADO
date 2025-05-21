@@ -1,11 +1,13 @@
 #include "memoria.h"
 
+t_memoria_config memoria_config;
+
 int main(int argc, char* argv[]) {
 
     /* ---------------- CONFIG ---------------- */
 
-   t_config *config_file = init_config("memoria.config");
-   t_memoria_config memoria_config = init_memoria_config(config_file);
+    t_config *config_file = init_config("memoria.config");
+    memoria_config = init_memoria_config(config_file);
 
 
     /* ---------------- LOGGER ---------------- */
