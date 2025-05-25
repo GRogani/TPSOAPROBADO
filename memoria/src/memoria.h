@@ -15,11 +15,22 @@
 t_memoria_config memoria_config;
 t_log* logger;
 
-// INICIO BORRAR CUANDO SE CONFIGUREN LOS OPCODES
-typedef uint32_t OPCODE;
-enum {
-    HANDSHAKE = 0,
-    OBTENER_ESPACIO_LIBRE  = 3
-};
-// FIN BORRAR
+typedef struct {
+    int pid;
+    size_t process_size;
+    t_list* instructions;          // List of char* (each line from script)
+} ProcessMemory;
+
+typedef struct {
+    t_list* processes;
+
+} GlobalMemory;
+
+
+ProcessMemory* find_process_by_pid(int pid);
+void create_process(int socket, t_buffer* buffer)
+int create_process_in_memory(uint32_t pid, uint32_t size, char* path_to_script);
+void get_instruction(int socket, t_buffer* request_buffer);
+void get_instructions(int socket, t_buffer* request_buffer);
+void get_free_space(int socket);
 #endif
