@@ -1,5 +1,7 @@
 #include "memoria.h"
 
+t_memoria_config memoria_config;
+
 int main(int argc, char* argv[]) {
 
     /* ---------------- CONFIG ---------------- */

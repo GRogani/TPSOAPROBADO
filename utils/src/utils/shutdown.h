@@ -8,12 +8,7 @@
 #include "config/t_configs.h"
 #include "logger/logger.h"
 
-/**
- * @brief Libera los recursos del kernel y destruye su logger.
- * @param kernel_config Configuración del kernel.
- * @param config Puntero a t_config que se debe liberar.
- */
-void shutdown_kernel(t_kernel_config kernel_config, t_config* config);
+//shutdown_kernel: VER EN MODULO KERNEL
 
 /**
  * @brief Libera los recursos del CPU y destruye su logger.

@@ -5,12 +5,16 @@
 #include <commons/log.h>
 
 typedef struct t_kernel_config{
-	char* port;
     char* memory_ip;
     char* memory_port;
-    PLANIFICATION_ALGORITHM planification_algorithm;
+    PLANIFICATION_ALGORITHM short_planification_algorithm;
+    PLANIFICATION_ALGORITHM ready_planification_algorithm;
     int sleep_time;
+    double alpha;
     t_log_level log_level;
+    char* cpu_dispatch_port;
+    char* cpu_interrupt_port;
+    char* io_port;
 } t_kernel_config;
 
 typedef struct t_memoria_config {

@@ -1,13 +1,20 @@
 #ifndef KERNEL_MAIN_H
 #define KERNEL_MAIN_H
 
+#include <signal.h>
 #include <commons/config.h>
 #include <commons/log.h>
-#include "../../utils/src/utils/config/t_configs.h"
-#include "../../utils/src/utils/config/config.h"
-#include "../../utils/src/utils/logger/logger.h"
-#include "../../utils/src/utils/socket/server.h"
-#include "../../utils/src/utils/socket/client.h"
-#include "../../utils/src/utils/shutdown.h"
+
+#include "utils/config/t_configs.h"
+#include "utils/logger/logger.h"
+#include "shutdown/shutdown.h"
+#include "handlers/cpu_server.h"
+#include "handlers/io_server.h"
+#include "collections/collections.h"
+#include "threads/create_threads.h"
+
+void initialize_global_vars();
+void create_servers_cpu();
+void create_server_io();
 
 #endif

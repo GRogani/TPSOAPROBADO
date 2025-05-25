@@ -17,14 +17,21 @@ t_config* init_config(char* configFileName)
 t_kernel_config init_kernel_config(t_config* config) {
     t_kernel_config conf;
     int LOG_LEVEL_INVALID = -1;
-    char* planification_algorithm_str = config_get_string_value(config, "PLANIFICATION_ALGORITHM");
-    char* log_level_str = config_get_string_value(config, "LOG_LEVEL");
 
-    conf.planification_algorithm = planification_from_string(planification_algorithm_str);
+    char* short_planification_algorithm_str = config_get_string_value(config, "SHORT_PLANIFICATION_ALGORITHM");
+    char* ready_planification_algorithm_str = config_get_string_value(config, "READY_PLANIFICATION_ALGORITHM");
+    char* log_level_str = config_get_string_value(config, "LOG_LEVEL");
+    conf.short_planification_algorithm = short_planification_from_string(short_planification_algorithm_str);
+    conf.ready_planification_algorithm = ready_planification_from_string(ready_planification_algorithm_str);
     conf.log_level = log_level_from_string(log_level_str);
 
-    if (conf.planification_algorithm == PLANIFICATION_INVALID) {
-        LOG_ERROR("Algoritmo de planificacion invalido: %s", planification_algorithm_str);
+    if (conf.short_planification_algorithm == PLANIFICATION_INVALID) {
+        LOG_ERROR("Algoritmo de planificacion corto plazo invalido: %s", short_planification_algorithm_str);
+        exit(EXIT_FAILURE);
+    }
+
+    if (conf.ready_planification_algorithm == PLANIFICATION_INVALID) {
+        LOG_ERROR("Algoritmo de planificacion ready invalido: %s", ready_planification_algorithm_str);
         exit(EXIT_FAILURE);
     }
 
@@ -33,11 +40,14 @@ t_kernel_config init_kernel_config(t_config* config) {
         exit(EXIT_FAILURE);
     }
 
-    conf.port = config_get_string_value(config, "PORT");
     conf.memory_ip = config_get_string_value(config, "MEMORY_IP");
     conf.memory_port = config_get_string_value(config, "MEMORY_PORT");
-
     conf.sleep_time = config_get_int_value(config, "SLEEP_TIME");
+    conf.alpha = config_get_double_value(config, "ALPHA");
+
+    conf.cpu_dispatch_port = config_get_string_value(config, "CPU_DISPATCH_PORT");
+    conf.cpu_interrupt_port = config_get_string_value(config, "CPU_INTERRUPT_PORT");
+    conf.io_port = config_get_string_value(config, "IO_PORT");
 
     return conf;
 }

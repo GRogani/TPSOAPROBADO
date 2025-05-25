@@ -6,6 +6,7 @@
 #include <string.h>
 #include "../safe_alloc.h"
 #include "../../macros/log_error.h"
+<<<<<<< HEAD:utils/src/utils/serialization/protocol.h
 
 /**
  * @enum OPCODE
@@ -16,6 +17,9 @@ typedef enum {
     HANDSHAKE,  // Operación inicial de handshake/autenticación
     OBTENER_ESPACIO_LIBRE 
 } OPCODE;
+=======
+#include "enums/Eopcodes.h"
+>>>>>>> main:utils/src/utils/serialization/buffer.h
 
 /**
  * @struct t_buffer
@@ -28,28 +32,15 @@ typedef enum {
  * Mantiene un stream de bytes con posición actual para lectura/escritura secuencial
  */
 typedef struct t_buffer {
-    uint32_t size;           // Tamaño total del buffer en bytes
+    uint32_t stream_size;           // Tamaño total del buffer en bytes
     void* stream;       // Puntero al stream de datos serializados
     uint32_t offset;    // Offset actual para operaciones de lectura/escritura
 } t_buffer;
 
 /**
- * @struct t_package
- * @brief Paquete completo de comunicación
- * @note
- * - `opcode` Tipo de operación (ej. HANDSHAKE)
- * 
- * - `buffer` Datos serializados asociados al paquete
- */
-typedef struct t_package {
-    OPCODE opcode;  // Tipo de operación (ej. HANDSHAKE)
-    t_buffer* buffer;         // Datos serializados asociados al paquete
-} t_package;
-
-/**
  * @brief Crea un nuevo buffer
  * @param size Tamaño inicial en bytes
- * @return t_buffer* Puntero al buffer creado, NULL en caso de error
+ * @return t_buffer* Puntero al buffer creado
  * 
  * @note El buffer creado debe liberarse con buffer_destroy()
  */
