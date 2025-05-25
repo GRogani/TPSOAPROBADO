@@ -6,7 +6,20 @@
 #include <string.h>
 #include "../safe_alloc.h"
 #include "../../macros/log_error.h"
+<<<<<<< HEAD:utils/src/utils/serialization/protocol.h
+
+/**
+ * @enum OPCODE
+ * @brief Códigos de operación para paquetes de comunicación
+ * @note - `HANDSHAKE`
+ */
+typedef enum {
+    HANDSHAKE,  // Operación inicial de handshake/autenticación
+    OBTENER_ESPACIO_LIBRE 
+} OPCODE;
+=======
 #include "enums/Eopcodes.h"
+>>>>>>> main:utils/src/utils/serialization/buffer.h
 
 /**
  * @struct t_buffer

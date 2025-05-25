@@ -10,4 +10,27 @@
 #include "../../utils/src/utils/socket/client.h"
 #include "../../utils/src/utils/shutdown.h"
 
+#define MEMORIA_DISPONIBLE 1024
+
+t_memoria_config memoria_config;
+t_log* logger;
+
+typedef struct {
+    int pid;
+    size_t process_size;
+    t_list* instructions;          // List of char* (each line from script)
+} proc_memory;
+
+typedef struct {
+    t_list* processes;
+
+} glb_memory;
+
+
+proc_memory* find_process_by_pid(int pid);
+void create_process(int socket, t_buffer* buffer)
+int create_process_in_memory(uint32_t pid, uint32_t size, char* path_to_script);
+void get_instruction(int socket, t_buffer* request_buffer);
+void get_instructions(int socket, t_buffer* request_buffer);
+void get_free_space(int socket);
 #endif
