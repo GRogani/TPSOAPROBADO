@@ -12,6 +12,7 @@
 
 #define MEMORIA_DISPONIBLE 1024
 
+t_memoria_config memoria_config;
 t_log* logger;
 
 // INICIO BORRAR CUANDO SE CONFIGUREN LOS OPCODES
@@ -22,4 +23,3 @@ enum {
 };
 // FIN BORRAR
 #endif
-

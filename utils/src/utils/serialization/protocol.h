@@ -13,7 +13,8 @@
  * @note - `HANDSHAKE`
  */
 typedef enum {
-    HANDSHAKE  // Operación inicial de handshake/autenticación
+    HANDSHAKE,  // Operación inicial de handshake/autenticación
+    OBTENER_ESPACIO_LIBRE 
 } OPCODE;
 
 /**
