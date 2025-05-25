@@ -37,18 +37,3 @@ int main(int argc, char* argv[]) {
 }
 
 
-
-t_log* logger(t_memoria_config config){
-
-    t_log* log = NULL;
-    t_log_level level = log_level_from_string(memoria_config.LOG_LEVEL); 
-    log = log_create("memoria.log", "Memoria", 1, level);
-    
-    return log;
-}
-
-void return_esapcioMemoria(int socket_cliente){
-    int32_t mem_disponible = memoria_config.TAM_MEMORIA;
-    send(socket_cliente, &mem_disponible, sizeof(int32_t), 0);
-}  
-

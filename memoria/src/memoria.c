@@ -1,6 +1,6 @@
 #include "memoria.h"
 
-GlobalMemory global_memory;
+glb_memory global_memory;
 
 t_list* load_script_lines(const char* path) {
     FILE* file = fopen(path, "r");
@@ -34,8 +34,8 @@ void create_process(int socket, t_buffer* buffer) {
 }
 
 
-ProcessMemory* find_process_by_pid(int pid) {
-    ProcessMemory* proc = NULL;
+proc_memory* find_process_by_pid(int pid) {
+    proc_memory* proc = NULL;
     for (int i = 0; i < list_size(global_memory.processes); i++) {
        proc = list_get(global_memory.processes, i);
         if (proc->pid == pid) {
@@ -47,7 +47,7 @@ ProcessMemory* find_process_by_pid(int pid) {
 
 int create_process_in_memory(uint32_t pid, uint32_t size, char* script_path) {
    
-    ProcessMemory* proc = malloc(sizeof(ProcessMemory));
+    proc_memory* proc = malloc(sizeof(proc_memory));
     proc->pid = pid;
     proc->process_size = size;
     proc->instructions = load_script_lines(script_path);
@@ -65,7 +65,7 @@ void get_instruction(int socket, t_buffer* request_buffer) {
     uint32_t pid = buffer_read_uint32(request_buffer);
     uint32_t pc = buffer_read_uint32(request_buffer);
 
-    ProcessMemory* proc = find_process_by_pid(pid);
+    proc_memory* proc = find_process_by_pid(pid);
     if (proc && pc =< list_size(proc->instructions)) 
     {
         char* instr = list_get(proc->instructions, pc);
@@ -84,7 +84,7 @@ void get_instruction(int socket, t_buffer* request_buffer) {
 void get_instructions(int socket, t_buffer* request_buffer) {
     uint32_t pid = buffer_read_uint32(request_buffer);
 
-    ProcessMemory* proc = find_process_by_pid(pid);
+    proc_memory* proc = find_process_by_pid(pid);
     if (proc) 
     {
         t_buffer* response_buffer = buffer_create(0);

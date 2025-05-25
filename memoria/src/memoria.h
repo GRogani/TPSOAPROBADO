@@ -19,15 +19,15 @@ typedef struct {
     int pid;
     size_t process_size;
     t_list* instructions;          // List of char* (each line from script)
-} ProcessMemory;
+} proc_memory;
 
 typedef struct {
     t_list* processes;
 
-} GlobalMemory;
+} glb_memory;
 
 
-ProcessMemory* find_process_by_pid(int pid);
+proc_memory* find_process_by_pid(int pid);
 void create_process(int socket, t_buffer* buffer)
 int create_process_in_memory(uint32_t pid, uint32_t size, char* path_to_script);
 void get_instruction(int socket, t_buffer* request_buffer);
