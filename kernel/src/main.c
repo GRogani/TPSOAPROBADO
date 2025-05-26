@@ -47,8 +47,6 @@ void process_enter()
 
     wait_cpu_connected(); // esperamos a que el thread nos notifique que terminó de correr y limpiar todo antes de cerrar.
 
-    // aca deberiamos hacer algo para cerrar el server de escucha de cpu.
-
     // TODO: validar si hay algun cpu conectado. Si no hay ninguno, tirar error y salir.
 
     // ejecutamos a mano la syscall init_proc para el proceso 0
