@@ -2,6 +2,8 @@
 
 static sem_t sem_cpu_connections;
 
+unsigned int id_generator = 0;
+
 bool initialize_repository_cpu_connections()
 {
   if (sem_init(&sem_cpu_connections, 0, 1) != 0)

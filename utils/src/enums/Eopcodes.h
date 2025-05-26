@@ -7,17 +7,8 @@
  * @note - `HANDSHAKE`
  */
 typedef uint32_t OPCODE;
-enum
-{
+enum {
     HANDSHAKE,
-    // IO to kernel
-    REQUEST_IO,
-    IO_COMPLETION,
-
-    // CPU to kernel
-    SYSCALL,
-
-    // CPU
     PID_PC_PACKAGE,
     CPU_REQUEST_INSTRUCTION,
     CPU_RESPONSE_INSTRUCTION,
@@ -31,6 +22,7 @@ enum
     LISTA_INSTRUCCIONES,
     CREAR_PROCESO,
     OBTENER_INSTRUCCION,
+    IO_COMPLETION,
 };
 
 #endif

@@ -13,6 +13,7 @@
 
 typedef struct t_cpu_connection
 {
+    unsigned int id;
     int interrupt_socket_id;
     int dispatch_socket_id;
     int current_process_executing;
