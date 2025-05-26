@@ -5,7 +5,6 @@
 #include <commons/log.h>
 #include "memoria.h"
 
-extern t_log* logger;
 
 void* handle_client(int skt);
 void handle_kernel();

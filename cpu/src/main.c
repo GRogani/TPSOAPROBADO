@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
     int fd_kernel_dispatch = -1;
     int fd_kernel_interrupt = -1;
 
-    while( (fd_memory * fd_kernel_dispatch * fd_kernel_interrupt) < 0 )
+    while( (fd_memory < 0) && (fd_kernel_dispatch < 0) && (fd_kernel_interrupt < 0) )
     {
         create_connections(config_cpu, &fd_memory, &fd_kernel_dispatch, &fd_kernel_interrupt);
         if( (fd_memory * fd_kernel_dispatch * fd_kernel_interrupt) < 0)
@@ -19,6 +19,8 @@ int main(int argc, char* argv[])
             sleep(3);
         }
     }
+
+    log_info(get_logger(), "Connections established successfully!");
 
     while (1)
     {
