@@ -32,9 +32,9 @@ void* cpu_server_handler(void* args) {
         log_info(get_logger(), "CPU connected successfully. Adding connection to list of connected CPUs");
 
         // agregamos la cpu a la conexion de cpus
-        
-        // TODO: crear 2 threads detachables para manejar las conexiones para interrupt y dispatch
+        create_cpu_connection(socket_dispatch_connection, socket_interrupt_connection);
 
+        // TODO: crear 2 threads detachables para manejar las conexiones para interrupt y dispatch
         signal_cpu_connected();
     }
     

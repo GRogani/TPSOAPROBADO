@@ -13,9 +13,9 @@
 
 typedef struct t_cpu_connection
 {
+    unsigned int id;
     int interrupt_socket_id;
     int dispatch_socket_id;
-    int id;
     int current_process_executing;
     sem_t cpu_exec_sem;
     t_list* exec_list; // esta lista como es por CPU, no es necesario que sea compartida o "general".

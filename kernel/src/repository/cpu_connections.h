@@ -14,4 +14,6 @@ bool destroy_repository_cpu_connections();
 void lock_cpu_connections();
 void unlock_cpu_connections();
 
+void create_cpu_connection(int socket_dispatch, int socket_interrupt)
+
 #endif
