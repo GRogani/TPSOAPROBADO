@@ -15,6 +15,11 @@ void* handle_io_client(void* socket)
                     process_handshake(package, *client_socket);
                     break;
                 }
+                case IO_COMPLETION:
+                {
+                    process_io_completion(package, *client_socket);
+                    break;
+                }
                 default:
                 {
                     log_error(get_logger(), "Unknown opcode %d from IO device", package->opcode);
@@ -59,6 +64,26 @@ void process_handshake(t_package* package, int socket) {
     pthread_t io_client_thread;
     int err_io_client = pthread_create(&io_client_thread, NULL, handsake, thread_args);
     if (err_io_client != 0) 
+    {
+        log_error(get_logger(), "Failed to create IO client HANDSHAKE thread");
+    }
+    pthread_detach(io_client_thread);
+}
+
+void process_io_completion(t_package *package, int socket)
+{
+    log_info(get_logger(), "Processing IO_COMPLETION from IO device");
+    int pid = read_io_completion(package);
+
+    package_destroy(package);
+
+    t_handshake_thread_args *thread_args = safe_malloc(sizeof(t_handshake_thread_args));
+    thread_args->client_socket = socket;
+    thread_args->pid = pid;
+
+    pthread_t io_client_thread;
+    int err_io_client = pthread_create(&io_client_thread, NULL, handsake, thread_args);
+    if (err_io_client != 0)
     {
         log_error(get_logger(), "Failed to create IO client HANDSHAKE thread");
     }
