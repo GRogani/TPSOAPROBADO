@@ -10,8 +10,8 @@ void io_completion(void *thread_args)
 
     // if not found, get from susp blocked
     // -> move from SUSPENDED_BLOCKED to SUSPENDED_READY
-    // -> mandamos a replanificar (corremos corto plazo)??
-    // deberiamos correr el largo plazo??
+    // -> mandamos a replanificar (corremos corto plazo)
+    // deberiamos correr el largo plazo?? -> NO, no necesariamente se liberó la memoria principal.
 
     // if not found in any of the lists, log error.
     

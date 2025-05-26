@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     create_servers_threads(&io_server_hanlder, &cpu_server_hanlder);
 
     // el cpu se crea y una vez que se aprieta enter, se cierra la escucha.
-    process_enter(cpu_server_hanlder);
+    process_enter();
 
     pthread_join(io_server_hanlder, NULL);
 
@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 
 }
 
-void process_enter(pthread_t cpu_server_hanlder)
+void process_enter()
 {
     printf("Presione Enter para comenzar...\n");
     int c;
@@ -41,9 +41,11 @@ void process_enter(pthread_t cpu_server_hanlder)
         c = getchar();
     } while (c != '\n' && c != EOF);
 
-    finish_cpu_server(cpu_server_hanlder); // hacemos que el while deje de correr para siempre.
+    printf("FINALIZANDO CPU SERVERS, ARRANCANDO PLANIFICACION...\n");
 
-    wait_cpu_connected(); // esperamos a que termine de conectarse el cpu si es que se estaba conectando.
+    finish_cpu_server(); // hacemos que el while deje de correr para siempre.
+
+    wait_cpu_connected(); // esperamos a que el thread nos notifique que terminó de correr y limpiar todo antes de cerrar.
 
     // aca deberiamos hacer algo para cerrar el server de escucha de cpu.
 

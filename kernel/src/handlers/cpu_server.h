@@ -11,5 +11,6 @@
 #include "repository/cpu_connections.h"
 
 void* cpu_server_handler(void*);
+void finish_cpu_server();
 
 #endif

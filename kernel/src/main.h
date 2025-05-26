@@ -15,6 +15,6 @@
 #include "semaphore/semaphore.h"
 
 int main(int, char*[]);
-void process_enter(pthread_t cpu_server_hanlder);
+void process_enter();
 
 #endif
