@@ -7,5 +7,10 @@
 #include "../utils.h"
 #include "io_threads.h"
 
+volatile bool io_busy = false;       // flag global del modulo
+pthread_mutex_t busy_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void waiting_requests(int kernel_socket, char* id_IO);
+void* processing_operation(void* args);
 
 #endif

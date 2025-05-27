@@ -26,4 +26,13 @@ int read_io_completion(t_package*);
 t_package *create_io_completion(int);
 int send_io_completion(int, int);
 
+
+void* read_IO_operation_request(t_package* package);
+t_package* create_IO_operation_request(uint32_t pid, uint32_t time);
+int send_IO_operation_request(int socket, uint32_t pid, uint32_t time);
+
+char* read_IO_operation_completed(t_package* package);
+int send_IO_operation_completed(int kernel_socket, char* yourName);
+t_package* create_IO_operation_completed(char* yourName);
+
 #endif

@@ -8,6 +8,7 @@
 #include "utils/serialization/buffer.h"
 #include "utils/socket/client.h"
 #include "utils/socket/server.h"
+#include "enums/Eopcodes.h"
 
 /**
  * @struct t_package
