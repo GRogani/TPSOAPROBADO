@@ -2,14 +2,13 @@
 
 void* handle_io_client(void* socket)
 {
-    int* client_socket = (int*)socket;
-    t_package* package;
+    t_package* package = safe_malloc(sizeof(t_package));
     while (1)
     {
         package = recv_package(*client_socket);
         if(package != NULL)
         {
-            switch(package->opcode)
+            case HANDSHAKE:
             {
                 case IO_NEW_DEVICE: {
                     process_new_device(package, *client_socket);

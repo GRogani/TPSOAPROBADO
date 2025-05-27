@@ -2,6 +2,7 @@
     "files.associations": {
         "instructioncycle.h": "c",
         "stdio.h": "c",
-        "log.h": "c"
+        "log.h": "c",
+        "data_request.h": "c"
     }
 }

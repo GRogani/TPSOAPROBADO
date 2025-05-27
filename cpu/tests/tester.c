@@ -1,5 +1,9 @@
 
+#include <semaphore.h>
 #include "../utils.h"
+
+
+sem_t cpu_mutex;
 
 int main(){
 

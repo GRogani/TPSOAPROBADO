@@ -1,26 +1,33 @@
 #include "instructionCycle.h"
 
-t_package* fetch(int socket, int PC) {
-    request_instruction(socket, PC);
-    t_package* instruction_package = receive_instruction(socket);
-    if (instruction_package == NULL) {
-       log_error(get_logger(), "Failed to fetch instruction");
-        return NULL;
-    }
-    return instruction_package;
+t_package* fetch(int socket, uint32_t PID, uint32_t PC) 
+{
+    t_package* package;
+    do
+    {
+        request_instruction(socket, PID, PC);
+        package = receive_instruction(socket);
+
+    }while(package != NULL);
+
+    return package;
 }
 
-instruction_t* decode(t_package* package) {
+instruction_t* decode(t_package* package) 
+{
     instruction_t* instruction = safe_malloc(sizeof(instruction_t));
+
+    package->buffer->offset = 0;
     instruction->cod_instruction = buffer_read_uint32(package->buffer);
     
-    switch(instruction->cod_instruction){
+    switch(instruction->cod_instruction)
+    {
         case NOOP:
             break;
         case WRITE:
             instruction->operand_numeric1 = buffer_read_uint32(package->buffer);
             instruction->operand_string_size = buffer_read_uint32(package->buffer);
-            instruction->operand_string = buffer_read_string(package->buffer, instruction->operand_string_size);
+            instruction->operand_string = buffer_read_string(package->buffer, &instruction->operand_string_size);
         case READ:
             instruction->operand_numeric1 = buffer_read_uint32(package->buffer);
             instruction->operand_numeric2 = buffer_read_uint32(package->buffer);
@@ -35,93 +42,133 @@ instruction_t* decode(t_package* package) {
     return instruction;
 }
 
-int execute(instruction_t* instruction, t_package* instruction_package, int socket_memory, int socket_dispatch, int* pc) {
+int execute(instruction_t* instruction, t_package* instruction_package, int socket_memory, int socket_dispatch, uint32_t* PC) 
+{
     switch (instruction->cod_instruction) {
         case NOOP:
             // No operation
             break;
         case WRITE:
-             uint32_t logic_dir_write = instruction->operand_numeric1;
-             char* valor_write = instruction->operand_string;
-             void* physic_dir_write = MMU(logic_dir_write);
-            write_memory_request(socket_memory, (uint32_t) physic_dir_write, valor_write);
+                uint32_t logic_dir_write = instruction->operand_numeric1;
+                char* valor_write = instruction->operand_string;
+                uint32_t physic_dir_write = MMU(logic_dir_write);
+                write_memory_request(socket_memory, physic_dir_write, valor_write);
             break;
         case READ:
-            uint32_t logic_dir_read = instruction->operand_numeric1;
-            uint32_t size = instruction->operand_numeric2;
-            void* physic_dir_read = MMU(logic_dir_read);
-            read_memory_request(socket_memory, physic_dir_read, size);
-            char* data = read_memory_response(socket_memory);
-            log_info(get_logger(), "Data read from memory: %s", data);
+                uint32_t logic_dir_read = instruction->operand_numeric1;
+                uint32_t size = instruction->operand_numeric2;
+                uint32_t physic_dir_read = MMU(logic_dir_read);
+                read_memory_request(socket_memory, physic_dir_read, size);
+                char* data = read_memory_response(socket_memory);
+                if(data != NULL)
+                {
+                    log_info(get_logger(), "Data read from memory: %s", data);
+                    free(data);
+                }else{
+                    log_error(get_logger(), "Failed to read data from memory");
+                    return -1;
+                }
             break;
         case GOTO:
-            *pc = instruction->operand_numeric1;
-            return 0;
+                *PC = instruction->operand_numeric1;
             break;
         case IO:
             // TODO: esto esta mal, deberiamos mandar una nueva instruccion. sino se va a mandar el opcode GET_INSTRUCTION que es el que se le mandó a la memoria desde la CPU y con el que la memoria contestó
             send_package(socket_dispatch, instruction_package);
             break;
         case INIT_PROC:
-            send_package(socket_dispatch, instruction_package);
+                send_package(socket_dispatch, instruction_package);
             break;
         case DUMP_PROCESS:
-            send_package(socket_dispatch, instruction_package);
+                send_package(socket_dispatch, instruction_package);
             break;
         case EXIT:
-            send_package(socket_dispatch, instruction_package);
+                send_package(socket_dispatch, instruction_package);
             break;
         default:
-            log_error(get_logger(), "Unknown instruction: %d", instruction->cod_instruction);
+                log_error(get_logger(), "Unknown instruction: %d", instruction->cod_instruction);
             return -1;
     }
-    pc++;
+
+    PC++;
+
     return 0;
 }
 
-int check_interrupt(int socket_interrupt, int pid_on_execute, int pc_on_execute) {
-    t_package* package = recv_interrupt_package(socket_interrupt);
-    if(package->opcode == CPU_INTERRUPT) {
+int check_interrupt(int socket_interrupt, int pid_on_execute, int pc_on_execute) 
+{
+    extern sem_t cpu_mutex; // en main
+
+    t_package* package = recv_package(socket_interrupt);
+    if(package == NULL) 
+    {
+        log_error(get_logger(), "Disconnecting interrupt...");
+        return -1;
+    }
+
+    if(package->opcode == CPU_INTERRUPT) 
+    {
+        sem_wait(&cpu_mutex);
+
         log_info(get_logger(), "Received interrupt from kernel");
+        package->buffer->offset = 0;
         int pid_received = buffer_read_uint32(package->buffer);
+
         if(pid_received == pid_on_execute) {
             log_info(get_logger(), "Interrupt for PID %d received", pid_received);
+
             t_buffer* buffer = buffer_create(2 * sizeof(uint32_t));
             buffer_add_uint32(buffer, pid_received);
             buffer_add_uint32(buffer, pc_on_execute);
+
             t_package* package = package_create(CPU_INTERRUPT, buffer);
             send_package(socket_interrupt, package);
             package_destroy(package);
+
             log_info(get_logger(), "Interrupt for PID %d executed", pid_received);
             return 1;
         } else {
             log_info(get_logger(), "Interrupt for PID %d received, but not executing", pid_received);
         }
 
+        sem_post(&cpu_mutex);
         
-        
-    } else {
-        log_error(get_logger(), "Received unexpected package: %d", package->opcode);
+    } 
+    else 
+    {
+        log_error(get_logger(), "Received unexpected package: %d. Expecting Interrupt.", package->opcode);
     }
+    
     return 0;
-
 }
 
-int MMU(uint32_t logic_dir) {
-    t_config* config_memoria = init_config("../memoria/memoria.config");
-    int levels = config_get_int_value(config_memoria, "CANTIDAD_NIVELES");
-    int entrys_by_table = config_get_int_value(config_memoria, "ENTRADAS_POR_TABLA");
-    int size_pag = config_get_int_value(config_memoria, "TAM_PAGINA");
+void* interrupt_handler(void* thread_args) 
+{   
+    interrupt_args_t* args = (interrupt_args_t *) thread_args;
 
-    int num_page = logic_dir / size_pag;
-    int offset = logic_dir % size_pag;
-    int physic_dir = 0;
+    while( check_interrupt(args->socket_interrupt , *args->pid, *args->pc) != -1);
     
-    for(int actual_level = 1; actual_level <= levels; actual_level++) {
-        int divisor = pow(entrys_by_table, levels - actual_level);
-        int entry = (num_page / divisor) % entrys_by_table;
+
+    return NULL;
+}
+
+uint32_t MMU(uint32_t logic_dir) 
+{
+    t_config* config_memoria = init_config("../memoria/memoria.config");
+    uint32_t levels = config_get_int_value(config_memoria, "CANTIDAD_NIVELES");
+    uint32_t entrys_by_table = config_get_int_value(config_memoria, "ENTRADAS_POR_TABLA");
+    uint32_t size_pag = config_get_int_value(config_memoria, "TAM_PAGINA");
+
+    uint32_t num_page = logic_dir / size_pag;
+    uint32_t offset = logic_dir % size_pag;
+    uint32_t physic_dir = 0;
+    
+    for(int actual_level = 1; actual_level <= levels; actual_level++) 
+    {
+        uint32_t divisor = pow(entrys_by_table, levels - actual_level);
+        uint32_t entry = (num_page / divisor) % entrys_by_table;
         physic_dir = physic_dir * entrys_by_table + entry;
     }
     
-    return physic_dir * size_pag + offset;
+    return (uint32_t)(physic_dir * size_pag + offset);
 }
