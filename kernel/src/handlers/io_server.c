@@ -21,13 +21,7 @@ void* io_server_handler(void* args) {
             log_error(get_logger(), "Failed to create detachable thread for I/O server");
             exit(EXIT_FAILURE);
         }
-        // TODO: Caso de Prueba - la función creo que debería mandar un struct + localizarlo donde corresponde
-        // para ver si funciona bien el mutex del modulo de IO agrego otro send
-        send_IO_operation_request(socket_client, 2, 5 * 1000000); // para que no me gane a la siguiente operación
-        send_IO_operation_request(socket_client, 2, 100);
-        // pthread_detach(t);
-        //TODO: este join está bien? no tiene que seguir aceptando conexiones independientemente del handler?
-        pthread_join(t, NULL);
+        pthread_detach(t);
     }
     
     return 0;

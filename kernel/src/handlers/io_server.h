@@ -5,6 +5,6 @@
 #include "io_client.h"
 
 
-void* io_server_handler(void* args);
+void* io_server_handler(void*);
 
 #endif

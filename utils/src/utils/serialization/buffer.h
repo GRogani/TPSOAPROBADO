@@ -1,5 +1,5 @@
-#ifndef UTILS_SERIALIZATION_PROTOCOL_H
-#define UTILS_SERIALIZATION_PROTOCOL_H
+#ifndef UTILS_SERIALIZATION_BUFFER_H
+#define UTILS_SERIALIZATION_BUFFER_H
 
 #include <stdint.h>
 #include <stdlib.h>

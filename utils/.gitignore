@@ -22,3 +22,5 @@ obj/
 !.vscode/launch.json
 !.vscode/settings.json
 !.vscode/tasks.json
+
+tests/tester.c

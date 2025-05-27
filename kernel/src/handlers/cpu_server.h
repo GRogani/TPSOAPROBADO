@@ -4,9 +4,9 @@
 #include <utils/socket/server.h>
 #include <sys/socket.h>
 #include <unistd.h> // para socket close()
-#include "lists/lists.h"
+#include "collections/collections.h"
+#include "semaphore/semaphore.h"
 
-void* cpu_server_handler(void* args);
-int add_cpu_connection(int socket_dispatch, int socket_interrupt);
+void* cpu_server_handler(void*);
 
 #endif

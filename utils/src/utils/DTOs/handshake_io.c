@@ -19,9 +19,9 @@ t_package* create_handshake(char* yourName)
 
 }
 
-int send_handshake(int socket, char* yourName)
+int send_handshake(int socket, char *yourName)
 {
-    t_package* pkg = create_handshake(yourName);
+    t_package* pkg = create_io_handshake(yourName);
     int bytes_sent = send_package(socket, pkg);
     package_destroy(pkg);
     return bytes_sent;

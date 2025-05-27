@@ -21,11 +21,9 @@ void* client_listener(void* arg) {
         int client_fd = accept_connection(server_fd);
         if (client_fd < 0) continue;
 
-        pthread_t handler_thread;
-        int* client_fd_ptr = safe_malloc(sizeof(int));
-        *client_fd_ptr = client_fd;
 
-        pthread_create(&handler_thread, NULL, client_handler, client_fd_ptr);
+        pthread_t handler_thread;
+        pthread_create(&handler_thread, NULL, client_handler, (void*)&client_fd);
         pthread_detach(handler_thread);
     }
 
@@ -41,7 +39,7 @@ void* client_handler(void* client_fd_ptr) {
     {
         package = recv_package(client_fd);
         if (package == NULL) {
-            log_error(get_logger(), "Failed reciving package");
+            log_info(get_logger(), "Client disconnected: %d", client_fd);
             close(client_fd);
             return NULL;
         }

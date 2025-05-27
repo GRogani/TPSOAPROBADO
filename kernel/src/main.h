@@ -10,8 +10,9 @@
 #include "shutdown/shutdown.h"
 #include "handlers/cpu_server.h"
 #include "handlers/io_server.h"
-#include "lists/lists.h"
+#include "collections/collections.h"
 #include "threads/create_threads.h"
+#include "semaphore/semaphore.h"
 
 void initialize_global_vars();
 void create_servers_cpu();
