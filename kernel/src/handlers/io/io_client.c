@@ -11,8 +11,8 @@ void* handle_io_client(void* socket)
         {
             switch(package->opcode)
             {
-                case HANDSHAKE: {
-                    process_handshake(package, *client_socket);
+                case IO_NEW_DEVICE: {
+                    process_new_device(package, *client_socket);
                     break;
                 }
                 case IO_COMPLETION:
@@ -51,7 +51,7 @@ void* handle_io_client(void* socket)
     }
 }
 
-void process_handshake(t_package* package, int socket) {
+void process_new_device(t_package* package, int socket) {
     log_info(get_logger(), "Processing HANDSHAKE from client");
     char* device_name = read_io_handshake(package);
 

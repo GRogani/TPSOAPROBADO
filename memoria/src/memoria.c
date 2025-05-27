@@ -30,7 +30,7 @@ void create_process(int socket, t_buffer* buffer) {
     int result = create_process_in_memory(pid, size, path);
     free(path);
 
-    //Respuesta al kernel???
+    // TODO: send response to kernel using opcode CREATE_PROCESS
 }
 
 
@@ -73,7 +73,7 @@ void get_instruction(int socket, t_buffer* request_buffer) {
 
         t_buffer* response_buffer = buffer_create(0);
         buffer_add_string(response_buffer, strlen(instr) + 1, instr);
-        t_package* response = package_create(OBTENER_INSTRUCCION, response_buffer);
+        t_package* response = package_create(GET_INSTRUCTION, response_buffer);
 
         send_package(socket, response);
         package_destroy(response);
@@ -98,7 +98,7 @@ void get_instructions(int socket, t_buffer* request_buffer) {
             log_info(logger, "## PID: %u - Instrucción %u: %s", pid, i, instr);
         }
 
-        t_package* response = package_create(OBTENER_INSTRUCCION, response_buffer);
+        t_package* response = package_create(GET_INSTRUCTION, response_buffer);
         send_package(socket, response);
         package_destroy(response);
     }else{
@@ -115,7 +115,7 @@ void get_free_space(int socket) {
     t_buffer* buffer = buffer_create(0);
     buffer_add_uint32(buffer, mock_free);
 
-    t_package* package = package_create(OBTENER_ESPACIO_LIBRE, buffer);
+    t_package* package = package_create(GET_FREE_SPACE, buffer);
     send_package(socket, package);
     package_destroy(package);
 }

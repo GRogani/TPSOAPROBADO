@@ -20,13 +20,7 @@ void *handle_dispatch_client(void* arg)
     {
       switch (package->opcode)
       {
-      case HANDSHAKE:
-      {
-        // TODO: devolvemos un paquete dummy
-        log_info(get_logger(), "CPU HANDSHAKE RECEIVED for connection with id -> %s", connection_id);
-        break;
-      }
-      case SYSCALL:
+      case CPU_SYSCALL:
       {
         // TODO: leemos el paquete, verificamos que tipo de syscall es.
         // dependiendo del tipo, handeleamos.

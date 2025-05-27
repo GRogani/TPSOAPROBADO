@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "instructioncycle.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "log.h": "c"
     }
 }

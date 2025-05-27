@@ -8,36 +8,25 @@
  */
 typedef uint32_t OPCODE;
 enum {
-    // all
-    HANDSHAKE,
+    // memoria opcodes
+    GET_INSTRUCTION,
+    LIST_INSTRUCTIONS,
+    GET_FREE_SPACE,
+    CREATE_PROCESS,
+    WRITE_MEMORY,
+    READ_MEMORY,
 
-    // kernel -> cpu
-    PID_PC_PACKAGE,
-    CPU_INTERRUPT_REQUEST,
-    
-    // cpu -> memoria
-    CPU_REQUEST_INSTRUCTION,
-    CPU_WRITE_MEMORY_REQUEST,
-    CPU_READ_MEMORY_RESPONSE,
-
-    // memoria -> cpu
-    CPU_RESPONSE_INSTRUCTION,
-    CPU_READ_MEMORY_REQUEST,
-
-    // cpu -> kernel
-    CPU_INTERRUPT_RESPONSE,
-
-    // kernel -> io
-    REQUEST_IO,
-
-    // io -> kernel
+    // opcodes kernel
+    IO_NEW_DEVICE,
     IO_COMPLETION,
+    CPU_SYSCALL,
 
-    // memoria <> kernel/cpu
-    OBTENER_ESPACIO_LIBRE,
-    CREAR_PROCESO,
-    OBTENER_INSTRUCCION,
-    LISTA_INSTRUCCIONES,
+    // opcodes CPU
+    PID_PC_PACKAGE,
+    CPU_INTERRUPT,
+
+    // opcodes IO
+    REQUEST_IO,
 };
 
 #endif

@@ -7,6 +7,6 @@
 #include "./io_completion.h"
 
 void* handle_io_client(void*);
-void process_handshake(t_package*, int);
+void process_new_device(t_package*, int);
 
 #endif
