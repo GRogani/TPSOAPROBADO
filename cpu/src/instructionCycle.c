@@ -129,6 +129,7 @@ int check_interrupt(int socket_interrupt, int pid_on_execute, int pc_on_execute)
             return 1;
         } else {
             log_info(get_logger(), "Interrupt for PID %d received, but not executing", pid_received);
+            // TODO: responder al kernel como que se "atendio" la interrupcion
         }
 
         sem_post(&cpu_mutex);
