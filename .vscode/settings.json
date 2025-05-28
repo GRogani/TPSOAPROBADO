@@ -16,6 +16,7 @@
         "process_new_device.h": "c",
         "io_completion.h": "c",
         "io_new_device.h": "c",
-        "io_connections.h": "c"
+        "io_connections.h": "c",
+        "handlers.h": "c"
     }
 }

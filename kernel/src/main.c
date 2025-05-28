@@ -1,4 +1,4 @@
-#include <main.h>
+#include "main.h"
 
 t_kernel_config kernel_config;  
                                 
@@ -46,6 +46,7 @@ void process_enter()
     finish_cpu_server(); // hacemos que el while deje de correr para siempre.
 
     wait_cpu_connected(); // esperamos a que el thread nos notifique que terminó de correr y limpiar todo antes de cerrar.
+    destroy_cpu_connected_sem(); // no lo usaremos mas luego de que cerramos el thread que escucha nuevas conexiones.
 
     // TODO: validar si hay algun cpu conectado. Si no hay ninguno, tirar error y salir.
 
