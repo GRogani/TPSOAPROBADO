@@ -14,6 +14,9 @@ int main(int argc, char* argv[]) {
 
     // El primer parámetro argv[0] siempre es para el nombre del programa
 
+    // Register device for the first time into the kernel
+    send_new_device(kernel_socket, argv[1]);
+
     waiting_requests(kernel_socket, argv[1]);
     shutdown_io(io_config, config_file, argv[1]);
 

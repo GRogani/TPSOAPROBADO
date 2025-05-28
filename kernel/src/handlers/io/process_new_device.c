@@ -1,10 +1,8 @@
-#include "handshake.h"
+#include "process_new_device.h"
 
-void handsake(void* thread_args)
-{
-    // TODO: deberiamos enviar un handshake de retorno?
-    
-    t_handshake_thread_args* args = (t_handshake_thread_args*)thread_args;
+void process_new_device(void* thread_args)
+{    
+    t_new_device_thread_args* args = (t_new_device_thread_args*)thread_args;
 
     lock_io_connections();
     lock_io_requests_link();

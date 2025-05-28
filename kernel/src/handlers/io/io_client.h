@@ -3,10 +3,10 @@
 
 #include <pthread.h>
 #include "../../utils/utils.h"
-#include "./handshake.h"
+#include "./process_new_device.h"
 #include "./io_completion.h"
 
 void* handle_io_client(void*);
-void process_new_device(t_package*, int);
+void handle_new_device(t_package*, int);
 
 #endif

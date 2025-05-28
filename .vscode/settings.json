@@ -12,6 +12,10 @@
         "io_operation_completed.h": "c",
         "io_operation_request.h": "c",
         "package.h": "c",
-        "cpu_server.h": "c"
+        "cpu_server.h": "c",
+        "process_new_device.h": "c",
+        "io_completion.h": "c",
+        "io_new_device.h": "c",
+        "io_connections.h": "c"
     }
 }

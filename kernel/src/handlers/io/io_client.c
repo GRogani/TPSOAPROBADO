@@ -12,7 +12,7 @@ void* handle_io_client(void* socket)
             switch(package->opcode)
             {
                 case IO_NEW_DEVICE: {
-                    process_new_device(package, client_socket);
+                    handle_new_device(package, client_socket);
                     break;
                 }
                 case IO_COMPLETION:
@@ -51,21 +51,21 @@ void* handle_io_client(void* socket)
     }
 }
 
-void process_new_device(t_package* package, int socket) {
-    log_info(get_logger(), "Processing HANDSHAKE from client");
-    char* device_name = read_io_handshake(package);
+void handle_new_device(t_package* package, int socket) {
+    log_info(get_logger(), "Processing new_device from client");
+    char* device_name = read_new_device(package);
 
     package_destroy(package);
 
-    t_handshake_thread_args* thread_args = safe_malloc(sizeof(t_handshake_thread_args));
+    t_new_device_thread_args* thread_args = safe_malloc(sizeof(t_new_device_thread_args));
     thread_args->client_socket = socket;
     thread_args->device_name = device_name;
 
     pthread_t io_client_thread;
-    int err_io_client = pthread_create(&io_client_thread, NULL, handsake, thread_args);
+    int err_io_client = pthread_create(&io_client_thread, NULL, process_new_device, thread_args);
     if (err_io_client != 0) 
     {
-        log_error(get_logger(), "Failed to create IO client HANDSHAKE thread");
+        log_error(get_logger(), "Failed to create IO client new_device thread");
     }
     pthread_detach(io_client_thread);
 }
