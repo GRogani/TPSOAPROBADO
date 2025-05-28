@@ -40,10 +40,6 @@ void *cpu_server_handler(void *args)
             break;
         }
 
-        // si justo apretó el enter aca, podria entrar primero el enter  a ejecutar y la conexion queda abierta para siempre.
-
-        wait_cpu_connected();
-
         int socket_interrupt_connection = accept_connection(socket_server_interrupt);
         if (socket_interrupt_connection == -1)
         {
@@ -83,11 +79,11 @@ void *cpu_server_handler(void *args)
 
             continue;
         }
+        pthread_detach(t1);
 
         // Do not create thread for interrupt.
-        // interruptions should be awaited in the short term scheduler
+        // interruptions should be awaited and sent into the short term scheduler
 
-        pthread_detach(t1);
     }
 
     if (socket_server_dispatch != -1) {
