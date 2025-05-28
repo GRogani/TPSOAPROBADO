@@ -4,6 +4,10 @@
 #include <unistd.h>
 #include "../utils.h"
 
-void* create_kernel_connection(void* connection_socket);
+int create_kernel_connection(char* puerto, char* ip);
+
+
+
+
 
 #endif

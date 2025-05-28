@@ -1,6 +1,8 @@
 #ifndef ENUM_OPCODES_H
 #define ENUM_OPCODES_H
 
+#include <stdint.h>
+
 /**
  * @enum OPCODE
  * @brief Códigos de operación para paquetes de comunicación
@@ -28,5 +30,12 @@ enum {
     // opcodes IO
     REQUEST_IO,
 };
+
+/**
+ * @brief Convierte un OPCODE a su representación en cadena.
+ * @param opcode El código de operación a convertir.
+ * @return Una cadena que representa el OPCODE.
+ */
+const char* opcode_to_string(OPCODE opcode);
 
 #endif

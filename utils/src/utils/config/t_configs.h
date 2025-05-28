@@ -44,7 +44,8 @@ typedef struct t_cpu_config {
     t_log_level LOG_LEVEL;
 } t_cpu_config;
 
-typedef struct t_io_config {
+typedef struct t_io_config 
+{
     char* IP_KERNEL;
     char* PUERTO_KERNEL;
     t_log_level LOG_LEVEL;

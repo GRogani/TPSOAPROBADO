@@ -9,7 +9,7 @@ char* read_io_operation_completed(t_package* package){
 }
 
 int send_io_operation_completed(int kernel_socket, char* device_name){
-    t_package* package = safe_malloc(sizeof(t_package));
+    t_package* package;
     package = create_io_operation_completed(device_name);
     int bytes_sent = send_package(kernel_socket, package);
     package_destroy(package);
