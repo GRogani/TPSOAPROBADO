@@ -83,25 +83,11 @@ void *cpu_server_handler(void *args)
 
             continue;
         }
+
+        // Do not create thread for interrupt.
+        // interruptions should be awaited in the short term scheduler
+
         pthread_detach(t1);
-
-        pthread_t t2;
-        int errt2 = pthread_create(&t2, NULL, handle_interrupt_client, connection_id);
-        if (errt2)
-        {
-            log_error(get_logger(), "Failed to create detachable thread for interrupt CPU server");
-            
-            remove_cpu_connection(connection_id);
-            close(socket_dispatch_connection);
-            close(socket_interrupt_connection);
-
-            if(should_exit) {
-                break;
-            }
-
-            continue;
-        }
-        pthread_detach(t2);
     }
 
     if (socket_server_dispatch != -1) {
@@ -111,6 +97,7 @@ void *cpu_server_handler(void *args)
         close(socket_server_interrupt);
     }
     log_info(get_logger(), "CPU server finished");
+
     signal_cpu_connected();
 
     return 0;

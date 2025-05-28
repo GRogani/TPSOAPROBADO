@@ -1,5 +1,4 @@
 #include "main.h"
-#include "data_request.h"
 
 int main(int argc, char* argv[]) {
 
@@ -10,30 +9,25 @@ int main(int argc, char* argv[]) {
     
     int kernel_socket;
     void* args[] = { &kernel_socket, (void*) io_config.PUERTO_KERNEL, (void*) io_config.IP_KERNEL };
-    pthread_t connection_thread;
-    pthread_create(&connection_thread, NULL, create_kernel_connection, args);
-
-    pthread_join(connection_thread, NULL);
-
-    // si, ese thread de arriba no hace falta.
+    
+    create_kernel_connection(args);
 
     // El primer parámetro argv[0] siempre es para el nombre del programa
-    send_handshake(kernel_socket, argv[1]);
+
     waiting_requests(kernel_socket, argv[1]);
-    shutdown_io(io_config, config_file);
+    shutdown_io(io_config, config_file, argv[1]);
 
     return 0;
-
 }
 
 void waiting_requests(int kernel_socket, char* id_IO){
     while(1){
         t_package* package = recv_package(kernel_socket);
-        t_request_IO* request = (t_request_IO *) read_IO_operation_request(package);
+        t_request_io* request = (t_request_io *) read_io_operation_request(package);
         if (io_busy) {
             LOG_DEBUG("OJO, estoy ocupado procesando una operación de I/O.");
             package_destroy(package);
-            request_destroy(request);
+            free(request);
             continue;
         } else {
             pthread_mutex_lock(&busy_mutex);
@@ -53,18 +47,24 @@ void waiting_requests(int kernel_socket, char* id_IO){
     }
 }
 
-void* processing_operation(void* io) {
-    log_info(get_logger(), "## PID: %d - Inicio de IO - Tiempo: %d", ((t_request_IO*) io)->pid, ((t_request_IO*) io)->sleep_time);
-    usleep(((t_request_IO*) io)->sleep_time);
-    log_info(get_logger(), "## PID: %d - Fin de IO", ((t_request_IO*) io)->pid);
-    LOG_DEBUG("Estoy libre [%s]", ((t_request_IO*) io)->device_name);
+void* processing_operation(void* arg) {
+    t_request_io* io = (t_request_io*) arg;
+
+    log_info(get_logger(), "## PID: %d - Inicio de IO - Tiempo: %d", io->pid, io->sleep_time);
+    
+    usleep(io->sleep_time);
+    
+    log_info(get_logger(), "## PID: %d - Fin de IO", io->pid);
+    
+    LOG_DEBUG("Estoy libre [%s]", io->device_name);
+    
     // RESPONSE
-    send_IO_operation_completed(((t_request_IO*) io)->kernel_socket, ((t_request_IO*) io)->device_name);
+    send_io_operation_completed(io->kernel_socket, io->device_name);
     
     pthread_mutex_lock(&busy_mutex);
     io_busy = false;
     pthread_mutex_unlock(&busy_mutex);
 
-    request_destroy(((t_request_IO*) io));
+    free(io);
     return NULL;
 }

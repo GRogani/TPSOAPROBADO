@@ -3,6 +3,15 @@
         "instructioncycle.h": "c",
         "stdio.h": "c",
         "log.h": "c",
-        "data_request.h": "c"
+        "data_request.h": "c",
+        "dtos.h": "c",
+        "logger.h": "c",
+        "main.h": "c",
+        "config.h": "c",
+        "buffer.h": "c",
+        "io_operation_completed.h": "c",
+        "io_operation_request.h": "c",
+        "package.h": "c",
+        "cpu_server.h": "c"
     }
 }

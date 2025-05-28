@@ -29,6 +29,6 @@ void shutdown_memoria(t_memoria_config memoria_config, t_config* config);
  * @param io_config Configuración de I/O.
  * @param config Puntero a t_config que se debe liberar.
  */
-void shutdown_io(t_io_config io_config, t_config* config);
+void shutdown_io(t_io_config io_config, t_config* config, char* device_name);
 
 #endif // SHUTDOWN_H

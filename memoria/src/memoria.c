@@ -54,7 +54,7 @@ int create_process_in_memory(uint32_t pid, uint32_t size, char* script_path) {
 
     list_add(global_memory.processes, proc);
 
-    log_info(logger,"## PID: %d - Process Created - Size: %d\n", pid, size);
+    log_info(get_logger(),"## PID: %d - Process Created - Size: %d\n", pid, size);
 
     return 0;
 }
@@ -66,10 +66,10 @@ void get_instruction(int socket, t_buffer* request_buffer) {
     uint32_t pc = buffer_read_uint32(request_buffer);
 
     proc_memory* proc = find_process_by_pid(pid);
-    if (proc && pc =< list_size(proc->instructions)) 
+    if (proc && pc <= list_size(proc->instructions)) 
     {
         char* instr = list_get(proc->instructions, pc);
-        log_info(logger,"## PID: %u - Get Instruction: %u - Instruction: %s\n", pid, pc, instr);
+        log_info(get_logger(),"## PID: %u - Get Instruction: %u - Instruction: %s\n", pid, pc, instr);
 
         t_buffer* response_buffer = buffer_create(0);
         buffer_add_string(response_buffer, strlen(instr) + 1, instr);
@@ -95,14 +95,14 @@ void get_instructions(int socket, t_buffer* request_buffer) {
         for (uint32_t i = 0; i < instr_count; i++) {
             char* instr = list_get(proc->instructions, i);
             buffer_add_string(response_buffer, strlen(instr) + 1, instr); 
-            log_info(logger, "## PID: %u - Instrucción %u: %s", pid, i, instr);
+            log_info(get_logger(), "## PID: %u - Instrucción %u: %s", pid, i, instr);
         }
 
         t_package* response = package_create(GET_INSTRUCTION, response_buffer);
         send_package(socket, response);
         package_destroy(response);
     }else{
-        log_error(logger, "## PID: %u - Proceso no encontrado.", pid);
+        log_error(get_logger(), "## PID: %u - Proceso no encontrado.", pid);
     }
 
     
