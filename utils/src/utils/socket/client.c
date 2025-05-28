@@ -2,7 +2,7 @@
 
 int create_connection(char* port, char* ip) {
 
-    struct addrinfo hints;
+  struct addrinfo hints;
 	struct addrinfo *server_info;
 
 	memset(&hints, 0, sizeof(hints));

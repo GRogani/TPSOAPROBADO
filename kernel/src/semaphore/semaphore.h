@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <unistd.h>
+#include "../utils.h"
 
 void initialize_global_semaphores();
 

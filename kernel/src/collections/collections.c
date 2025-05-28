@@ -3,7 +3,7 @@
 static t_dictionary *io_connections_dict;
 static t_dictionary *io_requests_link_dict;
 
-static t_list *cpu_connections_list;
+static t_dictionary *cpu_connections_dict;
 static t_list *new_list;
 static t_list *ready_list;
 static t_list *exec_list;
@@ -12,9 +12,9 @@ static t_list *susp_blocked_list;
 static t_list *susp_ready_list;
 static t_list *exit_list;
 
-t_list *get_cpu_connections_list()
+t_dictionary *get_cpu_connections_dict()
 {
-    return cpu_connections_list;
+    return cpu_connections_dict;
 }
 
 t_list *get_new_list()
@@ -38,8 +38,8 @@ void initialize_global_lists()
     initialize_repository_io_connections();
     io_connections_dict = dictionary_create();
 
-    initialize_repository_cpu_connections(); //TODO: es necesario que esta lista tenga semaforos? se crean elementos en un solo hilo y nunca mas se modifica. Podria ser un diccionario también.
-    cpu_connections_list = list_create();
+    initialize_repository_cpu_connections();
+    cpu_connections_dict = dictionary_create();
 
     initialize_repository_new();
     new_list = list_create();
@@ -57,7 +57,7 @@ void initialize_global_lists()
     if (
         io_connections_dict == NULL ||
         io_requests_link_dict == NULL ||
-        cpu_connections_list == NULL ||
+        cpu_connections_dict == NULL ||
         new_list == NULL ||
         ready_list == NULL ||
         exec_list == NULL ||
@@ -74,7 +74,7 @@ void initialize_global_lists()
 void destroy_global_lists()
 {
     dictionary_destroy_and_destroy_elements(io_connections_dict, io_connections_destroyer);
-    list_destroy_and_destroy_elements(cpu_connections_list, cpu_connections_destroyer);
+    dictionary_destroy_and_destroy_elements(cpu_connections_dict, cpu_connections_destroyer);
     dictionary_destroy_and_destroy_elements(io_requests_link_dict, io_requests_destroyer);
 }
 

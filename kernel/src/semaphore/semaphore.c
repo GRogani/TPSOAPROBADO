@@ -1,10 +1,11 @@
 #include "semaphore.h"
 
 static sem_t sem_cpu_connected;
+static sem_t sem_can_start;
 
 void initialize_cpu_connected_sem()
 {
-  if (sem_init(&sem_cpu_connected, 0, 1) != 0)
+  if (sem_init(&sem_cpu_connected, 0, 0) != 0)
   {
     LOG_ERROR("sem_init for CPU_CONNECTED failed");
     exit(EXIT_FAILURE);
@@ -28,5 +29,5 @@ void destroy_cpu_connected_sem()
 
 void initialize_global_semaphores()
 {
-  initialize_cpu_connected_Sem();
+  initialize_cpu_connected_sem();
 }

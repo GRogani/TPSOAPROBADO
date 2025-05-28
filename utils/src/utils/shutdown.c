@@ -18,10 +18,10 @@ void shutdown_memoria(t_memoria_config memoria_config, t_config* config) {
     destroy_logger();
 }
 
-void shutdown_io(t_io_config io_config, t_config* config) {
+void shutdown_io(t_io_config io_config, t_config* config, char* device_name) {
     log_info(get_logger(), "Shutting down IO...");
 
-    //Agregar...
+    free(device_name);
 
     config_destroy(config);
     destroy_logger();

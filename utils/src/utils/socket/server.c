@@ -63,7 +63,8 @@ int accept_connection(int socket_server)
 	int client_socket = accept(socket_server, NULL, NULL);
 	if (client_socket == -1)
 	{
-		log_error(get_logger(), "accept failed");
+		log_info(get_logger(), "accept failed");
+		return client_socket;
 	}
 
 	log_info(get_logger(), "Client connected.");

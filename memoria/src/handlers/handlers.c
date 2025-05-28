@@ -45,10 +45,23 @@ void* client_handler(void* client_fd_ptr) {
         }
 
         switch (package->opcode) 
-        {
-            case HANDSHAKE:
-                log_info(get_logger(), "Handshake recived");
+        {   
+            case GET_INSTRUCTION:
+                get_instruction(client_fd, package->buffer);
                 break;
+                
+            case LIST_INSTRUCTIONS:
+                get_instruction(client_fd, package->buffer);
+                break;
+
+            case GET_FREE_SPACE:
+                get_free_space(client_fd);
+                break;
+
+            case CREATE_PROCESS:
+                create_process(client_fd, package->buffer);
+                break;
+
             default:
                 log_warning(get_logger(), "Unknown Opcode");
                 close(client_fd);

@@ -1,7 +1,6 @@
 #include "cpu_connections.h"
 
 static sem_t sem_cpu_connections;
-static sem_t sem_id_generator;
 
 unsigned int id_generator = 0;
 
@@ -9,12 +8,7 @@ bool initialize_repository_cpu_connections()
 {
   if (sem_init(&sem_cpu_connections, 0, 1) != 0)
   {
-    LOG_ERROR("sem_init for CPU_CONNECTIONS list failed");
-    exit(EXIT_FAILURE);
-  }
-  if (sem_init(&sem_id_generator, 0, 1) != 0)
-  {
-    LOG_ERROR("sem_init for CPU_CONNECTIONS list failed");
+    LOG_ERROR("sem_init for CPU_CONNECTIONS dict failed");
     exit(EXIT_FAILURE);
   }
 }
@@ -29,29 +23,47 @@ void lock_cpu_connections()
   sem_wait(&sem_cpu_connections);
 }
 
+void* get_cpu_connection_by_id(char *id) {
+  void* cpu_connection = dictionary_get(get_cpu_connections_dict(), id);
+  return cpu_connection;
+}
+
+char * create_cpu_connection(int socket_interrupt, int socket_dispatch)
+{
+  t_cpu_connection* cpu_connection = safe_malloc(sizeof(t_cpu_connection));
+  cpu_connection->dispatch_socket_id = socket_dispatch;
+  cpu_connection->interrupt_socket_id = socket_interrupt;
+  cpu_connection->current_process_executing = -1;
+  
+  // Generar un ID random, se libera solo cuando eliminamos el elemento del diccionario.
+  char* id = safe_malloc(16);
+  snprintf(id, 16, "%d-%ld", socket_dispatch, random());
+
+  initialize_repository_cpu(&cpu_connection->cpu_exec_sem);
+
+  dictionary_put(get_cpu_connections_dict(), id, cpu_connection);
+
+  return id;
+}
+
+void free_cpu_connection(void *ptr)
+{
+  t_cpu_connection *cpu_connection = (t_cpu_connection *)ptr;
+
+  close(cpu_connection->dispatch_socket_id);
+  close(cpu_connection->interrupt_socket_id);
+
+  destroy_repository_cpu(&cpu_connection->cpu_exec_sem);
+
+  free(cpu_connection);
+}
+
+void remove_cpu_connection(char *id)
+{
+  dictionary_remove_and_destroy(get_cpu_connections_dict(), id, free_cpu_connection);
+}
+
 void unlock_cpu_connections()
 {
   sem_post(&sem_cpu_connections);
-}
-
-void create_cpu_connection(int socket_dispatch, int socket_interrupt)
-{
-  lock_cpu_connections();
-
-  t_cpu_connection* new_connection = malloc(sizeof(t_cpu_connection));
-
-  new_connection->socket_dispatch = socket_dispatch;
-  new_connection->socket_interrupt = socket_interrupt;
-
-  sem_wait(&sem_id_generator);
-  new_connection->id = id_generator;
-  id_generator++;
-  sem_post(&sem_id_generator);
-  
-  new_connection->current_process_executing = -1;
-  new_connection->exec_list = list_create();
-
-  list_add(cpu_connections, new_connection);
-
-  unlock_cpu_connections();
 }

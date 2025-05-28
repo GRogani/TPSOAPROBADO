@@ -28,9 +28,7 @@ void request_instruction(int socket, uint32_t PID, uint32_t PC)
     t_buffer* buffer = buffer_create(sizeof(uint32_t)*2);
     buffer_add_uint32(buffer, PID);
     buffer_add_uint32(buffer, PC);
-
-    t_package* package = package_create(CPU_REQUEST_INSTRUCTION, buffer);
-
+    t_package* package = package_create(GET_INSTRUCTION, buffer);
     send_package(socket, package);
     package_destroy(package);
 }
@@ -44,8 +42,8 @@ t_package* receive_instruction(int socket)
         return NULL;
     }
 
-    if (package->opcode != CPU_RESPONSE_INSTRUCTION) {
-        log_error(get_logger(), "Received instruction package with unexpected opcode: %d", package->opcode);
+    if (package->opcode != GET_INSTRUCTION) {
+        log_error(get_logger(), "Received package with unexpected opcode: %d", package->opcode);
         package_destroy(package);
         return NULL;
     }
@@ -58,8 +56,7 @@ void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* va
     t_buffer* buffer = buffer_create(sizeof(uint32_t) + strlen(valor_write) + 1);
     buffer_add_uint32(buffer, direccion_fisica);
     buffer_add_string(buffer, strlen(valor_write), valor_write);
-
-    t_package* package = package_create(CPU_WRITE_MEMORY_REQUEST, buffer);
+    t_package* package = package_create(WRITE_MEMORY, buffer);
     send_package(socket_memory, package);
     package_destroy(package);
 }
@@ -69,8 +66,7 @@ void read_memory_request(int socket_memory, uint32_t direccion_fisica, uint32_t 
     t_buffer* buffer = buffer_create( 2 * sizeof(uint32_t));
     buffer_add_uint32(buffer, direccion_fisica);
     buffer_add_uint32(buffer, size);
-
-    t_package* package = package_create(CPU_READ_MEMORY_REQUEST, buffer);
+    t_package* package = package_create(READ_MEMORY, buffer);
     send_package(socket_memory, package);
     package_destroy(package);
 }
@@ -82,8 +78,8 @@ char* read_memory_response(int socket_memory) {
         return NULL;
     }
 
-    if (package->opcode != CPU_READ_MEMORY_RESPONSE) {
-       log_error(get_logger(), "Received memory response with unexpected opcode: %d", package->opcode);
+    if (package->opcode != READ_MEMORY) {
+       log_error(get_logger(), "Received package with unexpected opcode: %d", package->opcode);
         package_destroy(package);
         return NULL;
     }

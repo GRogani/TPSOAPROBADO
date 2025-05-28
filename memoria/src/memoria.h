@@ -8,8 +8,7 @@
 
 #define MEMORIA_DISPONIBLE 1024
 
-t_memoria_config memoria_config;
-t_log* logger;
+extern t_memoria_config memoria_config;
 
 typedef struct {
     int pid;

@@ -8,25 +8,29 @@ void process_pending_io(t_pending_io_args args)
     lock_io_connections();
     lock_io_requests_link();
 
-    t_io_requests_link* request_link = find_io_request_by_device_name(args.device_name);
-    if(request_link == NULL) {
+    t_io_requests_link *request_link = find_io_request_by_device_name(args.device_name);
+    if (request_link == NULL)
+    {
         log_error(get_logger(), "Could not found request_link element.");
         goto free_request_link_connection;
     }
 
     lock_io_requests_queue(&request_link->io_requests_queue_semaphore);
 
-    void* connection_found = find_free_connection_from_device_name(args.device_name);
-    if(connection_found == NULL) {
+    void *connection = find_free_connection_from_device_name(args.device_name);
+    t_io_connection *connection_found = (t_io_connection *)connection;
+    if (connection_found == NULL)
+    {
         log_info(get_logger(), "There is no free connections for device %s", args.device_name);
         goto free_all;
     }
 
     // hay una conexion libre, asignamos la conexion al proceso
-    
+
     // obtenemos el primer elemento de la lista de solicitudes
-    void* request = get_next_request_in_queue(request_link->io_requests_queue);
-    if (request == NULL) {
+    void *request = get_next_request_in_queue(request_link->io_requests_queue);
+    if (request == NULL)
+    {
         log_info(get_logger(), "There is no pending requests for device %s", args.device_name);
         goto free_all;
     }
@@ -41,7 +45,7 @@ void process_pending_io(t_pending_io_args args)
     }
 
     // si se pudo enviar la solicitud, la eliminamos de la lista de solicitudes y liberamos el elemento
-    void* element = pop_next_request_in_queue(request_link->io_requests_queue);
+    void *element = pop_next_request_in_queue(request_link->io_requests_queue);
     if (element == NULL)
     {
         log_error(get_logger(), "FATAL ERROR: Could not pop io_request from queue, there is no elements");
@@ -49,18 +53,19 @@ void process_pending_io(t_pending_io_args args)
     }
 
     // actualizamos el current_processing de la conexion (luego sirve por si se desconecta, para saber que proceso estaba ejecutando y pasarlo a EXIT)
-    (t_io_connection * connection_found)->current_process_executing = io_request->pid;
+    connection_found->current_process_executing = io_request->pid;
 
-        free(element);
+    free(element);
+
     goto free_all;
 
-    free_all:
-        unlock_io_requests_queue(&request_link->io_requests_queue_semaphore);
-        goto free_request_link_connection;
+free_all:
+    unlock_io_requests_queue(&request_link->io_requests_queue_semaphore);
+    goto free_request_link_connection;
 
-    free_request_link_connection: 
-        unlock_io_requests_link();
-        unlock_io_connections();
-        free(args.device_name);
-        return;
-    }
+free_request_link_connection:
+    unlock_io_requests_link();
+    unlock_io_connections();
+    free(args.device_name);
+    return;
+}

@@ -73,7 +73,8 @@ int execute(instruction_t* instruction, t_package* instruction_package, int sock
                 *PC = instruction->operand_numeric1;
             break;
         case IO:
-                send_package(socket_dispatch, instruction_package);
+            // TODO: esto esta mal, deberiamos mandar una nueva instruccion. sino se va a mandar el opcode GET_INSTRUCTION que es el que se le mandó a la memoria desde la CPU y con el que la memoria contestó
+            send_package(socket_dispatch, instruction_package);
             break;
         case INIT_PROC:
                 send_package(socket_dispatch, instruction_package);
@@ -105,7 +106,7 @@ int check_interrupt(int socket_interrupt, int pid_on_execute, int pc_on_execute)
         return -1;
     }
 
-    if(package->opcode == CPU_INTERRUPT_REQUEST) 
+    if(package->opcode == CPU_INTERRUPT) 
     {
         sem_wait(&cpu_mutex);
 
@@ -120,7 +121,7 @@ int check_interrupt(int socket_interrupt, int pid_on_execute, int pc_on_execute)
             buffer_add_uint32(buffer, pid_received);
             buffer_add_uint32(buffer, pc_on_execute);
 
-            t_package* package = package_create(CPU_INTERRUPT_RESPONSE, buffer);
+            t_package* package = package_create(CPU_INTERRUPT, buffer);
             send_package(socket_interrupt, package);
             package_destroy(package);
 

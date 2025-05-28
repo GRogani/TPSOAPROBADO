@@ -5,7 +5,7 @@
 #include <commons/collections/dictionary.h>
 #include <commons/collections/queue.h>
 #include "../utils.h"
-#include "repository/new_list.h"
+#include "repository/process/new_list.h"
 #include "repository/io_connections.h"
 #include "repository/io_requests_link.h"
 #include "repository/io_requests_queue.h"
@@ -18,7 +18,6 @@ typedef struct t_cpu_connection
     int dispatch_socket_id;
     int current_process_executing;
     sem_t cpu_exec_sem;
-    t_list* exec_list; // esta lista como es por CPU, no es necesario que sea compartida o "general".
 } t_cpu_connection;
 
 typedef struct t_io_connection
@@ -39,7 +38,7 @@ typedef struct t_io_requests_link_list
     t_queue *io_requests_queue;
 } t_io_requests_link;
 
-t_list *get_cpu_connections_list();
+t_dictionary *get_cpu_connections_dict();
 t_list *get_new_list();
 t_dictionary *get_io_connections_dict();
 t_dictionary *get_io_requests_link_dict();
