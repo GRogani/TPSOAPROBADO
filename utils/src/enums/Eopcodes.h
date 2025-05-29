@@ -26,6 +26,7 @@ enum {
     // opcodes CPU
     PID_PC_PACKAGE,
     CPU_INTERRUPT,
+    CPU_SYSCALL_RESPONSE,
 
     // opcodes IO
     REQUEST_IO,

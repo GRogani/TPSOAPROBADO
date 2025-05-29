@@ -19,6 +19,7 @@ const char* opcode_to_string(OPCODE opcode)
         // CPU
         case PID_PC_PACKAGE: return "PID_PC_PACKAGE";
         case CPU_INTERRUPT: return "CPU_INTERRUPT";
+        case CPU_SYSCALL_RESPONSE: return "CPU_SYSCALL_RESPONSE";
 
         // IO
         case REQUEST_IO: return "REQUEST_IO";
