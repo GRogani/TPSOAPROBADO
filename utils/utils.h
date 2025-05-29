@@ -33,5 +33,6 @@
 // Enums
 #include "src/enums/Eopcodes.h"
 #include "src/enums/Eplanification_algorithm.h"
+#include "src/enums/Eprocess_state.h"
 
 #endif 
