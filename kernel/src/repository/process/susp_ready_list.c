@@ -49,3 +49,12 @@ t_pcb* remove_pcb_from_susp_ready(uint32_t pid) {
     t_pcb* removed_pcb = list_remove_by_condition(get_susp_ready_list(), pid_matches);
     return removed_pcb;
 }
+
+t_pcb* get_next_pcb_from_susp_ready() {
+    // Para algoritmos FIFO - obtiene el primer elemento
+    if (list_size(get_susp_ready_list()) == 0) {
+        return NULL;
+    }
+    
+    return list_remove(get_susp_ready_list(), 0); // Remueve y retorna el primer elemento
+}

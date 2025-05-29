@@ -5,6 +5,12 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../../collections/collections.h"
+#include "../../repository/pcb.h"
+#include "../../repository/process/new_list.h"
+#include "../utils.h"
+#include "../scheduler/long_scheduler.h"
+#include "../scheduler/short_scheduler.h"
 
 /**
  * @brief Estructura para los argumentos de init_proc

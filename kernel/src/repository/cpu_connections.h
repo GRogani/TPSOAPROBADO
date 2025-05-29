@@ -20,4 +20,7 @@ void remove_cpu_connection(char *id);
 
 void unlock_cpu_connections();
 
+void* get_all_cpu_connections();
+void* get_first_available_cpu();
+
 #endif

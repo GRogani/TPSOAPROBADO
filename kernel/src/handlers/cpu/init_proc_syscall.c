@@ -1,13 +1,4 @@
 #include "init_proc_syscall.h"
-#include "../../collections/collections.h"
-#include "../../repository/pcb.h"
-#include "../../repository/process/new_list.h"
-#include <macros/log_error.h>
-#include <utils/logger/logger.h>
-
-// Forward declarations de las funciones de planificadores
-extern void* run_long_scheduler(void);
-extern void run_short_scheduler(void);
 
 /**
  * @brief Syscall for process initialization.
@@ -30,8 +21,8 @@ void init_proc(void *args)
     log_info(get_logger(), "init_proc: Inicializando proceso PID=%d con memoria=%d bytes, archivo=%s\n", 
              pid, memory_space, pseudocode_file ? pseudocode_file : "NULL");
 
-    // 2. Crear nuevo PCB con archivo de pseudocódigo
-    t_pcb* new_pcb = pcb_create(pid, 0, pseudocode_file); // PC inicial en 0
+    // 2. Crear nuevo PCB con archivo de pseudocódigo y tamaño
+    t_pcb* new_pcb = pcb_create(pid, 0, memory_space, pseudocode_file); // PC inicial en 0
     if (new_pcb == NULL) {
         LOG_ERROR("init_proc: Error al crear PCB para PID %d", pid);
         return;

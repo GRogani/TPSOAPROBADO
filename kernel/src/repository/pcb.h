@@ -42,6 +42,7 @@ typedef struct {
 typedef struct t_pcb {
     uint32_t pc;                    // Program Counter
     uint32_t pid;                   // Process ID
+    uint32_t size;                  // Tamaño del proceso en memoria
     char* pseudocode_file;          // Nombre del archivo de pseudocódigo
     PROCESS_STATE current_state;    // Estado actual del proceso
     struct timeval state_start_time; // Tiempo de inicio del estado actual
@@ -53,10 +54,11 @@ typedef struct t_pcb {
  * @brief Crea un nuevo PCB inicializado.
  * @param pid Process ID del nuevo proceso.
  * @param pc Program Counter inicial.
+ * @param size Tamaño del proceso en memoria.
  * @param pseudocode_file Nombre del archivo de pseudocódigo del proceso.
  * @return Puntero al PCB creado o NULL si falla.
  */
-t_pcb* pcb_create(uint32_t pid, uint32_t pc, const char* pseudocode_file);
+t_pcb* pcb_create(uint32_t pid, uint32_t pc, uint32_t size, const char* pseudocode_file);
 
 /**
  * @brief Libera la memoria de un PCB.

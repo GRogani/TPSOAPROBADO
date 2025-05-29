@@ -59,10 +59,10 @@ t_pcb* remove_pcb_from_new(uint32_t pid) {
 }
 
 t_pcb* get_next_pcb_from_new() {
-    // Para algoritmos FIFO - obtiene el primer elemento
+    // Para algoritmos FIFO - obtiene y remueve el primer elemento
     if (list_size(get_new_list()) == 0) {
         return NULL;
     }
     
-    return (t_pcb*) list_get(get_new_list(), 0);
+    return (t_pcb*) list_remove(get_new_list(), 0);
 }
