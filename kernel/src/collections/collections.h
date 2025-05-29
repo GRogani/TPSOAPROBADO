@@ -4,12 +4,20 @@
 #include <commons/collections/list.h>
 #include <commons/collections/dictionary.h>
 #include <commons/collections/queue.h>
+#include <enums/Eprocess_state.h>
 #include "../utils.h"
-#include "repository/process/new_list.h"
-#include "repository/io_connections.h"
-#include "repository/io_requests_link.h"
-#include "repository/io_requests_queue.h"
-#include "repository/cpu_connections.h"
+#include "../repository/process/new_list.h"
+#include "../repository/process/ready_list.h"
+#include "../repository/process/exec_list.h"
+#include "../repository/process/blocked_list.h"
+#include "../repository/process/exit_list.h"
+#include "../repository/process/susp_blocked_list.h"
+#include "../repository/process/susp_ready_list.h"
+#include "../repository/io_connections.h"
+#include "../repository/io_requests_link.h"
+#include "../repository/io_requests_queue.h"
+#include "../repository/cpu_connections.h"
+#include "../repository/pcb.h"
 
 typedef struct t_cpu_connection
 {
@@ -40,6 +48,12 @@ typedef struct t_io_requests_link_list
 
 t_dictionary *get_cpu_connections_dict();
 t_list *get_new_list();
+t_list *get_ready_list();
+t_list *get_exec_list();
+t_list *get_blocked_list();
+t_list *get_exit_list();
+t_list *get_susp_blocked_list();
+t_list *get_susp_ready_list();
 t_dictionary *get_io_connections_dict();
 t_dictionary *get_io_requests_link_dict();
 
@@ -50,5 +64,6 @@ void io_connections_destroyer(void *ptr);
 void io_requests_destroyer(void *ptr);
 void io_requests_queue_destroyer(void *ptr);
 void cpu_connections_destroyer(void *ptr);
+void pcb_destroyer(void *ptr);
 
 #endif

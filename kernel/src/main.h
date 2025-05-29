@@ -13,6 +13,7 @@
 #include "collections/collections.h"
 #include "threads/create_threads.h"
 #include "semaphore/semaphore.h"
+#include "./handlers/cpu/init_proc_syscall.h"
 
 int main(int, char*[]);
 void process_enter();

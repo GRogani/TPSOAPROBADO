@@ -1,4 +1,4 @@
-run_medium_scheduler()
+void run_medium_scheduler(void)
 {
   /**
    * Aca va la implementacion del algoritmo de MEDIANO plazo
