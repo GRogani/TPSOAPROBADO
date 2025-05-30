@@ -2,14 +2,11 @@
 
 t_package* fetch(int socket, uint32_t PID, uint32_t PC) 
 {
-    log_debug(get_logger(), "Fetching instruction for PID: %d, PC: %d", PID, PC);
     t_package* package;
-    do
-    {
-        request_instruction(socket, PID, PC);
-        package = receive_instruction(socket);
 
-    }while(package != NULL);
+    log_debug(get_logger(), "Fetching instruction for PID: %d, PC: %d", PID, PC);
+    request_instruction(socket, PID, PC);
+    package = receive_instruction(socket);
 
     return package;
 }
@@ -74,24 +71,34 @@ int execute(t_instruction* instruction, t_package* instruction_package, int sock
                 *PC = instruction->operand_numeric1;
             break;
         case IO:
-            // TODO: esto esta mal, deberiamos mandar una nueva instruccion. sino se va a mandar el opcode GET_INSTRUCTION que es el que se le mandó a la memoria desde la CPU y con el que la memoria contestó
-            send_package(socket_dispatch, instruction_package);
+                log_debug(get_logger(), "Executing IO operation, sending syscall to kernel");
+                send_syscall(socket_dispatch, instruction_package);
+                (*PC)++;
+                return 1;
             break;
         case INIT_PROC:
-                send_package(socket_dispatch, instruction_package);
+                log_debug(get_logger(), "Executing INIT_PROC, sending syscall to kernel");
+                send_syscall(socket_dispatch, instruction_package);
+                (*PC)++;
+                return 1;
             break;
         case DUMP_PROCESS:
-                send_package(socket_dispatch, instruction_package);
+                log_debug(get_logger(), "Executing DUMP_PROCESS, sending syscall to kernel");
+                send_syscall(socket_dispatch, instruction_package);
+                (*PC)++;
+                return 1;
             break;
         case EXIT:
-                send_package(socket_dispatch, instruction_package);
+                log_debug(get_logger(), "Executing EXIT, sending syscall to kernel");
+                send_syscall(socket_dispatch, instruction_package);
+                return 1;
             break;
         default:
                 log_error(get_logger(), "Unknown instruction: %d", instruction->instruction_code);
             return -1;
     }
 
-    PC++;
+    (*PC)++;
 
     return 0;
 }

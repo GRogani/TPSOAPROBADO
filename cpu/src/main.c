@@ -30,19 +30,26 @@ int main(int argc, char* argv[])
     while(1)
     {
         sem_wait(&cpu_mutex);
-
         kernel_package = receive_PID_PC_Package(fd_kernel_dispatch, &pid, &pc);
         if(kernel_package == NULL) break; 
-
-        instruction_package = fetch(fd_memory, pid, pc);
-        instruction = decode(instruction_package);
-        execute(instruction, instruction_package, fd_memory, fd_kernel_dispatch, &pc);
-
         sem_post(&cpu_mutex);
+
+        int syscall = 0;
+        do{
+            sem_wait(&cpu_mutex);
+            instruction_package = fetch(fd_memory, pid, pc);
+            instruction = decode(instruction_package);
+            syscall = execute(instruction, instruction_package, fd_memory, fd_kernel_dispatch, &pc);
+            sem_post(&cpu_mutex);
+        }while(syscall != 1);
+
+        if (syscall == -1) 
+            log_error(get_logger(), "Error in execution");
 
         package_destroy(kernel_package);
         package_destroy(instruction_package);
-        free(instruction->operand_string);
+        if(instruction->operand_string_size > 0)
+            free(instruction->operand_string);
         free(instruction);
     }
     

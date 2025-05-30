@@ -53,18 +53,22 @@ void request_instruction(int socket, uint32_t PID, uint32_t PC)
 
 t_package* receive_instruction(int socket) 
 {
-    t_package* package = recv_package(socket);
+    t_package* package;
+    bool corrupted_package;
+    do{
+        corrupted_package = false;
+        package = recv_package(socket);
 
-    if (package == NULL) {
-        log_error(get_logger(), "Failed to receive instruction package");
-        return NULL;
-    }
-
-    if (package->opcode != GET_INSTRUCTION) {
-        log_error(get_logger(), "Received package with unexpected opcode: %d", package->opcode);
-        package_destroy(package);
-        return NULL;
-    }
+        if (package == NULL) {
+            log_error(get_logger(), "Disconnected from memory");
+            return NULL;
+        }
+        else if (package->opcode != GET_INSTRUCTION) {
+            corrupted_package = true;
+            log_error(get_logger(), "Received package with unexpected opcode: %d", package->opcode);
+            package_destroy(package);
+        }
+    }while(corrupted_package);
 
     return package;
 }
