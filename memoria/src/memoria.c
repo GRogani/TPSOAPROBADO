@@ -50,6 +50,10 @@ int create_process_in_memory(uint32_t pid, uint32_t size, char* script_path) {
 
     list_add(global_memory.processes, proc);
 
+    // TODO: ir restando el size total de la memoria
+    // si se queda sin size disponible para crear el proceso, entonces debemos devolver -1
+    // indicando error y retornamos ese error al kernel en forma de respuesta socket
+
     log_info(get_logger(),"## PID: %d - Process Created - Size: %d\n", pid, size);
 
     return 0;

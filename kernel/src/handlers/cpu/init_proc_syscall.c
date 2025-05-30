@@ -48,14 +48,14 @@ void init_proc(void *args)
 
     // 4. Ejecutar planificador de largo plazo
     log_info(get_logger(), "init_proc: Planificador de largo plazo iniciado\n");
-    run_long_scheduler();
+    bool success = run_long_scheduler();
     log_info(get_logger(), "init_proc: Planificador de largo plazo completado\n");
 
-    // 5. Ejecutar planificador de corto plazo
-    log_info(get_logger(), "init_proc: Ejecutando planificador de corto plazo\n");
-    run_short_scheduler();
-    
-    log_info(get_logger(), "init_proc: Proceso PID=%d inicializado completamente\n", pid);
+    if(success) {
+        log_info(get_logger(), "init_proc: Ejecutando planificador de corto plazo\n");
+        run_short_scheduler();
+        log_info(get_logger(), "init_proc: Proceso PID=%d inicializado completamente\n", pid);
+    }
 }
 
 /**

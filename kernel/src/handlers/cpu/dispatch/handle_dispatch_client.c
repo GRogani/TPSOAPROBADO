@@ -66,9 +66,6 @@ void handle_cpu_syscall(t_package* package, int socket)
         log_info(get_logger(), "Sending syscall response for init_proc PID %d", syscall->pid);
         send_cpu_syscall_response(socket, 0); // 0 = success
       }
-
-      // TODO: run largo plazo
-      // TODO: if largo plazo succeed initializing process, run corto-plazo
       break;
     }
     case SYSCALL_IO: {
