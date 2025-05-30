@@ -20,4 +20,10 @@ void send_instruction_request(int socket_dispatch, uint32_t PID, uint32_t PC);
 
 void send_instruction(int socket_dispatch, t_instruction* instruction);
 
+
+/// @brief Cambia el opcode del paquete a SYSCALL y lo envía por el socket.
+/// @param socket Donde enviar el paquete.
+/// @param package Paquete que se enviará con el opcode cambiado a SYSCALL.
+void send_syscall(int socket, t_package* package);
+
 #endif

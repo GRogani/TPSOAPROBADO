@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#define LOG_DEBUG_MODE true
+#define LOG_DEBUG_MODE false
 
 #define LOG_ERROR(fmt, ...) \
     fprintf(stderr, "\x1b[31m[ERROR]\x1b[0m (%s:%d in %s) " fmt "\n", __FILE__, __LINE__, __func__, ##__VA_ARGS__)

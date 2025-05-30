@@ -51,7 +51,7 @@ int main(){
     // =========================
     // Enviando IO COMPLETION
     // =========================
-    printf("\nPress Enter to send IO COMPLETION to CPU dispatch connection.\n");
+    printf("\n\x1b[33mPress Enter to send IO COMPLETION to CPU dispatch connection.\x1b[0m\n");
     getchar();
 
     send_io_operation_completed(cpu_dispatch_connection, "1");
@@ -60,7 +60,7 @@ int main(){
     // =========================
     // Enviando PID & PC
     // =========================
-    printf("\nPress Enter to send PID & PC to CPU dispatch connection.\n");
+    printf("\n\x1b[33mPress Enter to send PID & PC to CPU dispatch connection.\x1b[0m\n");
     getchar();
 
     send_PID_PC(cpu_dispatch_connection, 1, 3);
@@ -77,7 +77,7 @@ int main(){
     // =========================
     // Enviando instrucción
     // =========================
-    printf("\nPress Enter to send NOOP to CPU memory connection.\n");
+    printf("\n\x1b[33mPress Enter to send NOOP to CPU memory connection.\x1b[0m\n");
     getchar();
 
     send_instruction(cpu_memory_connection, instruction);
@@ -86,7 +86,7 @@ int main(){
     // =========================
     // Enviando syscall  EXIT
     // =========================
-    printf("\nPress Enter to send instruction to CPU memory connection.\n");
+    printf("\n\x1b[33mPress Enter to send instruction to CPU memory connection.\x1b[0m\n");
     getchar();
 
     send_instruction(cpu_memory_connection, syscall);
@@ -101,7 +101,7 @@ int main(){
     // =========================
     // Finalizando tester
     // =========================
-    printf("\nPress Enter to exit...\n");
+    printf("\n\x1b[33mPress Enter to exit...\x1b[0m\n");
     getchar();
 
     return 0;

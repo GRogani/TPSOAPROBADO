@@ -57,4 +57,9 @@ void send_instruction(int socket_dispatch, t_instruction* instruction)
     package_destroy(package);
 }
 
+void send_syscall(int socket, t_package* package)
+{
+    package->opcode = CPU_SYSCALL;
+    send_package(socket, package);
+}
 
