@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 
         instruction_package = fetch(fd_memory, pid, pc);
         instruction = decode(instruction_package);
-        execute(instruction, instruction_package, fd_memory, fd_kernel_dispatch, &pc);
+        execute(instruction, instruction_package, fd_memory, fd_kernel_dispatch, pid, &pc);
 
         sem_post(&cpu_mutex);
 

@@ -17,6 +17,8 @@
         "io_completion.h": "c",
         "io_new_device.h": "c",
         "io_connections.h": "c",
-        "handlers.h": "c"
+        "handlers.h": "c",
+        "handle_dispatch_client.h": "c",
+        "semaphore.h": "c"
     }
 }

@@ -7,6 +7,7 @@
 #include "utils/serialization/package.h"
 #include "utils/serialization/buffer.h"
 #include "utils/DTOs/cpu_interrupt.h"
+#include "utils/DTOs/cpu_dispatch.h"
 #include "enums/Eopcodes.h"
 #include "../../collections/collections.h"
 #include "../../algorithms/scheduling_algorithms.h"

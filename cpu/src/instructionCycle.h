@@ -9,6 +9,9 @@
 #include <commons/log.h>
 #include "../utils.h"
 #include "cpuProtocol.h"
+#include "utils/DTOs/cpu_syscall_request.h"
+#include "utils/DTOs/cpu_interrupt.h"
+#include "utils/DTOs/memory_get_instruction.h"
 
 
 
@@ -16,7 +19,7 @@ t_package* fetch(int socket,uint32_t PID, uint32_t PC);
 
 instruction_t* decode(t_package* package);
 
-int execute(instruction_t* instruction, t_package* instruction_package, int socket_memory, int socket_dispatch, uint32_t* PC);
+int execute(instruction_t* instruction, t_package* instruction_package, int socket_memory, int socket_dispatch, uint32_t pid, uint32_t* PC);
 
 int check_interrupt(int socket_interrupt, int pid_on_execute, int pc_on_execute);
 

@@ -65,16 +65,8 @@ bool send_dispatch_to_cpu(t_cpu_connection* cpu_connection, uint32_t pid, uint32
     
     log_info(get_logger(), "short_scheduler: Enviando dispatch PID=%d, PC=%d", pid, pc);
     
-    // Crear paquete PID_PC_PACKAGE
-    t_buffer* buffer = buffer_create(sizeof(uint32_t) * 2);
-    buffer_add_uint32(buffer, pid);
-    buffer_add_uint32(buffer, pc);
-    
-    t_package* package = package_create(PID_PC_PACKAGE, buffer);
-    
-    // Enviar paquete
-    int sent_bytes = send_package(cpu_connection->dispatch_socket_id, package);
-    package_destroy(package);
+    // Usar DTO para enviar dispatch
+    int sent_bytes = send_cpu_dispatch_request(cpu_connection->dispatch_socket_id, pid, pc);
     
     if (sent_bytes <= 0) {
         log_error(get_logger(), "short_scheduler: Error enviando dispatch");

@@ -35,7 +35,7 @@ t_package* create_cpu_syscall_response(uint32_t status)
 {
     t_buffer* buffer = buffer_create(sizeof(uint32_t));
     buffer_add_uint32(buffer, status);
-    return package_create(CPU_SYSCALL_RESPONSE, buffer);
+    return package_create(CPU_SYSCALL, buffer);
 }
 
 int send_cpu_syscall_response(int socket, uint32_t status) 

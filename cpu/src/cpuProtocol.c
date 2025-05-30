@@ -2,7 +2,6 @@
 
 t_package* receive_PID_PC_Package(int socket_dispatch_kernel, uint32_t* PID, uint32_t* PC) 
 {
-
     t_package* package = recv_package(socket_dispatch_kernel);
 
     if (package == NULL) {
@@ -16,21 +15,21 @@ t_package* receive_PID_PC_Package(int socket_dispatch_kernel, uint32_t* PID, uin
         return NULL;
     }
 
-    package->buffer->offset = 0;
-    *PID = buffer_read_uint32(package->buffer);
-    *PC = buffer_read_uint32(package->buffer);
+    // Usar DTO para leer el dispatch
+    t_cpu_dispatch* dispatch = read_cpu_dispatch(package);
+    if (dispatch) {
+        *PID = dispatch->pid;
+        *PC = dispatch->pc;
+        destroy_cpu_dispatch(dispatch);
+    }
 
     return package;
 }
 
 void request_instruction(int socket, uint32_t PID, uint32_t PC) 
 {
-    t_buffer* buffer = buffer_create(sizeof(uint32_t)*2);
-    buffer_add_uint32(buffer, PID);
-    buffer_add_uint32(buffer, PC);
-    t_package* package = package_create(GET_INSTRUCTION, buffer);
-    send_package(socket, package);
-    package_destroy(package);
+    // Usar DTO para enviar request de instrucción
+    send_memory_get_instruction_request(socket, PID, PC);
 }
 
 t_package* receive_instruction(int socket) 

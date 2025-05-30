@@ -21,14 +21,10 @@ t_list* load_script_lines(const char* path) {
     return list;
 }
 
-void create_process(int socket, t_buffer* buffer) {
-    uint32_t pid = buffer_read_uint32(buffer);
-    uint32_t size = buffer_read_uint32(buffer);
-    uint32_t path_len;
-    char* path = buffer_read_string(buffer, &path_len);
-
-    int result = create_process_in_memory(pid, size, path);
-    free(path);
+void create_process(int socket, t_package* package) {
+    t_memory_create_process* create_process_args = read_memory_create_process(package);
+    int result = create_process_in_memory(create_process_args->pid, create_process_args->size, create_process_args->pseudocode_path);
+    destroy_memory_create_process(create_process_args);
 
     // TODO: send response to kernel using opcode CREATE_PROCESS
 }

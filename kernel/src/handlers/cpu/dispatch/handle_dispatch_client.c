@@ -62,28 +62,34 @@ void handle_cpu_syscall(t_package* package, int socket)
                               syscall->params.init_proc.memory_space,
                               syscall->params.init_proc.pseudocode_file);
       
-      // Send response only if PID != 0 (as per requirements)
       if (syscall->pid != 0) {
         log_info(get_logger(), "Sending syscall response for init_proc PID %d", syscall->pid);
         send_cpu_syscall_response(socket, 0); // 0 = success
       }
+
+      // TODO: run largo plazo
+      // TODO: if largo plazo succeed initializing process, run corto-plazo
       break;
     }
-    case SYSCALL_IO:
+    case SYSCALL_IO: {
       // TODO: Handle IO syscall
       log_info(get_logger(), "IO syscall not implemented yet");
       break;
-    case SYSCALL_DUMP_PROCESS:
+    }
+    case SYSCALL_DUMP_PROCESS: {
       // TODO: Handle dump process syscall
       log_info(get_logger(), "Dump process syscall not implemented yet");
       break;
-    case SYSCALL_EXIT:
+    }
+    case SYSCALL_EXIT: {
       // TODO: Handle exit syscall
       log_info(get_logger(), "Exit syscall not implemented yet");
       break;
-    default:
+    }
+    default: {
       log_error(get_logger(), "Unknown syscall type: %d", syscall->syscall_type);
       break;
+    }
   }
   
   destroy_cpu_syscall(syscall);

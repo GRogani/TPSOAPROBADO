@@ -3,16 +3,18 @@
 
 #include <commons/collections/list.h>
 #include "../utils.h"
+#include "utils/DTOs/cpu_dispatch.h"
+#include "utils/DTOs/memory_get_instruction.h"
 
 typedef enum {
-NOOP,
-WRITE,
-READ,
-GOTO,
-IO,
-INIT_PROC,
-DUMP_PROCESS,
-EXIT
+INST_NOOP,
+INST_WRITE,
+INST_READ,
+INST_GOTO,
+INST_IO,
+INST_INIT_PROC,
+INST_DUMP_PROCESS,
+INST_EXIT
 } cod_instruction;
 
 typedef struct{

@@ -22,17 +22,18 @@ instruction_t* decode(t_package* package)
     
     switch(instruction->cod_instruction)
     {
-        case NOOP:
+        case INST_NOOP:
             break;
-        case WRITE:
+        case INST_WRITE:
             instruction->operand_numeric1 = buffer_read_uint32(package->buffer);
             instruction->operand_string_size = buffer_read_uint32(package->buffer);
             instruction->operand_string = buffer_read_string(package->buffer, &instruction->operand_string_size);
-        case READ:
+            break;
+        case INST_READ:
             instruction->operand_numeric1 = buffer_read_uint32(package->buffer);
             instruction->operand_numeric2 = buffer_read_uint32(package->buffer);
             break;
-        case GOTO:
+        case INST_GOTO:
             instruction->operand_numeric1 = buffer_read_uint32(package->buffer);
             break;
         default:
@@ -42,19 +43,19 @@ instruction_t* decode(t_package* package)
     return instruction;
 }
 
-int execute(instruction_t* instruction, t_package* instruction_package, int socket_memory, int socket_dispatch, uint32_t* PC) 
+int execute(instruction_t* instruction, t_package* instruction_package, int socket_memory, int socket_dispatch, uint32_t pid, uint32_t* PC) 
 {
     switch (instruction->cod_instruction) {
-        case NOOP:
+        case INST_NOOP:
             // No operation
             break;
-        case WRITE:
+        case INST_WRITE:
                 uint32_t logic_dir_write = instruction->operand_numeric1;
                 char* valor_write = instruction->operand_string;
                 uint32_t physic_dir_write = MMU(logic_dir_write);
                 write_memory_request(socket_memory, physic_dir_write, valor_write);
             break;
-        case READ:
+        case INST_READ:
                 uint32_t logic_dir_read = instruction->operand_numeric1;
                 uint32_t size = instruction->operand_numeric2;
                 uint32_t physic_dir_read = MMU(logic_dir_read);
@@ -69,22 +70,31 @@ int execute(instruction_t* instruction, t_package* instruction_package, int sock
                     return -1;
                 }
             break;
-        case GOTO:
+        case INST_GOTO:
                 *PC = instruction->operand_numeric1;
             break;
-        case IO:
-            // TODO: esto esta mal, deberiamos mandar una nueva instruccion. sino se va a mandar el opcode GET_INSTRUCTION que es el que se le mandó a la memoria desde la CPU y con el que la memoria contestó
-            send_package(socket_dispatch, instruction_package);
+        case INST_IO:
+            // Enviar syscall IO usando nuevo DTO
+            send_cpu_syscall_request(socket_dispatch, SYSCALL_RESPONSE_IO, pid, *PC);
+            // Para IO, CPU se autodesaloja (no espera respuesta)
+            return 1; // Indica que debe retornar el control al kernel
+        case INST_INIT_PROC:
+            // Enviar syscall INIT_PROC usando nuevo DTO
+            send_cpu_syscall_request(socket_dispatch, SYSCALL_RESPONSE_INIT_PROC, pid, *PC);
+            // Para INIT_PROC, CPU debe esperar respuesta del kernel
+            // Aquí esperaríamos una respuesta específica del kernel
+            // TODO: esperar respuesta del kernel
             break;
-        case INIT_PROC:
-                send_package(socket_dispatch, instruction_package);
-            break;
-        case DUMP_PROCESS:
-                send_package(socket_dispatch, instruction_package);
-            break;
-        case EXIT:
-                send_package(socket_dispatch, instruction_package);
-            break;
+        case INST_DUMP_PROCESS:
+            // Enviar syscall DUMP_PROCESS usando nuevo DTO
+            send_cpu_syscall_request(socket_dispatch, SYSCALL_RESPONSE_DUMP_PROCESS, pid, *PC);
+            // Para DUMP_PROCESS, CPU se autodesaloja (no espera respuesta)
+            return 1; // Indica que debe retornar el control al kernel
+        case INST_EXIT:
+            // Enviar syscall EXIT usando nuevo DTO
+            send_cpu_syscall_request(socket_dispatch, SYSCALL_RESPONSE_EXIT, pid, *PC);
+            // Para EXIT, CPU se autodesaloja (no espera respuesta)
+            return 1; // Indica que debe retornar el control al kernel
         default:
                 log_error(get_logger(), "Unknown instruction: %d", instruction->cod_instruction);
             return -1;
@@ -116,24 +126,13 @@ int check_interrupt(int socket_interrupt, int pid_on_execute, int pc_on_execute)
 
         if(pid_received == pid_on_execute) {
             log_info(get_logger(), "Interrupt for PID %d received", pid_received);
-
-            t_buffer* buffer = buffer_create(2 * sizeof(uint32_t));
-            buffer_add_uint32(buffer, pid_received);
-            buffer_add_uint32(buffer, pc_on_execute);
-
-            t_package* package = package_create(CPU_INTERRUPT, buffer);
-            send_package(socket_interrupt, package);
-            package_destroy(package);
-
-            log_info(get_logger(), "Interrupt for PID %d executed", pid_received);
-            return 1;
         } else {
             log_info(get_logger(), "Interrupt for PID %d received, but not executing", pid_received);
-            // TODO: responder al kernel como que se "atendio" la interrupcion
         }
+        
+        send_cpu_interrupt_response(socket_interrupt, pid_received, pc_on_execute);
 
         sem_post(&cpu_mutex);
-        
     } 
     else 
     {

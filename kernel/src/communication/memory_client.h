@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include "../repository/pcb.h"
 #include "../utils.h"
+#include "utils/DTOs/memory_create_process.h"
 
 
 /**

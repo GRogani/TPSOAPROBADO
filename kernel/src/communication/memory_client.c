@@ -33,11 +33,8 @@ bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, co
     log_info(get_logger(), "memory_client: Creando proceso PID=%d, size=%d, path=%s", 
              pid, size, pseudocode_path);
     
-    send_memory_create_process()
-    
-    // Enviar paquete
-    int sent_bytes = send_package(memory_socket, package);
-    package_destroy(package);
+    // Enviar paquete usando DTO
+    int sent_bytes = send_memory_create_process_request(memory_socket, pid, size, pseudocode_path);
     
     if (sent_bytes <= 0) {
         log_error(get_logger(), "memory_client: Error enviando paquete CREATE_PROCESS");
@@ -56,6 +53,7 @@ bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, co
     bool success = false;
     if (response->opcode == CREATE_PROCESS) {
         // Leer resultado de la operación
+        // TODO: ver si deberiamos moverlo al dto (la interpretacion del resultado)
         if (response->buffer != NULL && response->buffer->stream_size >= sizeof(uint32_t)) {
             response->buffer->offset = 0;
             uint32_t result = buffer_read_uint32(response->buffer);
