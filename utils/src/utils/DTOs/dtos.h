@@ -10,5 +10,6 @@
 #include "io_operation_request.h"
 #include "io_new_device.h"
 #include "instructions.h"
+#include "interrupt.h"
 
 #endif

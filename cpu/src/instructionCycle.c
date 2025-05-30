@@ -103,11 +103,9 @@ int execute(t_instruction* instruction, t_package* instruction_package, int sock
     return 0;
 }
 
-int check_interrupt(int socket_interrupt, int pid_on_execute, int pc_on_execute) 
+int check_interrupt(int socket_interrupt,t_package* package, uint32_t* pid_on_execute, uint32_t* pc_on_execute) 
 {
-    extern sem_t cpu_mutex; // en main
 
-    t_package* package = recv_package(socket_interrupt);
     if(package == NULL) 
     {
         log_error(get_logger(), "Disconnecting interrupt...");
@@ -116,47 +114,75 @@ int check_interrupt(int socket_interrupt, int pid_on_execute, int pc_on_execute)
 
     if(package->opcode == CPU_INTERRUPT) 
     {
-        sem_wait(&cpu_mutex);
-
-        log_info(get_logger(), "Received interrupt from kernel");
         package->buffer->offset = 0;
         int pid_received = buffer_read_uint32(package->buffer);
 
-        if(pid_received == pid_on_execute) {
-            log_info(get_logger(), "Interrupt for PID %d received", pid_received);
+        if(pid_received == *pid_on_execute) {
 
             t_buffer* buffer = buffer_create(2 * sizeof(uint32_t));
             buffer_add_uint32(buffer, pid_received);
-            buffer_add_uint32(buffer, pc_on_execute);
+            buffer_add_uint32(buffer, *pc_on_execute);
 
             t_package* package = package_create(CPU_INTERRUPT, buffer);
             send_package(socket_interrupt, package);
             package_destroy(package);
 
             log_info(get_logger(), "Interrupt for PID %d executed", pid_received);
+                
             return 1;
         } else {
             log_info(get_logger(), "Interrupt for PID %d received, but not executing", pid_received);
             // TODO: responder al kernel como que se "atendio" la interrupcion
         }
 
-        sem_post(&cpu_mutex);
+
         
     } 
     else 
     {
-        log_error(get_logger(), "Received unexpected package: %d. Expecting Interrupt.", package->opcode);
+        log_error(get_logger(), "Received unexpected opcode on interrupt connection: %s", opcode_to_string(package->opcode) );
     }
     
     return 0;
 }
 
+void* interrupt_listener(void* socket)
+{
+    while(1)
+    {
+        t_package* package = recv_package(*(int*)socket);
+        if(package == NULL) 
+        {
+            log_error(get_logger(), "Disconnecting interrupt listener...");
+            return NULL;
+        }
+        lock_interrupt_list();
+        log_info(get_logger(), "Received interrupt package with opcode: %s", opcode_to_string(package->opcode));
+        log_debug(get_logger(), "Adding interrupt package with opcode: %s", opcode_to_string(package->opcode));
+        add_interrupt(package);
+        unlock_interrupt_list();
+        signal_interrupt();
+
+    }
+}
+
 void* interrupt_handler(void* thread_args) 
 {   
     interrupt_args_t* args = (interrupt_args_t *) thread_args;
-
-    while( check_interrupt(args->socket_interrupt , *args->pid, *args->pc) != -1);
-    
+    while(1)
+    {
+        wait_interrupt();
+        lock_interrupt_list();
+            while(interrupt_count() > 0)
+            {
+                log_debug(get_logger(), "Checking interrupts");
+                t_package* package = get_last_interrupt(interrupt_count());
+                lock_cpu_mutex();
+                check_interrupt(args->socket_interrupt, package, args->pid, args->pc);
+                unlock_cpu_mutex();
+            }
+        unlock_interrupt_list();
+    }
 
     return NULL;
 }

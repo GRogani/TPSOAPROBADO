@@ -2,7 +2,7 @@
 
 t_package* receive_PID_PC_Package(int socket_dispatch_kernel, uint32_t* PID, uint32_t* PC) 
 {
-    
+    extern sem_t cpu_mutex; // en main
     t_package* package;
     bool corrupted_package;
 
@@ -35,8 +35,10 @@ t_package* receive_PID_PC_Package(int socket_dispatch_kernel, uint32_t* PID, uin
 
 
     package->buffer->offset = 0;
+    sem_wait(&cpu_mutex);
     *PID = buffer_read_uint32(package->buffer);
     *PC = buffer_read_uint32(package->buffer);
+    sem_post(&cpu_mutex);
 
     return package;
 }
@@ -134,4 +136,8 @@ void create_connections(t_cpu_config config_cpu, int* fd_memory, int* fd_kernel_
             sleep(3);
         }
     }
+
+    log_info(get_logger(), "Kernel Dispatch assigned to socket: %d", *fd_kernel_dispatch);
+    log_info(get_logger(), "Kernel Interrupt assigned to socket: %d", *fd_kernel_interrupt);
+    log_info(get_logger(), "Memory assigned to socket: %d", *fd_memory);
 }

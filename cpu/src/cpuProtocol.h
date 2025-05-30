@@ -1,6 +1,7 @@
 #ifndef CPU_PROTOCOL_H
 #define CPU_PROTOCOL_H
 
+#include <semaphore.h>
 #include <commons/collections/list.h>
 #include "../utils.h"
 
