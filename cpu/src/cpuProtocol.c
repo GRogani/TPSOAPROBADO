@@ -2,19 +2,37 @@
 
 t_package* receive_PID_PC_Package(int socket_dispatch_kernel, uint32_t* PID, uint32_t* PC) 
 {
+    
+    t_package* package;
+    bool corrupted_package;
 
-    t_package* package = recv_package(socket_dispatch_kernel);
+    do{
+        log_debug(get_logger(), "Waiting for PID and PC package from kernel...");
+        corrupted_package = false;
+        package = recv_package(socket_dispatch_kernel);
+        if (package == NULL) 
+        {
+            log_error(get_logger(), "Disconnected from kernel"); // ESTE CASO ES DE DESCONECCION, OSEA ESPERABLE LOSOTROS NO
+            return NULL;
+        }
+        else if (package->opcode != PID_PC_PACKAGE) 
+        {
+            corrupted_package = true;
+            log_error(get_logger(), "Received package with unexpected opcode: %s", opcode_to_string(package->opcode) );
+            package_destroy(package);
+        }
+        else if (package->buffer == NULL)
+        {
+            corrupted_package = true;
+            log_error(get_logger(), "Received package with NULL buffer");
+            package_destroy(package);
+        }
+        if (corrupted_package) 
+        {
+            log_info(get_logger(), "Retrying to receive PID and PC package...");
+        }
+    } while (corrupted_package);
 
-    if (package == NULL) {
-       log_error(get_logger(), "Disconnected from kernel");
-        return NULL;
-    }
-
-    if (package->opcode != PID_PC_PACKAGE) {
-       log_error(get_logger(), "Received package with unexpected opcode: %d", package->opcode);
-        package_destroy(package);
-        return NULL;
-    }
 
     package->buffer->offset = 0;
     *PID = buffer_read_uint32(package->buffer);

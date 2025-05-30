@@ -2,6 +2,7 @@
 
 t_package* fetch(int socket, uint32_t PID, uint32_t PC) 
 {
+    log_debug(get_logger(), "Fetching instruction for PID: %d, PC: %d", PID, PC);
     t_package* package;
     do
     {
@@ -13,14 +14,14 @@ t_package* fetch(int socket, uint32_t PID, uint32_t PC)
     return package;
 }
 
-instruction_t* decode(t_package* package) 
+t_instruction* decode(t_package* package) 
 {
-    instruction_t* instruction = safe_malloc(sizeof(instruction_t));
+    t_instruction* instruction = safe_malloc(sizeof(t_instruction));
 
     package->buffer->offset = 0;
-    instruction->cod_instruction = buffer_read_uint32(package->buffer);
+    instruction->instruction_code = buffer_read_uint32(package->buffer);
     
-    switch(instruction->cod_instruction)
+    switch(instruction->instruction_code)
     {
         case NOOP:
             break;
@@ -42,9 +43,9 @@ instruction_t* decode(t_package* package)
     return instruction;
 }
 
-int execute(instruction_t* instruction, t_package* instruction_package, int socket_memory, int socket_dispatch, uint32_t* PC) 
+int execute(t_instruction* instruction, t_package* instruction_package, int socket_memory, int socket_dispatch, uint32_t* PC) 
 {
-    switch (instruction->cod_instruction) {
+    switch (instruction->instruction_code) {
         case NOOP:
             // No operation
             break;
@@ -86,7 +87,7 @@ int execute(instruction_t* instruction, t_package* instruction_package, int sock
                 send_package(socket_dispatch, instruction_package);
             break;
         default:
-                log_error(get_logger(), "Unknown instruction: %d", instruction->cod_instruction);
+                log_error(get_logger(), "Unknown instruction: %d", instruction->instruction_code);
             return -1;
     }
 

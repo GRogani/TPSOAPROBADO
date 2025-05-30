@@ -5,41 +5,66 @@
 
 sem_t cpu_mutex;
 
+int dummy_connection(int server_socket) 
+{
+    int connection;
+
+    do
+    {
+        connection = accept_connection(server_socket);
+        if (connection < 0)
+            printf("Waiting for connection...\n");
+
+    }while(connection < 0);
+
+    return connection;
+}
+
 int main(){
+    init_logger("tester.log", "TESTER", LOG_LEVEL_INFO);
+
+    t_package* response;
+    t_instruction* instruction = create_instruction(NOOP, 0, 0, 0, NULL);
 
     int memory_server = create_server("30002");
     int dispatch_server = create_server("30003");
     int interrupt_server = create_server("30004");
 
-    printf("Test Servers created.\n");
+    log_info(get_logger(), "Servers created successfully!");
 
-    int cpu_memory_connection;
-    int cpu_dispatch_connection;
-    int cpu_interrupt_connection;
+    int cpu_memory_connection = dummy_connection(memory_server);
+    int cpu_dispatch_connection = dummy_connection(dispatch_server);
+    int cpu_interrupt_connection = dummy_connection(interrupt_server);
 
-    while ( cpu_dispatch_connection < 0 || cpu_memory_connection < 0 || cpu_interrupt_connection < 0 ) {
-        cpu_memory_connection = accept_connection(memory_server);
-        cpu_dispatch_connection = accept_connection(dispatch_server);
-        cpu_interrupt_connection = accept_connection(interrupt_server);
-        if (cpu_memory_connection < 0 || cpu_dispatch_connection < 0 || cpu_interrupt_connection < 0) {
-            printf("Waiting for connections...\n");
-            sleep(3);
-        }
-    }
-    printf("Connections accepted.\n");
+    log_info(get_logger(), "Connections established successfully!");
 
-    t_buffer* buffer = buffer_create(sizeof(uint32_t) * 2);
-    buffer_add_uint32(buffer, 1);
-    buffer_add_uint32(buffer, 1);
-    t_package* package = package_create(PID_PC_PACKAGE, buffer);
-    printf("Package created.\n");
-
-    printf("Press Enter to send package to CPU memory connection.\n");
+    printf("\nPress Enter to send IO COMPLETION to CPU dispatch connection.\n");
     getchar();
 
-    send_package(-20, package);
-    printf("Package sent to CPU dispatch connection.\n");
+    send_io_operation_completed(cpu_dispatch_connection, "1");
+    log_info(get_logger(), "IO COMPLETION sent to CPU dispatch connection.");
     
+    printf("\nPress Enter to send PID & PC to CPU dispatch connection.\n");
+    getchar();
+
+    send_PID_PC(cpu_dispatch_connection, 1, 3);
+    log_info(get_logger(), "Package sent with opcode PID_PC_PACKAGE to CPU dispatch connection.");
+
+    log_debug(get_logger(), "Waiting for response from CPU memory connection...");
+    response = recv_package(cpu_memory_connection);
+    log_info(get_logger(), "Received package from CPU memory connection with opcode: %s", opcode_to_string(response->opcode));
+    package_destroy(response);
+
+    printf("\nPress Enter to send instruction to CPU dispatch connection.\n");
+    getchar();
+
+    send_instruction(cpu_dispatch_connection, instruction);
+    log_info(get_logger(), "Instruction sent to CPU dispatch connection.");
+
+
+
+
+    printf("\nPress Enter to exit...\n");
     getchar();
 
     return 0;

@@ -14,9 +14,9 @@
 
 t_package* fetch(int socket,uint32_t PID, uint32_t PC);
 
-instruction_t* decode(t_package* package);
+t_instruction* decode(t_package* package);
 
-int execute(instruction_t* instruction, t_package* instruction_package, int socket_memory, int socket_dispatch, uint32_t* PC);
+int execute(t_instruction* instruction, t_package* instruction_package, int socket_memory, int socket_dispatch, uint32_t* PC);
 
 int check_interrupt(int socket_interrupt, int pid_on_execute, int pc_on_execute);
 

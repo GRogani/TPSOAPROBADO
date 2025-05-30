@@ -4,25 +4,6 @@
 #include <commons/collections/list.h>
 #include "../utils.h"
 
-typedef enum {
-NOOP,
-WRITE,
-READ,
-GOTO,
-IO,
-INIT_PROC,
-DUMP_PROCESS,
-EXIT
-} cod_instruction;
-
-typedef struct{
-    cod_instruction cod_instruction;
-    uint32_t operand_numeric1;
-    uint32_t operand_numeric2;
-    uint32_t operand_string_size;
-    char* operand_string;
-} instruction_t;
-
 typedef struct {
     int socket_interrupt;
     uint32_t* pid;

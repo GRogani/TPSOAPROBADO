@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     t_package* kernel_package = NULL;
     t_package* instruction_package = NULL;
     uint32_t pid, pc;
-    instruction_t* instruction = NULL;
+    t_instruction* instruction = NULL;
 
     interrupt_args_t thread_args = {fd_kernel_interrupt, &pid, &pc};
     pthread_t interrupt_thread;
