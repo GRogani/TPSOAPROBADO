@@ -18,6 +18,9 @@ instruction_t* decode(t_package* package)
     instruction_t* instruction = safe_malloc(sizeof(instruction_t));
 
     package->buffer->offset = 0;
+    // TODO: la memoria manda asi nomas toda la instruccion (por ej: "IO teclado 1000"). aca la cpu debe interpretarla
+    // y hacer lo correspondiente dependiendo de que instruccion se trata.
+    // osea, tenemos que implementar la logica correspondiente para interpretar cualquier instruccion.
     instruction->cod_instruction = buffer_read_uint32(package->buffer);
     
     switch(instruction->cod_instruction)

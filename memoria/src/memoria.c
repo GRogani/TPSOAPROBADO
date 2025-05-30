@@ -61,6 +61,7 @@ void get_instruction(int socket, t_buffer* request_buffer) {
     uint32_t pid = buffer_read_uint32(request_buffer);
     uint32_t pc = buffer_read_uint32(request_buffer);
 
+    // TODO: analizar concurrencia y si hay que aplicar semaforos
     proc_memory* proc = find_process_by_pid(pid);
     if (proc && pc <= list_size(proc->instructions)) 
     {

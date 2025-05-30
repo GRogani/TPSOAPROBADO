@@ -59,7 +59,7 @@ void* client_handler(void* client_fd_ptr) {
                 break;
 
             case CREATE_PROCESS:
-                create_process(client_fd, package->buffer);
+                create_process(client_fd, package);
                 break;
 
             default:
