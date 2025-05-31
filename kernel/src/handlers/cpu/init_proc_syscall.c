@@ -18,7 +18,7 @@ void init_proc(void *args)
     uint32_t memory_space = proc_args->memory_space;
     char* pseudocode_file = proc_args->pseudocode_file;
     
-    log_info(get_logger(), "init_proc: Inicializando proceso PID=%d con memoria=%d bytes, archivo=%s\n", 
+    LOG_INFO("init_proc: Inicializando proceso PID=%d con memoria=%d bytes, archivo=%s\n", 
              pid, memory_space, pseudocode_file ? pseudocode_file : "NULL");
 
     // 2. Crear nuevo PCB con archivo de pseudocódigo y tamaño
@@ -28,7 +28,7 @@ void init_proc(void *args)
         return;
     }
 
-    log_info(get_logger(), "init_proc: PCB creado exitosamente para PID=%d\n", pid);
+    LOG_INFO("init_proc: PCB creado exitosamente para PID=%d\n", pid);
 
     // 3. Agregar PCB a la lista NEW (con semáforos)
     lock_new_list();
@@ -44,17 +44,17 @@ void init_proc(void *args)
     add_pcb_to_new(new_pcb);
     unlock_new_list();
     
-    log_info(get_logger(), "init_proc: PCB agregado a lista NEW para PID=%d\n", pid);
+    LOG_INFO("init_proc: PCB agregado a lista NEW para PID=%d\n", pid);
 
     // 4. Ejecutar planificador de largo plazo
-    log_info(get_logger(), "init_proc: Planificador de largo plazo iniciado\n");
+    LOG_INFO("init_proc: Planificador de largo plazo iniciado\n");
     bool success = run_long_scheduler();
-    log_info(get_logger(), "init_proc: Planificador de largo plazo completado\n");
+    LOG_INFO("init_proc: Planificador de largo plazo completado\n");
 
     if(success) {
-        log_info(get_logger(), "init_proc: Ejecutando planificador de corto plazo\n");
+        LOG_INFO("init_proc: Ejecutando planificador de corto plazo\n");
         run_short_scheduler();
-        log_info(get_logger(), "init_proc: Proceso PID=%d inicializado completamente\n", pid);
+        LOG_INFO("init_proc: Proceso PID=%d inicializado completamente\n", pid);
     }
 }
 

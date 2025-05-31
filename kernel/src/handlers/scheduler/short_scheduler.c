@@ -1,7 +1,7 @@
 #include "short_scheduler.h"
 
 t_cpu_connection* get_free_cpu(void) {
-    log_debug(get_logger(), "short_scheduler: Buscando CPU libre");
+    LOG_DEBUG("short_scheduler: Buscando CPU libre");
     
     // Buscar CPU que no esté procesando (current_process_executing == -1)
     t_list *all_cpus = (t_list *) get_all_cpu_connections();
@@ -15,10 +15,10 @@ t_cpu_connection* get_free_cpu(void) {
     list_destroy(all_cpus);
     
     if (free_cpu != NULL) {
-        log_debug(get_logger(), "short_scheduler: CPU libre encontrada");
+        LOG_DEBUG("short_scheduler: CPU libre encontrada");
     } else {
         free_cpu = list_get(all_cpus, 0); // Si no hay libres, tomar la primera CPU (fallback)
-        log_debug(get_logger(), "short_scheduler: No hay CPUs libres disponibles");
+        LOG_DEBUG("short_scheduler: No hay CPUs libres disponibles");
     }
     
     return free_cpu;
@@ -26,19 +26,19 @@ t_cpu_connection* get_free_cpu(void) {
 
 t_cpu_interrupt *send_and_receive_interrupt(int interrupt_socket_id, uint32_t pid)
 {
-    log_info(get_logger(), "short_scheduler: Enviando interrupción para PID %d", pid);
+    LOG_INFO("short_scheduler: Enviando interrupción para PID %d", pid);
     
     // Enviar interrupción
     int sent_bytes = send_cpu_interrupt_request(interrupt_socket_id, pid);
     if (sent_bytes <= 0) {
-        log_error(get_logger(), "short_scheduler: Error enviando interrupción");
+        LOG_ERROR("short_scheduler: Error enviando interrupción");
         return false;
     }
     
     // Esperar confirmación de interrupción (CPU_INTERRUPT response)
     t_package* response = recv_package(interrupt_socket_id);
     if (response == NULL) {
-        log_error(get_logger(), "short_scheduler: Error recibiendo confirmación de interrupción");
+        LOG_ERROR("short_scheduler: Error recibiendo confirmación de interrupción");
         return false;
     }
     t_cpu_interrupt * interrupt_info = read_cpu_interrupt_response(response);
@@ -50,31 +50,31 @@ t_cpu_interrupt *send_and_receive_interrupt(int interrupt_socket_id, uint32_t pi
 
 bool send_dispatch_to_cpu(t_cpu_connection* cpu_connection, uint32_t pid, uint32_t pc) {
     if (cpu_connection == NULL) {
-        log_error(get_logger(), "short_scheduler: CPU connection es NULL para dispatch");
+        LOG_ERROR("short_scheduler: CPU connection es NULL para dispatch");
         return false;
     }
     
-    log_info(get_logger(), "short_scheduler: Enviando dispatch PID=%d, PC=%d", pid, pc);
+    LOG_INFO("short_scheduler: Enviando dispatch PID=%d, PC=%d", pid, pc);
     
     // Usar DTO para enviar dispatch
     int sent_bytes = send_cpu_dispatch_request(cpu_connection->dispatch_socket_id, pid, pc);
     
     if (sent_bytes <= 0) {
-        log_error(get_logger(), "short_scheduler: Error enviando dispatch");
+        LOG_ERROR("short_scheduler: Error enviando dispatch");
         return false;
     }
     
-    log_info(get_logger(), "short_scheduler: Dispatch enviado exitosamente");
+    LOG_INFO("short_scheduler: Dispatch enviado exitosamente");
     return true;
 }
 
 void run_short_scheduler(void) {
-    log_info(get_logger(), "short_scheduler: Iniciando planificador de corto plazo");
+    LOG_INFO("short_scheduler: Iniciando planificador de corto plazo");
     
     t_cpu_connection* cpu = get_free_cpu();
     
     if(cpu == NULL) {
-        log_error(get_logger(), "short_scheduler: No hay CPUs disponibles");
+        LOG_ERROR("short_scheduler: No hay CPUs disponibles");
         return;
     }
 
@@ -88,7 +88,7 @@ void run_short_scheduler(void) {
         
         if (!preemption_enabled) {
             // do nothing
-            log_debug(get_logger(), "short_scheduler: CPU ocupada, preemption deshabilitado");
+            LOG_DEBUG("short_scheduler: CPU ocupada, preemption deshabilitado");
             unlock_cpu(&cpu->cpu_exec_sem);
             return;
         }
@@ -104,7 +104,7 @@ void run_short_scheduler(void) {
     
     if (next_ready == NULL) {
         // no hay procesos en ready
-        log_debug(get_logger(), "short_scheduler: No hay procesos en READY");
+        LOG_DEBUG("short_scheduler: No hay procesos en READY");
         
         // lock(exec_list)
         lock_exec_list();
@@ -114,14 +114,14 @@ void run_short_scheduler(void) {
         
         if (process_exists_in_exec) {
             // si existe en EXEC, no hacer nada
-            log_debug(get_logger(), "short_scheduler: Proceso %d sigue en EXEC", cpu->current_process_executing);
+            LOG_DEBUG("short_scheduler: Proceso %d sigue en EXEC", cpu->current_process_executing);
             unlock_ready_list();
             unlock_exec_list();
             unlock_cpu(&cpu->cpu_exec_sem);
             return;
         } else {
             // no existe en EXEC (syscall lo movió a otro estado)
-            log_info(get_logger(), "short_scheduler: Proceso %d ya no está en EXEC, liberando CPU", cpu->current_process_executing);
+            LOG_INFO("short_scheduler: Proceso %d ya no está en EXEC, liberando CPU", cpu->current_process_executing);
             cpu->current_process_executing = -1;
             unlock_ready_list();
             unlock_exec_list();
@@ -131,7 +131,7 @@ void run_short_scheduler(void) {
     }
     
     // si hay procesos en ready
-    log_info(get_logger(), "short_scheduler: Proceso encontrado en READY: PID=%d", next_ready->pid);
+    LOG_INFO("short_scheduler: Proceso encontrado en READY: PID=%d", next_ready->pid);
     
     // desalojo enabled?
     bool preemption_enabled = should_preempt_current_process();
@@ -139,7 +139,7 @@ void run_short_scheduler(void) {
     if (preemption_enabled && cpu_is_processing) {
         // si se debe desalojar, entonces, usamos la cpu que encontramos arriba
         if (cpu != NULL) {
-            log_info(get_logger(), "short_scheduler: Realizando preemption del proceso %d", cpu->current_process_executing);
+            LOG_INFO("short_scheduler: Realizando preemption del proceso %d", cpu->current_process_executing);
 
             // send(interrupt) + receive(interrupt)
             t_cpu_interrupt* interrupt_info = send_and_receive_interrupt(cpu->interrupt_socket_id, cpu->current_process_executing);
@@ -153,7 +153,7 @@ void run_short_scheduler(void) {
                 preempted_pcb->current_state = READY;
                 preempted_pcb->pc = interrupt_info->pc; // Actualizar PC del PCB preemptado
                 add_pcb_to_ready(preempted_pcb);
-                log_info(get_logger(), "short_scheduler: Proceso %d movido de EXEC a READY por preemption", cpu->current_process_executing);
+                LOG_INFO("short_scheduler: Proceso %d movido de EXEC a READY por preemption", cpu->current_process_executing);
             }
             
             // Liberar la CPU anterior
@@ -165,7 +165,7 @@ void run_short_scheduler(void) {
     }
     
     // move_process: move next READY to EXEC
-    log_info(get_logger(), "short_scheduler: Moviendo proceso PID=%d de READY a EXEC", next_ready->pid);
+    LOG_INFO("short_scheduler: Moviendo proceso PID=%d de READY a EXEC", next_ready->pid);
     
     // Mover de READY a EXEC
     next_ready->current_state = EXEC;
@@ -176,9 +176,9 @@ void run_short_scheduler(void) {
     
     if (dispatch_success) {
         cpu->current_process_executing = next_ready->pid;
-        log_info(get_logger(), "short_scheduler: Proceso PID=%d despachado exitosamente", next_ready->pid);
+        LOG_INFO("short_scheduler: Proceso PID=%d despachado exitosamente", next_ready->pid);
     } else {
-        log_error(get_logger(), "short_scheduler: Error despachando proceso PID=%d", next_ready->pid);
+        LOG_ERROR("short_scheduler: Error despachando proceso PID=%d", next_ready->pid);
         // Revertir cambios
         remove_pcb_from_exec(next_ready->pid);
         next_ready->current_state = READY;
@@ -190,5 +190,5 @@ void run_short_scheduler(void) {
     unlock_exec_list();
     unlock_cpu_connections();
     
-    log_info(get_logger(), "short_scheduler: Planificador de corto plazo completado");
+    LOG_INFO("short_scheduler: Planificador de corto plazo completado");
 }
