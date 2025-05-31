@@ -1,13 +1,13 @@
 #ifndef UTILS_SOCKET_SERVER_H
 #define UTILS_SOCKET_SERVER_H
 
-#include "../logger/logger.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <string.h>
+#include "../../macros/logger_macro.h"
 
 
 /**

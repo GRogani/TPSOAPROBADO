@@ -12,20 +12,20 @@ int create_connection(char* port, char* ip) {
 
     int getaddrinfoErr = getaddrinfo(ip, port, &hints, &server_info);
     if (getaddrinfoErr != 0) {
-        log_error(get_logger(), "getaddrinfo(...) failed");
+        LOG_ERROR("getaddrinfo(...) failed");
         return -1;
     }
 
     int socket_client = socket(server_info->ai_family, server_info->ai_socktype, server_info->ai_protocol);
     if (socket_client == -1) {
-        log_error(get_logger(), "Socket creation failed");
+        LOG_ERROR("Socket creation failed");
         freeaddrinfo(server_info);
         return -1;
     }
 
     int connectErr = connect(socket_client, server_info->ai_addr, server_info->ai_addrlen);
     if (connectErr == -1) {
-        log_error(get_logger(), "Could not create connection to server.\tIP:%s PORT:%s", ip, port);
+        LOG_ERROR("Could not connect to server.\tIP:%s PORT:%s", ip, port);
         freeaddrinfo(server_info);
         return -1;
     }

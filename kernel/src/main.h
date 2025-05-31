@@ -5,8 +5,7 @@
 #include <commons/config.h>
 #include <commons/log.h>
 
-#include "utils/config/t_configs.h"
-#include "utils/logger/logger.h"
+#include "../utils.h"
 #include "shutdown/shutdown.h"
 #include "handlers/cpu_server.h"
 #include "handlers/io_server.h"

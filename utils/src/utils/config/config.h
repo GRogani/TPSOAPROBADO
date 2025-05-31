@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <commons/config.h>
 #include <commons/log.h>
-#include <macros/log_error.h>
+#include "../../macros/logger_macro.h"
 #include "t_configs.h"
 
 t_config* init_config(char* configFileName);

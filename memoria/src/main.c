@@ -19,7 +19,7 @@ int main(){
     create_server_thread(&server_thread);
 
     pthread_join(server_thread, NULL);
-    log_info(get_logger(), "Server thread finished.");
+    LOG_INFO("Server thread finished.");
     shutdown_memoria(memoria_config, config_file);
 
     return 0;

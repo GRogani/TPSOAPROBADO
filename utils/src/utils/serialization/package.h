@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "utils/logger/logger.h"
+#include "../../macros/logger_macro.h"
 #include "utils/serialization/buffer.h"
 #include "utils/socket/client.h"
 #include "utils/socket/server.h"

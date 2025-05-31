@@ -1,7 +1,9 @@
 #ifndef UTILS_IO_NEW_DEVICE_H
 #define UTILS_IO_NEW_DEVICE_H
 
-#include "../utils.h"
+#include "utils/serialization/package.h"
+#include "utils/serialization/buffer.h"
+#include "enums/Eopcodes.h"
 
 char* read_new_device( t_package* package );
 

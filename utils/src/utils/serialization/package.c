@@ -14,7 +14,7 @@ void package_destroy(t_package* package)
         buffer_destroy(package->buffer);
         free(package);
     } else {
-        LOG_WARN("You tried to destroy NULL package.");
+        LOG_WARNING("You tried to destroy NULL package");
     }
 }
 

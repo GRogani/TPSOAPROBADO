@@ -13,7 +13,7 @@ int create_server(char* port) {
 	int getaddrinfoErr = getaddrinfo(NULL, port, &hints, &servinfo);
 	if (getaddrinfoErr != 0)
 	{
-		log_error(get_logger(), "getaddrinfo failed");
+		LOG_ERROR("getaddrinfo failed");
 		return -1;
 	}
 
@@ -22,14 +22,14 @@ int create_server(char* port) {
                         servinfo->ai_protocol);
 
 	if(socket_server == -1) {
-		log_error(get_logger(), "Could not create fd for socket");
+		LOG_ERROR("Could not create fd for socket");
 		freeaddrinfo(servinfo);
 		return -1;
 	}
 
 	int errSockOpt = setsockopt(socket_server, SOL_SOCKET, SO_REUSEPORT, &(int){1}, sizeof(int));
 	if(errSockOpt == -1) {
-		log_error(get_logger(), "Could not associate multiple sockets to one port");
+		LOG_ERROR("Could not associate multiple sockets to one port");
 		close(socket_server);
 		freeaddrinfo(servinfo);
 		return -1;
@@ -37,7 +37,7 @@ int create_server(char* port) {
 
 	int bindErr = bind(socket_server, servinfo->ai_addr, servinfo->ai_addrlen);
 	if(bindErr == -1) {
-		log_error(get_logger(), "Could not associate a socket to port");
+		LOG_ERROR("Could not associate a socket to port");
 		close(socket_server);
 		freeaddrinfo(servinfo);
 		return -1;
@@ -45,7 +45,7 @@ int create_server(char* port) {
 
 	int listenErr = listen(socket_server, SOMAXCONN);
 	if(listenErr == -1) {
-		log_error(get_logger(), "Could not listen on port %s", port);
+		LOG_ERROR("Could not listen on port %s", port);
 		close(socket_server);
 		freeaddrinfo(servinfo);
 		return -1;
@@ -58,16 +58,16 @@ int create_server(char* port) {
 
 int accept_connection(int socket_server)
 {
-	log_info(get_logger(), "Awaiting for new clients...");
+	LOG_INFO("Awaiting for new clients...");
 
 	int client_socket = accept(socket_server, NULL, NULL);
 	if (client_socket == -1)
 	{
-		log_info(get_logger(), "accept failed");
+		LOG_ERROR("accept failed");
 		return client_socket;
 	}
 
-	log_info(get_logger(), "Client connected.");
+	LOG_INFO("Client connected. Socket fd: %d", client_socket);
 	
 	return client_socket;
 }

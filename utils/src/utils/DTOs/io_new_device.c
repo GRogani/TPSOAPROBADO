@@ -14,7 +14,7 @@ int send_new_device(int kernel_socket, char* device_name)
     t_package* package;
     package = create_new_device(device_name);
     int bytes_sent = send_package(kernel_socket, package);
-    log_info(get_logger(), "New device '%s' registered in Kernel", device_name);
+    LOG_INFO("New device '%s' registered in Kernel", device_name);
     package_destroy(package);
     return bytes_sent;
 };

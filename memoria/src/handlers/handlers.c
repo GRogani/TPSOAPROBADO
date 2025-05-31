@@ -6,7 +6,7 @@ int create_server_thread(pthread_t* listener_thread)
 {
     int err = pthread_create(listener_thread, NULL, client_listener, NULL);
     if (err != 0) {
-        log_error(get_logger(), "Listener thread creation failed.");
+        LOG_ERROR("Listener thread creation failed.");
         return err;
     }
 
@@ -15,7 +15,7 @@ int create_server_thread(pthread_t* listener_thread)
 
 void* client_listener(void* arg) {
     int server_fd = create_server(memoria_config.PUERTO_ESCUCHA);
-    log_info(get_logger(), "Memoria server listening on port: %s", memoria_config.PUERTO_ESCUCHA);
+    LOG_INFO("Memoria server listening on port: %s", memoria_config.PUERTO_ESCUCHA);
 
     while (1) {
         int client_fd = accept_connection(server_fd);
@@ -39,7 +39,7 @@ void* client_handler(void* client_fd_ptr) {
     {
         package = recv_package(client_fd);
         if (package == NULL) {
-            log_info(get_logger(), "Client disconnected: %d", client_fd);
+            LOG_INFO("Client disconnected: %d", client_fd);
             close(client_fd);
             return NULL;
         }
@@ -71,7 +71,7 @@ void* client_handler(void* client_fd_ptr) {
                 break;
 
             default:
-                log_warning(get_logger(), "Unknown Opcode");
+                LOG_WARNING("Unknown Opcode");
                 close(client_fd);
                 break;
         }

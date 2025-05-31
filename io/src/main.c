@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
     t_config* config_file = init_config("io.config");
     t_io_config io_config = init_io_config(config_file);
     init_logger("io.log", "[IO]", io_config.LOG_LEVEL);
-    log_info(get_logger(), "Starting up %s connections...", argv[1]);
+    LOG_INFO("Starting up %s connections...", argv[1]);
     
     int kernel_socket;
     kernel_socket = create_kernel_connection(io_config.PUERTO_KERNEL, io_config.IP_KERNEL);
@@ -31,7 +31,7 @@ void waiting_requests(int kernel_socket, char* id_IO)
         package = recv_package(kernel_socket);
         if(package == NULL)
         {
-            log_info(get_logger(), "Kernel disconnected, shutting down I/O device.");
+            LOG_INFO("Kernel disconnected, shutting down I/O device.");
             break;
         }
         // if (io_busy) 
@@ -62,13 +62,13 @@ void waiting_requests(int kernel_socket, char* id_IO)
 
 void processing_operation(t_request_io* io) 
 {
-    log_info(get_logger(), "## PID: %d - Inicio de IO - Tiempo: %d", io->pid, io->sleep_time);
+    LOG_INFO("## PID: %d - Inicio de IO - Tiempo: %d", io->pid, io->sleep_time);
     
     usleep(io->sleep_time);
     
-    log_info(get_logger(), "## PID: %d - Fin de IO", io->pid);
+    LOG_INFO("## PID: %d - Fin de IO", io->pid);
     
-    log_debug(get_logger(), "Estoy libre [%s]", io->device_name);
+    LOG_DEBUG("Estoy libre [%s]", io->device_name);
     
     // RESPONSE
     send_io_operation_completed(io->kernel_socket, io->device_name);

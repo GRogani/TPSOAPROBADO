@@ -107,7 +107,7 @@ void initialize_global_lists()
         susp_ready_list == NULL ||
         exit_list == NULL)
     {
-        log_error(get_logger(), "Some of the lists/queues failed to create");
+        LOG_ERROR("Some of the lists/queues failed to create");
         exit(EXIT_FAILURE);
     }
 }
