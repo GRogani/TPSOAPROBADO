@@ -37,7 +37,7 @@ int main(){
     int dispatch_server = create_server("30003");
     int interrupt_server = create_server("30004");
 
-    log_info(get_logger(), "Servers created successfully!");
+    LOG_INFO("Servers created successfully!");
 
     // =========================
     // Esperando conexiones de CPU
@@ -47,7 +47,7 @@ int main(){
     int cpu_dispatch_connection = dummy_connection(dispatch_server);
     int cpu_interrupt_connection = dummy_connection(interrupt_server);
 
-    log_info(get_logger(), "Connections established successfully!");
+    LOG_INFO("Connections established successfully!");
 
     // =========================
     // Enviando IO COMPLETION
@@ -57,7 +57,7 @@ int main(){
     getchar();
 
     send_io_operation_completed(cpu_dispatch_connection, "1");
-    log_info(get_logger(), "IO COMPLETION sent to CPU dispatch connection.");
+    LOG_INFO("IO COMPLETION sent to CPU dispatch connection.");
     
     // =========================
     // Enviando PID & PC
@@ -67,15 +67,15 @@ int main(){
     getchar();
 
     send_PID_PC(cpu_dispatch_connection, PID, PC);
-    log_info(get_logger(), "Package sent with opcode PID_PC_PACKAGE to CPU dispatch connection.");
+    LOG_INFO("Package sent with opcode PID_PC_PACKAGE to CPU dispatch connection.");
 
     // =========================
     // Esperando respuesta de CPU memory
     // =========================
 
-    log_debug(get_logger(), "Waiting for response from CPU memory connection...");
+    LOG_INFO("Waiting for response from CPU memory connection...");
     response = recv_package(cpu_memory_connection);
-    log_info(get_logger(), "Received package from CPU memory connection with opcode: %s", opcode_to_string(response->opcode));
+    LOG_INFO("Received package from CPU memory connection with opcode: %s", opcode_to_string(response->opcode));
     package_destroy(response);
 
     // =========================
@@ -86,7 +86,7 @@ int main(){
     getchar();
 
     send_instruction(cpu_memory_connection, instruction);
-    log_info(get_logger(), "NOOP sent to CPU memory connection.");
+    LOG_INFO("NOOP sent to CPU memory connection.");
 
     // =========================
     // Enviando syscall  EXIT
@@ -96,14 +96,14 @@ int main(){
     getchar();
 
     send_instruction(cpu_memory_connection, syscall);
-    log_info(get_logger(), "Syscall sent to CPU memory connection.");
+    LOG_INFO("Syscall sent to CPU memory connection.");
 
     // ===================================
     // Recbiendo respuesta de CPU dispatch
     // ===================================
 
     response = recv_package(cpu_dispatch_connection);
-    log_info(get_logger(), "Received package from CPU dispatch connection with opcode: %s", opcode_to_string(response->opcode));
+    LOG_INFO("Received package from CPU dispatch connection with opcode: %s", opcode_to_string(response->opcode));
     package_destroy(response);
 
 
@@ -124,17 +124,17 @@ int main(){
     printf("\n\x1b[33mPress Enter to send PID/PC and interruption simultaneously\x1b[0m\n");
     getchar();
 
-    log_info(get_logger(), "Sending PID/PC");
+    LOG_INFO("Sending PID/PC");
     send_PID_PC(cpu_dispatch_connection, PID, PC);
-    log_info(get_logger(), "Sending Interruption");
+    LOG_INFO("Sending Interruption");
     send_interrupt(cpu_interrupt_connection, PID);
 
-    log_info(get_logger(), "Sending Instruction NOOP to CPU memory connection and interruption to CPU interrupt connection");
+    LOG_INFO("Sending Instruction NOOP to CPU memory connection and interruption to CPU interrupt connection");
     send_instruction(cpu_memory_connection, instruction);
     send_interrupt(cpu_interrupt_connection, PID);
     
     response = recv_package(cpu_memory_connection);
-    log_info(get_logger(), "Received package from CPU memory connection with opcode: %s", opcode_to_string(response->opcode));
+    LOG_INFO("Received package from CPU memory connection with opcode: %s", opcode_to_string(response->opcode));
     package_destroy(response);
 
     // =========================

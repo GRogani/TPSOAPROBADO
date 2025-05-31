@@ -4,7 +4,7 @@
 // Modifiquen aca si cambian las utils
 
 // Macros
-#include "src/macros/log_error.h"
+#include "src/macros/logger_macro.h"
 
 // Safe Alloc
 #include "src/utils/safe_alloc.h"

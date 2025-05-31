@@ -20,10 +20,10 @@ int main()
         socket = accept_connection(kernel_server);
     }
 
-    log_info(get_logger(), "Connected to kernel server on socket %d", socket);
+    LOG_INFO("Connected to kernel server on socket %d", socket);
 
     response = recv_package(socket);
-    log_info(get_logger(), "Received package with opcode: %s", opcode_to_string(response->opcode) );
+    LOG_INFO("Received package with opcode: %s", opcode_to_string(response->opcode) );
     package_destroy(response);
 
     printf("Press enter to send packages...\n");
@@ -41,7 +41,7 @@ int main()
 
     package2 = package_create(REQUEST_IO, buffer2);
 
-    log_info(get_logger(), "Sending 2 packages with opcode: %s", opcode_to_string(package1->opcode) );
+    LOG_INFO("Sending 2 packages with opcode: %s", opcode_to_string(package1->opcode) );
 
     send_package(socket, package1);
     send_package(socket, package2);
@@ -50,7 +50,7 @@ int main()
 
 
     response = recv_package(socket);
-    log_info(get_logger(), "Received package with opcode: %s",  opcode_to_string(response->opcode));
+    LOG_INFO("Received package with opcode: %s",  opcode_to_string(response->opcode) );
     package_destroy(response);
 
     printf("Press enter to exit...\n");

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../safe_alloc.h"
-#include "../../macros/log_error.h"
+#include "../../macros/logger_macro.h"
 
 /**
  * @struct t_buffer

@@ -10,10 +10,10 @@ void *cpu_server_handler(void *args)
     extern t_kernel_config kernel_config;
 
     socket_server_dispatch = create_server(kernel_config.cpu_dispatch_port);
-    log_info(get_logger(), "CPU dispatch server available on port %s", kernel_config.cpu_dispatch_port);
+    LOG_INFO("CPU dispatch server available on port %s", kernel_config.cpu_dispatch_port);
 
     socket_server_interrupt = create_server(kernel_config.cpu_interrupt_port);
-    log_info(get_logger(), "CPU interrupt server available on port %s", kernel_config.cpu_interrupt_port);
+    LOG_INFO("CPU interrupt server available on port %s", kernel_config.cpu_interrupt_port);
 
     while (true)
     {
@@ -22,11 +22,11 @@ void *cpu_server_handler(void *args)
             break;
         }
 
-        log_info(get_logger(), "Accepting dispatch connection");
+        LOG_INFO("Accepting dispatch connection");
         int socket_dispatch_connection = accept_connection(socket_server_dispatch);
         if (socket_dispatch_connection == -1)
         {
-            log_error(get_logger(), "Error accepting dispatch connection");
+            LOG_ERROR("Error accepting dispatch connection");
             
             if(should_exit) {
                 break;
@@ -43,7 +43,7 @@ void *cpu_server_handler(void *args)
         int socket_interrupt_connection = accept_connection(socket_server_interrupt);
         if (socket_interrupt_connection == -1)
         {
-            log_error(get_logger(), "Error accepting interrupt connection");
+            LOG_ERROR("Error accepting interrupt connection");
             close(socket_dispatch_connection);
 
             if(should_exit) {
@@ -59,7 +59,7 @@ void *cpu_server_handler(void *args)
             break;
         }
 
-        log_info(get_logger(), "CPU connected successfully. Adding connection to list of connected CPUs");
+        LOG_INFO("CPU connected successfully. Adding connection to list of connected CPUs");
 
         char *connection_id = create_cpu_connection(socket_interrupt_connection, socket_dispatch_connection);
 
@@ -67,7 +67,7 @@ void *cpu_server_handler(void *args)
         int errt1 = pthread_create(&t1, NULL, handle_dispatch_client, connection_id);
         if (errt1)
         {
-            log_error(get_logger(), "Failed to create detachable thread for dispatch CPU server");
+            LOG_ERROR("Failed to create detachable thread for dispatch CPU server");
             
             remove_cpu_connection(connection_id);
             close(socket_dispatch_connection);
@@ -92,7 +92,7 @@ void *cpu_server_handler(void *args)
     if (socket_server_interrupt != -1) {
         close(socket_server_interrupt);
     }
-    log_info(get_logger(), "CPU server finished");
+    LOG_INFO("CPU server finished");
 
     signal_cpu_connected();
 

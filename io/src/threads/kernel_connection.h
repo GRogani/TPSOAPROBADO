@@ -8,6 +8,4 @@ int create_kernel_connection(char* puerto, char* ip);
 
 
 
-
-
 #endif

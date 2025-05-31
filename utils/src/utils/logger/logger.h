@@ -1,9 +1,12 @@
 #ifndef UTILS_LOGGER_H
 #define UTILS_LOGGER_H
 
+#include <stdarg.h>
 #include <stdlib.h>
+#include <semaphore.h>
 #include <commons/log.h>
-#include "../../macros/log_error.h"
+
+//USAR LAS MACROS DE LOGGING DEFINIDAS EN logger_macro.h
 
 /**
  * @brief Inicializa el logger global del proceso.
@@ -16,6 +19,11 @@
  * @param log_level Nivel mínimo de logs que se registrarán.
  */
 void init_logger(char* log_file_name, char* process_name, t_log_level log_level);
+
+void lock_logger();
+
+void unlock_logger();
+
 
 /**
  * @brief Devuelve la instancia actual del logger.

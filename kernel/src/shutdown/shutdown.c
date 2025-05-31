@@ -4,7 +4,7 @@
 
 void shutdown_hook(t_config *config)
 {
-    log_info(get_logger(), "Shutting down kernel...");
+    LOG_INFO("Shutting down kernel...");
 
     destroy_global_lists();
 

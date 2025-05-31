@@ -22,7 +22,7 @@ void buffer_destroy(t_buffer *buffer){
     }
     else 
     {
-        LOG_WARN("Intentaste destruir un buffer NULL.\n");
+        LOG_WARNING("Intentaste destruir un buffer NULL");
     }
 }
 
@@ -56,19 +56,19 @@ void buffer_add_pointer(t_buffer *buffer, void *ptr) {
 void buffer_read(t_buffer *buffer, void *data, uint32_t size){
    	if (buffer == NULL)
 	{
-        LOG_WARN("El buffer es NULL.\n");
+        LOG_WARNING("El buffer es NULL");
 		return;
 	}
     if (data == NULL)
     {
-        LOG_WARN("El puntero donde almacenar los datos es NULL.\n");
+        LOG_WARNING("El puntero donde almacenar los datos es NULL");
         return;
     }
 
 	// Verificar límites de lectura
 	if (buffer->offset + size > buffer->stream_size)
 	{
-        LOG_WARN("Se quiere leer más de lo permitido ojito. Offset: %u, Size: %u, Buffer size: %u\n", buffer->offset, size, buffer->stream_size);
+        LOG_WARNING("Se quiere leer más de lo permitido ojito. Offset: %u, Size: %u, Buffer size: %u", buffer->offset, size, buffer->stream_size);
 		return;
 	}
 

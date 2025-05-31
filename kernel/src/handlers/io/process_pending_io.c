@@ -3,7 +3,7 @@
 void process_pending_io(t_pending_io_args args)
 {
 
-    log_info(get_logger(), "Processing pending IO for device %s", args.device_name);
+    LOG_INFO("Processing pending IO for device %s", args.device_name);
 
     lock_io_connections();
     lock_io_requests_link();
@@ -11,7 +11,7 @@ void process_pending_io(t_pending_io_args args)
     t_io_requests_link *request_link = find_io_request_by_device_name(args.device_name);
     if (request_link == NULL)
     {
-        log_error(get_logger(), "Could not found request_link element.");
+        LOG_ERROR("Could not found request_link element.");
         goto free_request_link_connection;
     }
 
@@ -21,7 +21,7 @@ void process_pending_io(t_pending_io_args args)
     t_io_connection *connection_found = (t_io_connection *)connection;
     if (connection_found == NULL)
     {
-        log_info(get_logger(), "There is no free connections for device %s", args.device_name);
+        LOG_INFO("There is no free connections for device %s", args.device_name);
         goto free_all;
     }
 
@@ -31,7 +31,7 @@ void process_pending_io(t_pending_io_args args)
     void *request = get_next_request_in_queue(request_link->io_requests_queue);
     if (request == NULL)
     {
-        log_info(get_logger(), "There is no pending requests for device %s", args.device_name);
+        LOG_INFO("There is no pending requests for device %s", args.device_name);
         goto free_all;
     }
     t_io_request *io_request = (t_io_request *)request;
@@ -40,7 +40,7 @@ void process_pending_io(t_pending_io_args args)
     int err = send_io_request(args.client_socket, io_request->pid, io_request->sleep_time);
     if (err == -1)
     {
-        log_error(get_logger(), "Could not sent socket %d request io message for process %d", args.client_socket, io_request->pid);
+        LOG_ERROR("Could not sent socket %d request io message for process %d", args.client_socket, io_request->pid);
         goto free_all;
     }
 
@@ -48,7 +48,7 @@ void process_pending_io(t_pending_io_args args)
     void *element = pop_next_request_in_queue(request_link->io_requests_queue);
     if (element == NULL)
     {
-        log_error(get_logger(), "FATAL ERROR: Could not pop io_request from queue, there is no elements");
+        LOG_ERROR("FATAL ERROR: Could not pop io_request from queue, there is no elements");
         goto free_all;
     }
 

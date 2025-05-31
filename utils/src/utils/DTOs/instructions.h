@@ -1,7 +1,10 @@
 #ifndef DTOS_INSTRUCTIONS_H
 #define DTOS_INSTRUCTIONS_H
 
-#include "../utils.h"
+#include "utils/serialization/package.h"
+#include "utils/serialization/buffer.h"
+#include "enums/Einstruction_codes.h"
+#include "enums/Eopcodes.h"
 
 typedef struct
 {

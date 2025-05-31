@@ -3,10 +3,10 @@
 
 #include <stdlib.h>
 #include <commons/config.h>
-#include <commons/log.h>
 #include "../enums/Eplanification_algorithm.h"
 #include "config/t_configs.h"
 #include "logger/logger.h"
+#include "../macros/logger_macro.h"
 
 //shutdown_kernel: VER EN MODULO KERNEL
 

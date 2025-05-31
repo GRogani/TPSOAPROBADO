@@ -1,9 +1,9 @@
 #ifndef UTILS_IO_OPERATION_REQUEST_H
 #define UTILS_IO_OPERATION_REQUEST_H
 
-#include "utils/logger/logger.h"
 #include "utils/serialization/package.h"
 #include "utils/serialization/buffer.h"
+#include "enums/Eopcodes.h"
 
 typedef struct t_request_io {
     int kernel_socket;

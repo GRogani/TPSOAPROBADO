@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "macros/log_error.h"
+#include "../macros/logger_macro.h"
 
 /**
  * @brief Intenta asignar memoria dinámica de forma segura.

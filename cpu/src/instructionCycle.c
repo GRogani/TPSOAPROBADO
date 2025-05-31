@@ -4,7 +4,7 @@ t_package* fetch(int socket, uint32_t PID, uint32_t PC)
 {
     t_package* package;
 
-    log_debug(get_logger(), "Fetching instruction for PID: %d, PC: %d", PID, PC);
+    LOG_DEBUG("Fetching instruction for PID: %d, PC: %d", PID, PC);
     request_instruction(socket, PID, PC);
     package = receive_instruction(socket);
 
@@ -60,10 +60,10 @@ int execute(t_instruction* instruction, t_package* instruction_package, int sock
                 char* data = read_memory_response(socket_memory);
                 if(data != NULL)
                 {
-                    log_info(get_logger(), "Data read from memory: %s", data);
+                    LOG_INFO("Data read from memory: %s", data);
                     free(data);
                 }else{
-                    log_error(get_logger(), "Failed to read data from memory");
+                    LOG_INFO("Failed to read data from memory");
                     return -1;
                 }
             break;
@@ -71,30 +71,30 @@ int execute(t_instruction* instruction, t_package* instruction_package, int sock
                 *PC = instruction->operand_numeric1;
             break;
         case IO:
-                log_debug(get_logger(), "Executing IO operation, sending syscall to kernel");
+                LOG_DEBUG("Executing IO operation, sending syscall to kernel");
                 send_syscall(socket_dispatch, instruction_package);
                 (*PC)++;
                 return 1;
             break;
         case INIT_PROC:
-                log_debug(get_logger(), "Executing INIT_PROC, sending syscall to kernel");
+                LOG_DEBUG("Executing INIT_PROC, sending syscall to kernel");
                 send_syscall(socket_dispatch, instruction_package);
                 (*PC)++;
                 return 1;
             break;
         case DUMP_PROCESS:
-                log_debug(get_logger(), "Executing DUMP_PROCESS, sending syscall to kernel");
+                LOG_DEBUG("Executing DUMP_PROCESS, sending syscall to kernel");
                 send_syscall(socket_dispatch, instruction_package);
                 (*PC)++;
                 return 1;
             break;
         case EXIT:
-                log_debug(get_logger(), "Executing EXIT, sending syscall to kernel");
+                LOG_DEBUG("Executing EXIT, sending syscall to kernel");
                 send_syscall(socket_dispatch, instruction_package);
                 return 1;
             break;
         default:
-                log_error(get_logger(), "Unknown instruction: %d", instruction->instruction_code);
+                LOG_WARNING("Unknown instruction: %d", instruction->instruction_code);
             return -1;
     }
 
@@ -108,7 +108,7 @@ int check_interrupt(int socket_interrupt,t_package* package, uint32_t* pid_on_ex
 
     if(package == NULL) 
     {
-        log_error(get_logger(), "Disconnecting interrupt...");
+        LOG_INFO("Disconnecting interrupt...");
         return -1;
     }
 
@@ -127,11 +127,11 @@ int check_interrupt(int socket_interrupt,t_package* package, uint32_t* pid_on_ex
             send_package(socket_interrupt, package);
             package_destroy(package);
 
-            log_info(get_logger(), "Interrupt for PID %d executed", pid_received);
+            LOG_DEBUG("Interrupt for PID %d executed", pid_received);
                 
             return 1;
         } else {
-            log_info(get_logger(), "Interrupt for PID %d received, but not executing", pid_received);
+            LOG_DEBUG("Interrupt for PID %d received, but not executing", pid_received);
             // TODO: responder al kernel como que se "atendio" la interrupcion
         }
 
@@ -140,7 +140,7 @@ int check_interrupt(int socket_interrupt,t_package* package, uint32_t* pid_on_ex
     } 
     else 
     {
-        log_error(get_logger(), "Received unexpected opcode on interrupt connection: %s", opcode_to_string(package->opcode) );
+        LOG_WARNING("Received unexpected opcode on interrupt connection: %s", opcode_to_string(package->opcode) );
     }
     
     return 0;
@@ -153,12 +153,11 @@ void* interrupt_listener(void* socket)
         t_package* package = recv_package(*(int*)socket);
         if(package == NULL) 
         {
-            log_error(get_logger(), "Disconnecting interrupt listener...");
+            LOG_INFO("Disconnecting interrupt listener...");
             return NULL;
         }
         lock_interrupt_list();
-        log_info(get_logger(), "Received interrupt package with opcode: %s", opcode_to_string(package->opcode));
-        log_debug(get_logger(), "Adding interrupt package with opcode: %s", opcode_to_string(package->opcode));
+        LOG_DEBUG("Received interrupt package with opcode: %s", opcode_to_string(package->opcode));
         add_interrupt(package);
         unlock_interrupt_list();
         signal_interrupt();
@@ -175,7 +174,6 @@ void* interrupt_handler(void* thread_args)
         lock_interrupt_list();
             while(interrupt_count() > 0)
             {
-                log_debug(get_logger(), "Checking interrupts");
                 t_package* package = get_last_interrupt(interrupt_count());
                 lock_cpu_mutex();
                 check_interrupt(args->socket_interrupt, package, args->pid, args->pc);

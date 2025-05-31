@@ -7,22 +7,22 @@ int create_servers_threads(pthread_t* io_thread, pthread_t* cpu_thread)
     int err_cpu = pthread_create(cpu_thread, NULL, cpu_server_handler, NULL);
     if (err_cpu != 0) 
     {
-        log_error(get_logger(), "Failed to create CPU server thread");
+        LOG_ERROR("Failed to create CPU server thread");
         return -1;
     } else 
     {
-        log_info(get_logger(), "Successfully created CPU server thread");
+        LOG_INFO("Successfully created CPU server thread");
     }
 
     //SERVER IO T
     int err_io = pthread_create(io_thread, NULL, io_server_handler, NULL);
     if (err_io != 0) 
     {
-        log_error(get_logger(), "Failed to create IO server thread");
+        LOG_ERROR("Failed to create IO server thread");
         return -1;
     } else 
     {
-        log_info(get_logger(), "Successfully created IO server thread");
+        LOG_INFO("Successfully created IO server thread");
     }
 
     return 0;

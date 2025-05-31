@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
                 instruction = decode(instruction_package);
                 if(instruction == NULL) 
                 {
-                    log_error(get_logger(), "Decoding error");
+                    LOG_ERROR("Decoding error");
                     unlock_cpu_mutex();
                     break;
                 }
@@ -64,14 +64,14 @@ int main(int argc, char* argv[])
         };
 
         if (syscall == -1) 
-            log_error(get_logger(), "Execution error");
+            LOG_ERROR("Execution error");
 
         package_destroy(kernel_package);
         cleanup_instruction(instruction, instruction_package);
         
     }
     
-    log_info(get_logger(), "Closing connections...");
+    LOG_INFO("Closing connections...");
 
     pthread_join(interrupt_listener_thread, NULL);
     pthread_join(interrupt_handler_thread, NULL);

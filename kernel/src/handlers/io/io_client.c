@@ -22,7 +22,7 @@ void* handle_io_client(void* socket)
                 }
                 default:
                 {
-                    log_error(get_logger(), "Unknown opcode %d from IO device", package->opcode);
+                    LOG_ERROR("Unknown opcode %d from IO device", package->opcode);
                     package_destroy(package);
                     pthread_exit(0);
                     close(client_socket); 
@@ -34,13 +34,13 @@ void* handle_io_client(void* socket)
             
             t_io_connection *io_connection = (t_io_connection *)find_io_connection_by_socket(client_socket);
             if(io_connection == NULL) {
-                log_error(get_logger(), "Failed to find IO connection by socket");
+                LOG_ERROR("Failed to find IO connection by socket");
                 close(client_socket);
                 pthread_exit(0);
                 return;
             }
             
-            log_error(get_logger(), "Client disconnected %s", io_connection->device_name);
+            LOG_ERROR("Client disconnected %s", io_connection->device_name);
 
             // TODO: handle closed connection
             close(client_socket);
@@ -52,7 +52,7 @@ void* handle_io_client(void* socket)
 }
 
 void handle_new_device(t_package* package, int socket) {
-    log_info(get_logger(), "Processing new_device from client");
+    LOG_INFO("Processing new_device from client");
     char* device_name = read_new_device(package);
 
     package_destroy(package);
@@ -65,14 +65,14 @@ void handle_new_device(t_package* package, int socket) {
     int err_io_client = pthread_create(&io_client_thread, NULL, process_new_device, thread_args);
     if (err_io_client != 0) 
     {
-        log_error(get_logger(), "Failed to create IO client new_device thread");
+        LOG_ERROR("Failed to create IO client new_device thread");
     }
     pthread_detach(io_client_thread);
 }
 
 void process_io_completion(t_package *package, int socket)
 {
-    log_info(get_logger(), "Processing IO_COMPLETION from IO device");
+    LOG_INFO("Processing IO_COMPLETION from IO device");
     int pid = read_io_completion(package);
 
     package_destroy(package);
@@ -85,7 +85,7 @@ void process_io_completion(t_package *package, int socket)
     int err_io_client = pthread_create(&io_client_thread, NULL, io_completion, thread_args);
     if (err_io_client != 0)
     {
-        log_error(get_logger(), "Failed to create IO client HANDSHAKE thread");
+        LOG_ERROR("Failed to create IO client HANDSHAKE thread");
     }
     pthread_detach(io_client_thread);
 }

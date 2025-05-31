@@ -51,5 +51,5 @@ void process_enter()
     // TODO: validar si hay algun cpu conectado. Si no hay ninguno, tirar error y salir.
 
     // ejecutamos a mano la syscall init_proc para el proceso 0
-    log_info(get_logger(), "Ejecutando syscall init_proc para el proceso 0");
+    LOG_INFO("Ejecutando syscall init_proc para el proceso 0");
 }

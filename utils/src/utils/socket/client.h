@@ -1,11 +1,11 @@
 #ifndef UTILS_SOCKET_CLIENT_H
 #define UTILS_SOCKET_CLIENT_H
 
-#include "../logger/logger.h"
 #include <sys/socket.h>
 #include <netdb.h>
 #include <string.h>
 #include <stdlib.h>
+#include "../../macros/logger_macro.h"
 
 /**
 * @brief Creates a client and connects to a socket server
