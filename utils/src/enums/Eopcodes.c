@@ -1,6 +1,6 @@
 #include "Eopcodes.h"
 
-const char* opcode_to_string(OPCODE opcode) 
+char* opcode_to_string(OPCODE opcode) 
 {
     switch (opcode) {
         // memoria

@@ -1,6 +1,6 @@
 #include "cpu.h"
 
-bool initialize_repository_cpu(sem_t *sem_cpu)
+void initialize_repository_cpu(sem_t *sem_cpu)
 {
   if (sem_init(sem_cpu, 0, 1) != 0)
   {
@@ -9,7 +9,7 @@ bool initialize_repository_cpu(sem_t *sem_cpu)
   }
 }
 
-bool destroy_repository_cpu(sem_t *sem_cpu)
+void destroy_repository_cpu(sem_t *sem_cpu)
 {
   sem_destroy(sem_cpu);
 }

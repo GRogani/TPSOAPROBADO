@@ -37,7 +37,7 @@ void* handle_io_client(void* socket)
                 log_error(get_logger(), "Failed to find IO connection by socket");
                 close(client_socket);
                 pthread_exit(0);
-                return;
+                return NULL;
             }
             
             log_error(get_logger(), "Client disconnected %s", io_connection->device_name);
@@ -73,13 +73,13 @@ void handle_new_device(t_package* package, int socket) {
 void process_io_completion(t_package *package, int socket)
 {
     log_info(get_logger(), "Processing IO_COMPLETION from IO device");
-    int pid = read_io_completion(package);
+    char* device_name = read_io_operation_completed(package);
 
     package_destroy(package);
 
     t_completion_thread_args *thread_args = safe_malloc(sizeof(t_completion_thread_args));
     thread_args->client_socket = socket;
-    thread_args->pid = pid;
+    thread_args->device_name = device_name;
 
     pthread_t io_client_thread;
     int err_io_client = pthread_create(&io_client_thread, NULL, io_completion, thread_args);

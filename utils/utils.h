@@ -33,6 +33,10 @@
 // Shutdown
 #include "src/utils/shutdown.h"
 
+// Enums
+#include "src/enums/Eopcodes.h"
+#include "src/enums/Eplanification_algorithm.h"
+#include "src/enums/Eprocess_state.h"
 // DTOs
 #include "src/utils/DTOs/dtos.h"
 

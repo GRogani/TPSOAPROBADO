@@ -4,7 +4,7 @@ static sem_t sem_cpu_connections;
 
 unsigned int id_generator = 0;
 
-bool initialize_repository_cpu_connections()
+void initialize_repository_cpu_connections()
 {
   if (sem_init(&sem_cpu_connections, 0, 1) != 0)
   {
@@ -13,7 +13,7 @@ bool initialize_repository_cpu_connections()
   }
 }
 
-bool destroy_repository_cpu_connections()
+void destroy_repository_cpu_connections()
 {
   sem_destroy(&sem_cpu_connections);
 }
@@ -66,4 +66,23 @@ void remove_cpu_connection(char *id)
 void unlock_cpu_connections()
 {
   sem_post(&sem_cpu_connections);
+}
+
+void* get_all_cpu_connections() {
+    return dictionary_elements(get_cpu_connections_dict());
+}
+
+void* get_first_available_cpu() {
+    t_list* connections_list = dictionary_elements(get_cpu_connections_dict());
+    
+    // Helper function to check if CPU is available
+    bool is_cpu_available(void* ptr) {
+        t_cpu_connection* connection = (t_cpu_connection*)ptr;
+        return connection->current_process_executing == -1;
+    }
+    
+    t_cpu_connection* available_cpu = list_find(connections_list, is_cpu_available);
+    list_destroy(connections_list);
+    
+    return available_cpu;
 }

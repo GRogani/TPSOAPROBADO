@@ -1,7 +1,6 @@
 #include "semaphore.h"
 
 static sem_t sem_cpu_connected;
-static sem_t sem_can_start;
 
 void initialize_cpu_connected_sem()
 {

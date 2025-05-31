@@ -2,14 +2,14 @@
 
 static sem_t sem_io_connections;
 
-bool initialize_repository_io_connections() {
+void initialize_repository_io_connections() {
     if (sem_init(&sem_io_connections, 0, 1) != 0) {
         LOG_ERROR("sem_init for IO_CONNECTIONS list failed");
         exit(EXIT_FAILURE);
     }
 }
 
-bool destroy_repository_io_connections() {
+void destroy_repository_io_connections() {
     sem_destroy(&sem_io_connections);
 }
 

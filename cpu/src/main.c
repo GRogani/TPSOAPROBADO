@@ -16,7 +16,6 @@ int main(int argc, char* argv[])
     create_connections(config_cpu, &memory_socket, &kernel_dispatch_socket, &kernel_interrupt_socket);
 
     t_package* kernel_package = NULL;
-    t_package* instruction_package = NULL;
     uint32_t pid, pc;
     t_instruction* instruction = NULL;
 
@@ -36,38 +35,41 @@ int main(int argc, char* argv[])
         }
         unlock_cpu_mutex();
         kernel_package = receive_PID_PC_Package(kernel_dispatch_socket, &pid, &pc);
-        if(kernel_package == NULL) break; 
+        if(kernel_package == NULL) break;
+        package_destroy(kernel_package);
 
         int syscall = 0;
         while (syscall != 1)
         {
             lock_cpu_mutex();
 
-                instruction_package = fetch(memory_socket, pid, pc);
-                if(instruction_package == NULL)
-                {
-                    unlock_cpu_mutex();
-                    break;
-                }
+            t_package *instruction_package = fetch(memory_socket, pid, pc);
+            if (instruction_package == NULL)
+            {
+                unlock_cpu_mutex();
+                break;
+            }
 
-                instruction = decode(instruction_package);
-                if(instruction == NULL) 
+                t_instruction * instruction = decode(instruction_package);
+                
+                if (instruction == NULL)
                 {
                     log_error(get_logger(), "Decoding error");
                     unlock_cpu_mutex();
                     break;
                 }
+                package_destroy(instruction_package);
 
-                syscall = execute(instruction, instruction_package, memory_socket, kernel_dispatch_socket, &pc);
+                syscall = execute(instruction, memory_socket, kernel_dispatch_socket, &pid, &pc);
 
-            unlock_cpu_mutex();
+                unlock_cpu_mutex();
         };
 
         if (syscall == -1) 
             log_error(get_logger(), "Execution error");
 
-        package_destroy(kernel_package);
-        cleanup_instruction(instruction, instruction_package);
+        
+        cleanup_instruction(instruction);
         
     }
     
@@ -87,10 +89,8 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void cleanup_instruction(t_instruction* instruction, t_package* package) 
+void cleanup_instruction(t_instruction* instruction) 
 {
-    if (package != NULL)
-        package_destroy(package);
     if (instruction != NULL) {
         if (instruction->operand_string_size > 0)
             free(instruction->operand_string);

@@ -8,9 +8,9 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-bool initialize_repository_cpu(sem_t *);
+void initialize_repository_cpu(sem_t *);
 
-bool destroy_repository_cpu(sem_t *);
+void destroy_repository_cpu(sem_t *);
 
 void lock_cpu(sem_t *);
 

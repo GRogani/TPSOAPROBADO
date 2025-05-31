@@ -8,8 +8,8 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-bool initialize_repository_io_connections();
-bool destroy_repository_io_connections();
+void initialize_repository_io_connections();
+void destroy_repository_io_connections();
 
 void lock_io_connections();
 void unlock_io_connections();

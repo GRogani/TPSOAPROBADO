@@ -9,7 +9,7 @@ typedef struct t_new_device_thread_args {
     int client_socket;
 } t_new_device_thread_args;
 
-void process_new_device(void*);
+void* process_new_device(void*);
 void call_process_pending_io(int, char *);
 
 #endif
