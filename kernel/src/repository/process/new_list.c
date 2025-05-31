@@ -1,55 +1,68 @@
 #include "new_list.h"
+#include "../pcb.h"
+#include <commons/collections/list.h>
+#include <stdlib.h>
+#include "macros/log_error.h"
 
 static sem_t sem_new;
 
-bool initialize_repository_new() {
+void initialize_repository_new() {
     if (sem_init(&sem_new, 0, 1) != 0) {
         LOG_ERROR("sem_init for NEW list failed");
         exit(EXIT_FAILURE);
     }
 }
 
-bool destroy_repository_new() {
+void destroy_repository_new() {
     sem_destroy(&sem_new);
 }
 
-bool find_and_lock_new_list(int process_id) {
+void lock_new_list() {
     sem_wait(&sem_new);
-
-    bool pid_matches(void* ptr) {
-	    int el_pid = (int) ptr;
-	    return el_pid == process_id;
-	};
-
-    void* el_found = list_find(get_new_list(), pid_matches);
-
-    if(el_found == NULL) {
-        return false;
-    }
-
-    return true;
-}
-
-void create_new(int pid) {
-    list_add(get_new_list(), pid);
-}
-
-bool delete_new(int process_id) {
-
-    bool pid_matches(void* ptr) {
-        int el_pid = (int) ptr;
-        return el_pid == process_id;
-    }
-
-    int removed_el = list_remove_by_condition(get_new_list(), pid_matches);
-
-    if(removed_el != process_id) {
-        return false;
-    }
-
-    return true;
 }
 
 void unlock_new_list() {
     sem_post(&sem_new);
+}
+
+bool find_pcb_in_new(uint32_t pid) {
+    t_list* list = get_new_list();
+    
+    for (int i = 0; i < list_size(list); i++) {
+        t_pcb* pcb = (t_pcb*) list_get(list, i);
+        if (pcb && pcb->pid == pid) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+void add_pcb_to_new(t_pcb* pcb) {
+    if (pcb == NULL) return;
+    
+    // El PCB ya debe estar en estado NEW al ser creado
+    list_add(get_new_list(), pcb);
+}
+
+t_pcb* remove_pcb_from_new(uint32_t pid) {
+    t_list* list = get_new_list();
+    
+    for (int i = 0; i < list_size(list); i++) {
+        t_pcb* pcb = (t_pcb*) list_get(list, i);
+        if (pcb && pcb->pid == pid) {
+            return (t_pcb*) list_remove(list, i);
+        }
+    }
+    
+    return NULL;
+}
+
+t_pcb* get_next_pcb_from_new() {
+    // Para algoritmos FIFO - obtiene y remueve el primer elemento
+    if (list_size(get_new_list()) == 0) {
+        return NULL;
+    }
+    
+    return (t_pcb*) list_remove(get_new_list(), 0);
 }

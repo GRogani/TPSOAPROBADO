@@ -9,8 +9,8 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-bool initialize_repository_cpu_connections();
-bool destroy_repository_cpu_connections();
+void initialize_repository_cpu_connections();
+void destroy_repository_cpu_connections();
 
 void lock_cpu_connections();
 
@@ -19,5 +19,8 @@ char *create_cpu_connection(int socket_interrupt, int socket_dispatch);
 void remove_cpu_connection(char *id);
 
 void unlock_cpu_connections();
+
+void* get_all_cpu_connections();
+void* get_first_available_cpu();
 
 #endif

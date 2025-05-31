@@ -22,6 +22,36 @@ t_list *get_new_list()
     return new_list;
 }
 
+t_list *get_ready_list()
+{
+    return ready_list;
+}
+t_list *get_exec_list()
+
+{
+    return exec_list;
+}
+
+t_list *get_blocked_list()
+{
+    return blocked_list;
+}
+
+t_list *get_exit_list()
+{
+    return exit_list;
+}
+
+t_list *get_susp_blocked_list()
+{
+    return susp_blocked_list;
+}
+
+t_list *get_susp_ready_list()
+{
+    return susp_ready_list;
+}
+
 t_dictionary *get_io_connections_dict()
 {
     return io_connections_dict;
@@ -44,11 +74,22 @@ void initialize_global_lists()
     initialize_repository_new();
     new_list = list_create();
 
+    initialize_repository_ready();
     ready_list = list_create();
+    
+    initialize_repository_exec();
     exec_list = list_create();
+    
+    initialize_repository_blocked();
     blocked_list = list_create();
+    
+    initialize_repository_susp_blocked();
     susp_blocked_list = list_create();
+    
+    initialize_repository_susp_ready();
     susp_ready_list = list_create();
+    
+    initialize_repository_exit();
     exit_list = list_create();
 
     initialize_repository_io_requests_link();
@@ -81,6 +122,12 @@ void destroy_global_lists()
 void destroy_global_repositories()
 {
     destroy_repository_new();
+    destroy_repository_ready();
+    destroy_repository_exec();
+    destroy_repository_blocked();
+    destroy_repository_susp_blocked();
+    destroy_repository_susp_ready();
+    destroy_repository_exit();
     destroy_repository_io_connections();
     destroy_repository_io_requests_link();
 }
@@ -113,4 +160,10 @@ void cpu_connections_destroyer(void *ptr)
 {
     t_cpu_connection *connection = (t_cpu_connection *)ptr;
     free(connection);
+}
+
+void pcb_destroyer(void *ptr)
+{
+    t_pcb *pcb = (t_pcb *)ptr;
+    pcb_destroy(pcb);
 }

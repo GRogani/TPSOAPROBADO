@@ -4,10 +4,10 @@
 #include <collections/collections.h>
 
 typedef struct t_completion_thread_args {
-    int pid;
+    char* device_name;
     int client_socket;
 } t_completion_thread_args;
 
-void io_completion(void*);
+void* io_completion(void*);
 
 #endif

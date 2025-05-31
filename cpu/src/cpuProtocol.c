@@ -33,24 +33,16 @@ t_package* receive_PID_PC_Package(int socket_dispatch_kernel, uint32_t* PID, uin
         }
     } while (corrupted_package);
 
-
-    package->buffer->offset = 0;
     sem_wait(&cpu_mutex);
-    *PID = buffer_read_uint32(package->buffer);
-    *PC = buffer_read_uint32(package->buffer);
+
+    t_cpu_dispatch * cpu_dispatch = read_cpu_dispatch_request(package);
+    *PID = cpu_dispatch->pid;
+    *PC = cpu_dispatch->pc;
+    destroy_cpu_dispatch(cpu_dispatch);
+    
     sem_post(&cpu_mutex);
 
     return package;
-}
-
-void request_instruction(int socket, uint32_t PID, uint32_t PC) 
-{
-    t_buffer* buffer = buffer_create(sizeof(uint32_t)*2);
-    buffer_add_uint32(buffer, PID);
-    buffer_add_uint32(buffer, PC);
-    t_package* package = package_create(GET_INSTRUCTION, buffer);
-    send_package(socket, package);
-    package_destroy(package);
 }
 
 t_package* receive_instruction(int socket) 
@@ -75,6 +67,8 @@ t_package* receive_instruction(int socket)
     return package;
 }
 
+
+// TODO: move these to DTOs
 void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* valor_write) 
 {
     t_buffer* buffer = buffer_create(sizeof(uint32_t) + strlen(valor_write) + 1);
@@ -85,6 +79,7 @@ void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* va
     package_destroy(package);
 }
 
+// TODO: move these to DTOs
 void read_memory_request(int socket_memory, uint32_t direccion_fisica, uint32_t size) 
 {
     t_buffer* buffer = buffer_create( 2 * sizeof(uint32_t));
@@ -95,6 +90,7 @@ void read_memory_request(int socket_memory, uint32_t direccion_fisica, uint32_t 
     package_destroy(package);
 }
 
+// TODO: move these to DTOs
 char* read_memory_response(int socket_memory) {
     t_package* package = recv_package(socket_memory);
     if (package == NULL) {

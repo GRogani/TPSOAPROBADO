@@ -47,11 +47,11 @@ void* client_handler(void* client_fd_ptr) {
         switch (package->opcode) 
         {   
             case GET_INSTRUCTION:
-                get_instruction(client_fd, package->buffer);
+                get_instruction(client_fd, package);
                 break;
                 
             case LIST_INSTRUCTIONS:
-                get_instruction(client_fd, package->buffer);
+                get_instruction(client_fd, package);
                 break;
 
             case GET_FREE_SPACE:
@@ -59,7 +59,15 @@ void* client_handler(void* client_fd_ptr) {
                 break;
 
             case CREATE_PROCESS:
-                create_process(client_fd, package->buffer);
+                create_process(client_fd, package);
+                break;
+
+            case UNSUSPEND_PROCESS:
+                // TODO:check if memory has available space for re-initializing the process
+                break;
+
+            case SWAP:
+                // TODO: suspend process and move to another space (free some memory)
                 break;
 
             default:

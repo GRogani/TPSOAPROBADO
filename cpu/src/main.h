@@ -9,7 +9,6 @@
 #include "lists_and_mutex.h"
 #include "instructionCycle.h"
 
-void cleanup_instruction(t_instruction* instruction, t_package* package);
-
+void cleanup_instruction(t_instruction* instruction);
 
 #endif

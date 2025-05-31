@@ -1,6 +1,6 @@
 #include "io_requests_queue.h"
 
-bool initialize_repository_io_requests_queue(sem_t *sem_io_requests_queue)
+void initialize_repository_io_requests_queue(sem_t *sem_io_requests_queue)
 {
     if (sem_init(sem_io_requests_queue, 0, 1) != 0)
     {
@@ -9,7 +9,7 @@ bool initialize_repository_io_requests_queue(sem_t *sem_io_requests_queue)
     }
 }
 
-bool destroy_repository_io_requests_queue(sem_t *sem_io_requests_queue)
+void destroy_repository_io_requests_queue(sem_t *sem_io_requests_queue)
 {
     sem_destroy(sem_io_requests_queue);
 }

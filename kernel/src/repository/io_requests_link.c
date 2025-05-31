@@ -33,6 +33,8 @@ void* create_io_request_link(char* device_name) {
     initialize_repository_io_requests_queue(&io_request->io_requests_queue_semaphore);
 
     dictionary_put(get_io_requests_link_dict(), device_name, io_request);
+
+    return io_request;
 }
 
 void unlock_io_requests_link() {

@@ -1,6 +1,6 @@
 #include "io_completion.h"
 
-void io_completion(void *thread_args)
+void* io_completion(void *thread_args)
 {
     t_completion_thread_args *args = (t_completion_thread_args *)thread_args;
 
@@ -18,5 +18,6 @@ void io_completion(void *thread_args)
     
     // actualizamos current-processing de la connection a -1.
 
+    free(args->device_name);
     free(args);
 }

@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     create_servers_threads(&io_server_hanlder, &cpu_server_hanlder);
 
     // el cpu se crea y una vez que se aprieta enter, se cierra la escucha.
-    process_enter();
+    process_enter(argv[1], atoi(argv[2]));
 
     pthread_join(io_server_hanlder, NULL);
 
@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 
 }
 
-void process_enter()
+void process_enter(char* pseudocode_file_name, uint32_t program_size)
 {
     printf("Presione Enter para comenzar...\n");
     int c;
@@ -51,5 +51,11 @@ void process_enter()
     // TODO: validar si hay algun cpu conectado. Si no hay ninguno, tirar error y salir.
 
     // ejecutamos a mano la syscall init_proc para el proceso 0
+<<<<<<< HEAD
     LOG_INFO("Ejecutando syscall init_proc para el proceso 0");
+=======
+    log_info(get_logger(), "Ejecutando syscall init_proc para el proceso 0");
+
+    handle_init_proc_syscall(0, program_size, pseudocode_file_name);
+>>>>>>> 15155396654dd87654bb916a154b7f2bfd09641a
 }
