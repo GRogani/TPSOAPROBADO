@@ -2,17 +2,15 @@
 
 static sem_t sem_susp_blocked;
 
-bool initialize_repository_susp_blocked() {
+void initialize_repository_susp_blocked() {
     if (sem_init(&sem_susp_blocked, 0, 1) != 0) {
         LOG_ERROR("sem_init for SUSP_BLOCKED list failed");
         exit(EXIT_FAILURE);
     }
-    return true;
 }
 
-bool destroy_repository_susp_blocked() {
+void destroy_repository_susp_blocked() {
     sem_destroy(&sem_susp_blocked);
-    return true;
 }
 
 void lock_susp_blocked_list() {

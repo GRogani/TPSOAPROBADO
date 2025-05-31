@@ -1,6 +1,8 @@
 #include "memory_get_instruction.h"
 
-// Request functions
+// REQUEST
+
+// used by memory
 t_memory_get_instruction_request* read_memory_get_instruction_request(t_package* package) 
 {
     package->buffer->offset = 0;
@@ -21,6 +23,7 @@ t_package* create_memory_get_instruction_request(uint32_t pid, uint32_t pc)
     return package_create(GET_INSTRUCTION, buffer);
 }
 
+// used by cpu
 int send_memory_get_instruction_request(int socket, uint32_t pid, uint32_t pc) 
 {
     t_package* package = create_memory_get_instruction_request(pid, pc);
@@ -36,47 +39,30 @@ void destroy_memory_get_instruction_request(t_memory_get_instruction_request* re
     }
 }
 
-// Response functions
-t_memory_get_instruction_response* read_memory_get_instruction_response(t_package* package) 
+// RESPONSE
+
+// used by cpu
+char* read_memory_get_instruction_response(t_package* package) 
 {
     package->buffer->offset = 0;
-    t_memory_get_instruction_response* response = safe_malloc(sizeof(t_memory_get_instruction_response));
-    
     uint32_t instruction_len;
-    response->instruction = buffer_read_string(package->buffer, &instruction_len);
-    
-    package->buffer->offset = 0;
+    char* instruction = buffer_read_string(package->buffer, &instruction_len);
+    return instruction;
+}
+
+t_package* create_memory_get_instruction_response(char* instruction) 
+{
+    t_buffer *buffer = buffer_create(0);
+    buffer_add_string(buffer, strlen(instruction) + 1, instruction);
+    t_package *response = package_create(GET_INSTRUCTION, buffer);
     return response;
 }
 
-t_package* create_memory_get_instruction_response(const char* instruction) 
-{
-    uint32_t instruction_len = instruction ? strlen(instruction) + 1 : 1;
-    t_buffer* buffer = buffer_create(instruction_len + sizeof(uint32_t));
-    
-    if (instruction) {
-        buffer_add_string(buffer, strlen(instruction), instruction);
-    } else {
-        buffer_add_string(buffer, 0, "");
-    }
-    
-    return package_create(GET_INSTRUCTION, buffer);
-}
-
-int send_memory_get_instruction_response(int socket, const char* instruction) 
+// used by memory
+int send_memory_get_instruction_response(int socket, char* instruction) 
 {
     t_package* package = create_memory_get_instruction_response(instruction);
     int bytes_sent = send_package(socket, package);
     package_destroy(package);
     return bytes_sent;
-}
-
-void destroy_memory_get_instruction_response(t_memory_get_instruction_response* response) 
-{
-    if (response) {
-        if (response->instruction) {
-            free(response->instruction);
-        }
-        free(response);
-    }
 }

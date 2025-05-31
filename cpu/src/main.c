@@ -1,60 +1,100 @@
 #include "main.h"
 
-sem_t cpu_mutex;
 
 int main(int argc, char* argv[]) 
 {
-    sem_init(&cpu_mutex, 0, 1);
+    init_list_and_mutex();
 
     t_config* config_file = init_config("cpu.config");
     t_cpu_config config_cpu = init_cpu_config(config_file);
     init_logger("cpu.log", "CPU", config_cpu.LOG_LEVEL);
 
-    int fd_memory = -1;
-    int fd_kernel_dispatch = -1;
-    int fd_kernel_interrupt = -1;
+    int memory_socket = -1;
+    int kernel_dispatch_socket = -1;
+    int kernel_interrupt_socket = -1;
 
-    create_connections(config_cpu, &fd_memory, &fd_kernel_dispatch, &fd_kernel_interrupt);
-
-    log_info(get_logger(), "Connections established successfully!");
+    create_connections(config_cpu, &memory_socket, &kernel_dispatch_socket, &kernel_interrupt_socket);
 
     t_package* kernel_package = NULL;
-    t_package* instruction_package = NULL;
     uint32_t pid, pc;
-    instruction_t* instruction = NULL;
+    t_instruction* instruction = NULL;
 
-    interrupt_args_t thread_args = {fd_kernel_interrupt, &pid, &pc};
-    pthread_t interrupt_thread;
-    pthread_create(&interrupt_thread, NULL, interrupt_handler, &thread_args);
+    interrupt_args_t thread_args = {kernel_interrupt_socket, &pid, &pc};
+    pthread_t interrupt_handler_thread;
+    pthread_t interrupt_listener_thread;
+    pthread_create(&interrupt_listener_thread, NULL, interrupt_listener, &kernel_interrupt_socket);
+    pthread_create(&interrupt_handler_thread, NULL, interrupt_handler, &thread_args);
 
-    while(1)
-    {
-        sem_wait(&cpu_mutex);
-
-        kernel_package = receive_PID_PC_Package(fd_kernel_dispatch, &pid, &pc);
-        if(kernel_package == NULL) break; 
-
-        instruction_package = fetch(fd_memory, pid, pc);
-        instruction = decode(instruction_package);
-        execute(instruction, instruction_package, fd_memory, fd_kernel_dispatch, pid, &pc);
-
-        sem_post(&cpu_mutex);
-
+    while (1)
+    {   
+        lock_cpu_mutex();
+        if(interrupt_count() > 0)
+        {
+            unlock_cpu_mutex();
+            break;
+        }
+        unlock_cpu_mutex();
+        kernel_package = receive_PID_PC_Package(kernel_dispatch_socket, &pid, &pc);
+        if(kernel_package == NULL) break;
         package_destroy(kernel_package);
-        package_destroy(instruction_package);
-        free(instruction->operand_string);
-        free(instruction);
+
+        int syscall = 0;
+        while (syscall != 1)
+        {
+            lock_cpu_mutex();
+
+            t_package *instruction_package = fetch(memory_socket, pid, pc);
+            if (instruction_package == NULL)
+            {
+                unlock_cpu_mutex();
+                break;
+            }
+
+                t_instruction * instruction = decode(instruction_package);
+                
+                if (instruction == NULL)
+                {
+                    log_error(get_logger(), "Decoding error");
+                    unlock_cpu_mutex();
+                    break;
+                }
+                package_destroy(instruction_package);
+
+                syscall = execute(instruction, memory_socket, kernel_dispatch_socket, &pid, &pc);
+
+                unlock_cpu_mutex();
+        };
+
+        if (syscall == -1) 
+            log_error(get_logger(), "Execution error");
+
+        
+        cleanup_instruction(instruction);
+        
     }
     
     log_info(get_logger(), "Closing connections...");
-    pthread_join(interrupt_thread, NULL);
-    sem_destroy(&cpu_mutex);
+
+    pthread_join(interrupt_listener_thread, NULL);
+    pthread_join(interrupt_handler_thread, NULL);
+
+    close(memory_socket);
+    close(kernel_dispatch_socket);
+    close(kernel_interrupt_socket);
+
+    destroy_list_and_mutex();
     log_destroy(get_logger());
-    close(fd_memory);
-    close(fd_kernel_dispatch);
-    close(fd_kernel_interrupt);
     config_destroy(config_file);
 
     return 0;
+}
+
+void cleanup_instruction(t_instruction* instruction) 
+{
+    if (instruction != NULL) {
+        if (instruction->operand_string_size > 0)
+            free(instruction->operand_string);
+        free(instruction);
+    }
 }
 

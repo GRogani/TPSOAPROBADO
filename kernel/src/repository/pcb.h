@@ -58,7 +58,7 @@ typedef struct t_pcb {
  * @param pseudocode_file Nombre del archivo de pseudocódigo del proceso.
  * @return Puntero al PCB creado o NULL si falla.
  */
-t_pcb* pcb_create(uint32_t pid, uint32_t pc, uint32_t size, const char* pseudocode_file);
+t_pcb* pcb_create(uint32_t pid, uint32_t pc, uint32_t size, char* pseudocode_file);
 
 /**
  * @brief Libera la memoria de un PCB.
@@ -71,7 +71,7 @@ void pcb_destroy(t_pcb* pcb);
  * @param pcb Puntero al PCB.
  * @return Puntero al nombre del archivo o NULL si no está definido.
  */
-const char* pcb_get_pseudocode_file(t_pcb* pcb);
+char* pcb_get_pseudocode_file(t_pcb* pcb);
 
 /**
  * @brief Cambia el estado de un proceso y actualiza las métricas.

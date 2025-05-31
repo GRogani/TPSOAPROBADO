@@ -2,54 +2,73 @@
 
 t_package* receive_PID_PC_Package(int socket_dispatch_kernel, uint32_t* PID, uint32_t* PC) 
 {
-    t_package* package = recv_package(socket_dispatch_kernel);
+    extern sem_t cpu_mutex; // en main
+    t_package* package;
+    bool corrupted_package;
 
-    if (package == NULL) {
-       log_error(get_logger(), "Disconnected from kernel");
-        return NULL;
-    }
+    do{
+        log_debug(get_logger(), "Waiting for PID and PC package from kernel...");
+        corrupted_package = false;
+        package = recv_package(socket_dispatch_kernel);
+        if (package == NULL) 
+        {
+            log_error(get_logger(), "Disconnected from kernel"); // ESTE CASO ES DE DESCONECCION, OSEA ESPERABLE LOSOTROS NO
+            return NULL;
+        }
+        else if (package->opcode != PID_PC_PACKAGE) 
+        {
+            corrupted_package = true;
+            log_error(get_logger(), "Received package with unexpected opcode: %s", opcode_to_string(package->opcode) );
+            package_destroy(package);
+        }
+        else if (package->buffer == NULL)
+        {
+            corrupted_package = true;
+            log_error(get_logger(), "Received package with NULL buffer");
+            package_destroy(package);
+        }
+        if (corrupted_package) 
+        {
+            log_info(get_logger(), "Retrying to receive PID and PC package...");
+        }
+    } while (corrupted_package);
 
-    if (package->opcode != PID_PC_PACKAGE) {
-       log_error(get_logger(), "Received package with unexpected opcode: %d", package->opcode);
-        package_destroy(package);
-        return NULL;
-    }
+    sem_wait(&cpu_mutex);
 
-    // Usar DTO para leer el dispatch
-    t_cpu_dispatch* dispatch = read_cpu_dispatch(package);
-    if (dispatch) {
-        *PID = dispatch->pid;
-        *PC = dispatch->pc;
-        destroy_cpu_dispatch(dispatch);
-    }
+    t_cpu_dispatch * cpu_dispatch = read_cpu_dispatch_request(package);
+    *PID = cpu_dispatch->pid;
+    *PC = cpu_dispatch->pc;
+    destroy_cpu_dispatch(cpu_dispatch);
+    
+    sem_post(&cpu_mutex);
 
     return package;
-}
-
-void request_instruction(int socket, uint32_t PID, uint32_t PC) 
-{
-    // Usar DTO para enviar request de instrucción
-    send_memory_get_instruction_request(socket, PID, PC);
 }
 
 t_package* receive_instruction(int socket) 
 {
-    t_package* package = recv_package(socket);
+    t_package* package;
+    bool corrupted_package;
+    do{
+        corrupted_package = false;
+        package = recv_package(socket);
 
-    if (package == NULL) {
-        log_error(get_logger(), "Failed to receive instruction package");
-        return NULL;
-    }
-
-    if (package->opcode != GET_INSTRUCTION) {
-        log_error(get_logger(), "Received package with unexpected opcode: %d", package->opcode);
-        package_destroy(package);
-        return NULL;
-    }
+        if (package == NULL) {
+            log_error(get_logger(), "Disconnected from memory");
+            return NULL;
+        }
+        else if (package->opcode != GET_INSTRUCTION) {
+            corrupted_package = true;
+            log_error(get_logger(), "Received package with unexpected opcode: %d", package->opcode);
+            package_destroy(package);
+        }
+    }while(corrupted_package);
 
     return package;
 }
 
+
+// TODO: move these to DTOs
 void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* valor_write) 
 {
     t_buffer* buffer = buffer_create(sizeof(uint32_t) + strlen(valor_write) + 1);
@@ -60,6 +79,7 @@ void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* va
     package_destroy(package);
 }
 
+// TODO: move these to DTOs
 void read_memory_request(int socket_memory, uint32_t direccion_fisica, uint32_t size) 
 {
     t_buffer* buffer = buffer_create( 2 * sizeof(uint32_t));
@@ -70,6 +90,7 @@ void read_memory_request(int socket_memory, uint32_t direccion_fisica, uint32_t 
     package_destroy(package);
 }
 
+// TODO: move these to DTOs
 char* read_memory_response(int socket_memory) {
     t_package* package = recv_package(socket_memory);
     if (package == NULL) {
@@ -111,4 +132,8 @@ void create_connections(t_cpu_config config_cpu, int* fd_memory, int* fd_kernel_
             sleep(3);
         }
     }
+
+    log_info(get_logger(), "Kernel Dispatch assigned to socket: %d", *fd_kernel_dispatch);
+    log_info(get_logger(), "Kernel Interrupt assigned to socket: %d", *fd_kernel_interrupt);
+    log_info(get_logger(), "Memory assigned to socket: %d", *fd_memory);
 }

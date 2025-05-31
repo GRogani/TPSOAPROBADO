@@ -8,7 +8,7 @@ typedef enum {
     BLOCKED,
     SUSP_BLOCKED,
     SUSP_READY,
-    EXIT,
+    EXIT_L,
     PROCESS_STATE_INVALID = -1
 } PROCESS_STATE;
 

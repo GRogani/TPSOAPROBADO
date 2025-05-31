@@ -14,8 +14,8 @@ char* process_state_to_string(PROCESS_STATE state) {
             return "SUSP_BLOCKED";
         case SUSP_READY:
             return "SUSP_READY";
-        case EXIT:
-            return "EXIT";
+        case EXIT_L:
+            return "EXIT_L";
         default:
             return "UNKNOWN";
     }

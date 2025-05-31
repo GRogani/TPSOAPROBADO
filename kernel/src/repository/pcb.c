@@ -1,6 +1,6 @@
 #include "pcb.h"
 
-t_pcb* pcb_create(uint32_t pid, uint32_t pc, uint32_t size, const char* pseudocode_file) {
+t_pcb* pcb_create(uint32_t pid, uint32_t pc, uint32_t size, char* pseudocode_file) {
     t_pcb* pcb = safe_malloc(sizeof(t_pcb));
     if (pcb == NULL) {
         return NULL;
@@ -80,7 +80,7 @@ void pcb_change_state(t_pcb* pcb, PROCESS_STATE new_state) {
         case SUSP_READY:
             pcb->MT.susp_ready_time_ms += time_in_current_state;
             break;
-        case EXIT:
+        case EXIT_L:
             pcb->MT.exit_time_ms += time_in_current_state;
             break;
         default:
@@ -110,7 +110,7 @@ void pcb_change_state(t_pcb* pcb, PROCESS_STATE new_state) {
         case SUSP_READY:
             pcb->ME.susp_ready_count++;
             break;
-        case EXIT:
+        case EXIT_L:
             pcb->ME.exit_count++;
             break;
         default:
@@ -133,7 +133,7 @@ uint64_t time_diff_ms(struct timeval start, struct timeval end) {
     return end_ms - start_ms;
 }
 
-const char* pcb_get_pseudocode_file(t_pcb* pcb) {
+char* pcb_get_pseudocode_file(t_pcb* pcb) {
     if (pcb == NULL) {
         return NULL;
     }

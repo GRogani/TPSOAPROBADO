@@ -2,17 +2,15 @@
 
 static sem_t sem_exit;
 
-bool initialize_repository_exit() {
+void initialize_repository_exit() {
     if (sem_init(&sem_exit, 0, 1) != 0) {
         LOG_ERROR("sem_init for EXIT list failed");
         exit(EXIT_FAILURE);
     }
-    return true;
 }
 
-bool destroy_repository_exit() {
+void destroy_repository_exit() {
     sem_destroy(&sem_exit);
-    return true;
 }
 
 void lock_exit_list() {

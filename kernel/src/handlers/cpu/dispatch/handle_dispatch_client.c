@@ -9,7 +9,7 @@ void *handle_dispatch_client(void* arg)
   {
     log_error(get_logger(), "CPU connection not found for id %s", connection_id);
     pthread_exit(0);
-    return;
+    return NULL;
   }
 
   t_package *package;
@@ -38,15 +38,15 @@ void *handle_dispatch_client(void* arg)
     {
       log_error(get_logger(), "CPU %s disconnected", connection_id);
       exit(EXIT_FAILURE);
-      return;
+      return NULL;
     }
   }
 }
 
 void handle_cpu_syscall(t_package* package, int socket) 
 {
-  t_cpu_syscall* syscall = read_cpu_syscall(package);
-  
+  t_cpu_syscall *syscall = read_cpu_syscall_request(package);
+
   if (syscall == NULL) {
     log_error(get_logger(), "Failed to read CPU syscall");
     return;

@@ -20,8 +20,7 @@ int send_new_device(int kernel_socket, char* device_name)
 };
 
 t_package* create_new_device(char* device_name){
-    uint32_t size = strlen(device_name) + 1;
-    t_buffer* buffer = buffer_create(size);
-    buffer_add_string(buffer, size - 1, device_name);
+    t_buffer* buffer = buffer_create(0);
+    buffer_add_string(buffer, strlen(device_name) + 1, device_name);
     return package_create(IO_NEW_DEVICE, buffer);
 };

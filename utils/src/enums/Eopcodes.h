@@ -9,12 +9,15 @@
  * @note - `HANDSHAKE`
  */
 typedef uint32_t OPCODE;
-enum {
+enum
+{
     // memoria opcodes
     GET_INSTRUCTION,
     LIST_INSTRUCTIONS,
     GET_FREE_SPACE,
     CREATE_PROCESS,
+    UNSUSPEND_PROCESS,
+    SWAP,
     WRITE_MEMORY,
     READ_MEMORY,
 
@@ -36,6 +39,6 @@ enum {
  * @param opcode El código de operación a convertir.
  * @return Una cadena que representa el OPCODE.
  */
-const char* opcode_to_string(OPCODE opcode);
+char* opcode_to_string(OPCODE opcode);
 
 #endif

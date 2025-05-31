@@ -2,17 +2,15 @@
 
 static sem_t sem_susp_ready;
 
-bool initialize_repository_susp_ready() {
+void initialize_repository_susp_ready() {
     if (sem_init(&sem_susp_ready, 0, 1) != 0) {
         LOG_ERROR("sem_init for SUSP_READY list failed");
         exit(EXIT_FAILURE);
     }
-    return true;
 }
 
-bool destroy_repository_susp_ready() {
+void destroy_repository_susp_ready() {
     sem_destroy(&sem_susp_ready);
-    return true;
 }
 
 void lock_susp_ready_list() {

@@ -19,7 +19,7 @@ int connect_to_memory(t_kernel_config* config) {
     return memory_socket;
 }
 
-bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, const char* pseudocode_path) {
+bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, char* pseudocode_path) {
     if (memory_socket < 0) {
         log_error(get_logger(), "memory_client: Socket inválido");
         return false;
@@ -49,27 +49,10 @@ bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, co
         log_error(get_logger(), "memory_client: Error recibiendo respuesta de memoria");
         return false;
     }
-    
     bool success = false;
     if (response->opcode == CREATE_PROCESS) {
-        // Leer resultado de la operación
-        // TODO: ver si deberiamos moverlo al dto (la interpretacion del resultado)
-        if (response->buffer != NULL && response->buffer->stream_size >= sizeof(uint32_t)) {
-            response->buffer->offset = 0;
-            uint32_t result = buffer_read_uint32(response->buffer);
-            success = (result == 0); // 0 = éxito, otro valor = error
-            
-            if (success) {
-                log_info(get_logger(), "memory_client: Proceso PID=%d creado exitosamente en memoria", pid);
-            } else {
-                log_error(get_logger(), "memory_client: Error creando proceso PID=%d en memoria (código: %d)", 
-                         pid, result);
-            }
-        } else {
-            log_warning(get_logger(), "memory_client: Respuesta de memoria sin datos de resultado");
-            // Por compatibilidad, asumir éxito si no hay código de error explícito
-            success = true;
-        }
+        bool create_process_result = read_memory_create_process_response(response);
+        success = create_process_result;
     } else {
         log_error(get_logger(), "memory_client: Respuesta inesperada de memoria (opcode: %d)", response->opcode);
     }

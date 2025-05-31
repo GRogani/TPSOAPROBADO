@@ -24,37 +24,28 @@ t_cpu_connection* get_free_cpu(void) {
     return free_cpu;
 }
 
-bool send_and_receive_interrupt(t_cpu_connection* cpu_connection, uint32_t pid) {
-    if (cpu_connection == NULL) {
-        log_error(get_logger(), "short_scheduler: CPU connection es NULL para interrupción");
-        return false;
-    }
-    
+t_cpu_interrupt *send_and_receive_interrupt(int interrupt_socket_id, uint32_t pid)
+{
     log_info(get_logger(), "short_scheduler: Enviando interrupción para PID %d", pid);
     
     // Enviar interrupción
-    int sent_bytes = send_cpu_interrupt_request(cpu_connection->interrupt_socket_id, pid);
+    int sent_bytes = send_cpu_interrupt_request(interrupt_socket_id, pid);
     if (sent_bytes <= 0) {
         log_error(get_logger(), "short_scheduler: Error enviando interrupción");
         return false;
     }
     
     // Esperar confirmación de interrupción (CPU_INTERRUPT response)
-    t_package* response = recv_package(cpu_connection->interrupt_socket_id);
+    t_package* response = recv_package(interrupt_socket_id);
     if (response == NULL) {
         log_error(get_logger(), "short_scheduler: Error recibiendo confirmación de interrupción");
         return false;
     }
-    
-    bool success = (response->opcode == CPU_INTERRUPT);
-    if (success) {
-        log_info(get_logger(), "short_scheduler: Interrupción confirmada para PID %d", pid);
-    } else {
-        log_error(get_logger(), "short_scheduler: Respuesta inesperada a interrupción (opcode: %d)", response->opcode);
-    }
+    t_cpu_interrupt * interrupt_info = read_cpu_interrupt_response(response);
     
     package_destroy(response);
-    return success;
+    
+    return interrupt_info;
 }
 
 bool send_dispatch_to_cpu(t_cpu_connection* cpu_connection, uint32_t pid, uint32_t pc) {
@@ -151,17 +142,8 @@ void run_short_scheduler(void) {
             log_info(get_logger(), "short_scheduler: Realizando preemption del proceso %d", cpu->current_process_executing);
 
             // send(interrupt) + receive(interrupt)
-            bool interrupt_success = send_and_receive_interrupt(cpu->dispatch_socket_id, cpu->current_process_executing);
+            t_cpu_interrupt* interrupt_info = send_and_receive_interrupt(cpu->interrupt_socket_id, cpu->current_process_executing);
 
-            if (!interrupt_success) {
-                log_error(get_logger(), "short_scheduler: Error en interrupción, abortando");
-                // Devolver proceso a READY y salir
-                add_pcb_to_ready(next_ready);
-                unlock_ready_list();
-                unlock_cpu(&cpu->cpu_exec_sem);
-                return;
-            }
-            
             // lock(EXEC_LIST) - ya está lockeada implícitamente
             lock_exec_list();
             
@@ -169,6 +151,7 @@ void run_short_scheduler(void) {
             t_pcb* preempted_pcb = remove_pcb_from_exec(cpu->current_process_executing);
             if (preempted_pcb != NULL) {
                 preempted_pcb->current_state = READY;
+                preempted_pcb->pc = interrupt_info->pc; // Actualizar PC del PCB preemptado
                 add_pcb_to_ready(preempted_pcb);
                 log_info(get_logger(), "short_scheduler: Proceso %d movido de EXEC a READY por preemption", cpu->current_process_executing);
             }

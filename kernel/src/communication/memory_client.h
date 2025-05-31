@@ -7,8 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "../repository/pcb.h"
-#include "../utils.h"
-#include "utils/DTOs/memory_create_process.h"
+#include "../../../utils/utils.h"
 
 
 /**
@@ -26,7 +25,7 @@ int connect_to_memory(t_kernel_config* config);
  * @param pseudocode_path Ruta al archivo de pseudocódigo
  * @return true si la creación fue exitosa, false caso contrario
  */
-bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, const char* pseudocode_path);
+bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, char* pseudocode_path);
 
 /**
  * @brief Consulta espacio libre en memoria

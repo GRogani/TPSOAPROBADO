@@ -9,6 +9,11 @@
 // Safe Alloc
 #include "src/utils/safe_alloc.h"
 
+// Enums
+#include "src/enums/Eopcodes.h"
+#include "src/enums/Eplanification_algorithm.h"
+#include "src/enums/Einstruction_codes.h"
+
 // Logger
 #include "src/utils/logger/logger.h"
 
@@ -16,8 +21,6 @@
 #include "src/utils/config/config.h"
 #include "src/utils/config/t_configs.h"
 
-// DTOs
-#include "src/utils/DTOs/dtos.h"
 
 // Serialization
 #include "src/utils/serialization/buffer.h"
@@ -34,5 +37,7 @@
 #include "src/enums/Eopcodes.h"
 #include "src/enums/Eplanification_algorithm.h"
 #include "src/enums/Eprocess_state.h"
+// DTOs
+#include "src/utils/DTOs/dtos.h"
 
 #endif 

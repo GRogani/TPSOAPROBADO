@@ -15,8 +15,8 @@
 // Forward declaration
 typedef struct t_pcb t_pcb;
 
-bool initialize_repository_blocked();
-bool destroy_repository_blocked();
+void initialize_repository_blocked();
+void destroy_repository_blocked();
 
 void lock_blocked_list();
 void unlock_blocked_list();

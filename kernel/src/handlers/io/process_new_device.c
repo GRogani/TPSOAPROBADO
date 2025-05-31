@@ -1,6 +1,6 @@
 #include "process_new_device.h"
 
-void process_new_device(void* thread_args)
+void* process_new_device(void* thread_args)
 {    
     t_new_device_thread_args* args = (t_new_device_thread_args*)thread_args;
 

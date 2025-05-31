@@ -34,12 +34,11 @@ bool run_long_scheduler(void)
 
     log_info(get_logger(), "long_scheduler: Intentando des-suspender proceso PID=%d", pcb->pid);
 
-    // Intentar crear proceso en memoria (para des-suspensión usamos tamaño mock)
-    // TODO: El tamaño debería obtenerse del contexto de suspensión
-    uint32_t mock_size = 1024; // Tamaño temporal para des-suspensión
-    bool memory_ok = create_process_in_memory(memory_socket, pcb->pid,
-                                              mock_size, pcb->pseudocode_file);
+    // Intentar de-suspender proceso en memoria
+    // TODO: IMPLEMENTAR DESUSPENSION
+    break; // TODO: Eliminar esta línea cuando se implemente la des-suspensión
 
+    bool memory_ok = true;
     if (memory_ok)
     {
       // Éxito: mover de SUSP_READY a READY
@@ -81,9 +80,7 @@ bool run_long_scheduler(void)
     log_info(get_logger(), "long_scheduler: Intentando inicializar proceso PID=%d", pcb->pid);
 
     // Intentar crear proceso en memoria (para inicialización usamos tamaño mock)
-    // TODO: Usar el tamaño del PCB en lugar de valor mock
-    bool memory_ok = create_process_in_memory(memory_socket, pcb->pid,
-                                              pcb->size, pcb->pseudocode_file);
+    bool memory_ok = create_process_in_memory(memory_socket, pcb->pid, pcb->size, pcb->pseudocode_file);
 
     if (memory_ok)
     {

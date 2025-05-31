@@ -1,17 +1,18 @@
 #include "cpu_dispatch.h"
 
-t_cpu_dispatch* read_cpu_dispatch(t_package* package) 
+// read from cpu
+t_cpu_dispatch* read_cpu_dispatch_request(t_package* package) 
 {
     package->buffer->offset = 0;
     t_cpu_dispatch* dispatch = safe_malloc(sizeof(t_cpu_dispatch));
     
     dispatch->pid = buffer_read_uint32(package->buffer);
     dispatch->pc = buffer_read_uint32(package->buffer);
-    
-    package->buffer->offset = 0;
+
     return dispatch;
 }
 
+// sent by kernel to cpu
 t_package* create_cpu_dispatch_request(uint32_t pid, uint32_t pc) 
 {
     t_buffer* buffer = buffer_create(sizeof(uint32_t) * 2);

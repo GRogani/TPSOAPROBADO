@@ -16,7 +16,7 @@ void init_proc(void *args)
     t_init_proc_args *proc_args = (t_init_proc_args*)args;
     uint32_t pid = proc_args->pid;
     uint32_t memory_space = proc_args->memory_space;
-    const char* pseudocode_file = proc_args->pseudocode_file;
+    char* pseudocode_file = proc_args->pseudocode_file;
     
     log_info(get_logger(), "init_proc: Inicializando proceso PID=%d con memoria=%d bytes, archivo=%s\n", 
              pid, memory_space, pseudocode_file ? pseudocode_file : "NULL");
@@ -64,7 +64,7 @@ void init_proc(void *args)
  * @param memory_space Espacio en memoria asignado al proceso
  * @param pseudocode_file Nombre del archivo de pseudocódigo del proceso
  */
-void handle_init_proc_syscall(uint32_t pid, uint32_t memory_space, const char* pseudocode_file)
+void handle_init_proc_syscall(uint32_t pid, uint32_t memory_space, char* pseudocode_file)
 {
     // Crear estructura de argumentos
     t_init_proc_args args = {

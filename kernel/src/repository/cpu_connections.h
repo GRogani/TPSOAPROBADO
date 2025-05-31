@@ -9,8 +9,8 @@
 #include <semaphore.h>
 #include <unistd.h>
 
-bool initialize_repository_cpu_connections();
-bool destroy_repository_cpu_connections();
+void initialize_repository_cpu_connections();
+void destroy_repository_cpu_connections();
 
 void lock_cpu_connections();
 

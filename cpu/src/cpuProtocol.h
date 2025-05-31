@@ -1,29 +1,11 @@
 #ifndef CPU_PROTOCOL_H
 #define CPU_PROTOCOL_H
 
+#include <semaphore.h>
 #include <commons/collections/list.h>
 #include "../utils.h"
 #include "utils/DTOs/cpu_dispatch.h"
 #include "utils/DTOs/memory_get_instruction.h"
-
-typedef enum {
-INST_NOOP,
-INST_WRITE,
-INST_READ,
-INST_GOTO,
-INST_IO,
-INST_INIT_PROC,
-INST_DUMP_PROCESS,
-INST_EXIT
-} cod_instruction;
-
-typedef struct{
-    cod_instruction cod_instruction;
-    uint32_t operand_numeric1;
-    uint32_t operand_numeric2;
-    uint32_t operand_string_size;
-    char* operand_string;
-} instruction_t;
 
 typedef struct {
     int socket_interrupt;

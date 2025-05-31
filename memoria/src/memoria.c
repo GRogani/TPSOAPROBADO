@@ -2,7 +2,7 @@
 
 glb_memory global_memory;
 
-t_list* load_script_lines(const char* path) {
+t_list* load_script_lines(char* path) {
     FILE* file = fopen(path, "r");
     if (!file) return NULL;
 
@@ -22,11 +22,10 @@ t_list* load_script_lines(const char* path) {
 }
 
 void create_process(int socket, t_package* package) {
-    t_memory_create_process* create_process_args = read_memory_create_process(package);
+    t_memory_create_process* create_process_args = read_memory_create_process_request(package);
     int result = create_process_in_memory(create_process_args->pid, create_process_args->size, create_process_args->pseudocode_path);
     destroy_memory_create_process(create_process_args);
-
-    // TODO: send response to kernel using opcode CREATE_PROCESS
+    send_memory_create_process_response(socket, 0); // 0 indicates success
 }
 
 
@@ -61,23 +60,19 @@ int create_process_in_memory(uint32_t pid, uint32_t size, char* script_path) {
 
 
 
-void get_instruction(int socket, t_buffer* request_buffer) {
-    uint32_t pid = buffer_read_uint32(request_buffer);
-    uint32_t pc = buffer_read_uint32(request_buffer);
+void get_instruction(int socket, t_package* package) {
+    t_memory_get_instruction_request* request = read_memory_get_instruction_request(package);
+    uint32_t pid = request->pid;
+    uint32_t pc = request->pc;
+    destroy_memory_get_instruction_request(request);
 
     // TODO: analizar concurrencia y si hay que aplicar semaforos
     proc_memory* proc = find_process_by_pid(pid);
     if (proc && pc <= list_size(proc->instructions)) 
     {
-        char* instr = list_get(proc->instructions, pc);
-        log_info(get_logger(),"## PID: %u - Get Instruction: %u - Instruction: %s\n", pid, pc, instr);
-
-        t_buffer* response_buffer = buffer_create(0);
-        buffer_add_string(response_buffer, strlen(instr) + 1, instr);
-        t_package* response = package_create(GET_INSTRUCTION, response_buffer);
-
-        send_package(socket, response);
-        package_destroy(response);
+        char* instruction = list_get(proc->instructions, pc);
+        log_info(get_logger(),"## PID: %u - Get Instruction: %u - Instruction: %s\n", pid, pc, instruction);
+        send_memory_get_instruction_response(socket, instruction);
     }
     
 }

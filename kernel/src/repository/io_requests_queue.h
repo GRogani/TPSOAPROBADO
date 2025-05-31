@@ -7,8 +7,8 @@
 #include <unistd.h>
 #include <collections/collections.h>
 
-bool initialize_repository_io_requests_queue(sem_t *);
-bool destroy_repository_io_requests_queue(sem_t *);
+void initialize_repository_io_requests_queue(sem_t *);
+void destroy_repository_io_requests_queue(sem_t *);
 
 void lock_io_requests_queue(sem_t*);
 

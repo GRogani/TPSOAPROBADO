@@ -2,17 +2,15 @@
 
 static sem_t sem_ready;
 
-bool initialize_repository_ready() {
+void initialize_repository_ready() {
     if (sem_init(&sem_ready, 0, 1) != 0) {
         LOG_ERROR("sem_init for READY list failed");
         exit(EXIT_FAILURE);
     }
-    return true;
 }
 
-bool destroy_repository_ready() {
+void destroy_repository_ready() {
     sem_destroy(&sem_ready);
-    return true;
 }
 
 void lock_ready_list() {

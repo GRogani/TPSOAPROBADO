@@ -5,8 +5,10 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <commons/string.h>
-#include "instructionCycle.h"
 #include "../utils.h"
+#include "lists_and_mutex.h"
+#include "instructionCycle.h"
 
+void cleanup_instruction(t_instruction* instruction);
 
 #endif
