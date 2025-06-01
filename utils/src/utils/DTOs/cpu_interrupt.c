@@ -36,20 +36,22 @@ t_cpu_interrupt *read_cpu_interrupt_response(t_package *package)
 
     interrupt->pid = buffer_read_uint32(package->buffer);
     interrupt->pc = buffer_read_uint32(package->buffer);
+    interrupt->interrupted_same_pid = buffer_read_uint32(package->buffer);
 
     return interrupt;
 }
 
-t_package* create_cpu_interrupt_response(uint32_t pid, uint32_t pc) 
+t_package *create_cpu_interrupt_response(uint32_t pid, uint32_t pc, uint32_t interrupted_same_pid)
 {
     t_buffer* buffer = buffer_create(sizeof(uint32_t) * 2);
     buffer_add_uint32(buffer, pid);
     buffer_add_uint32(buffer, pc);
+    buffer_add_uint32(buffer, interrupted_same_pid);
     return package_create(CPU_INTERRUPT, buffer);
 }
 
 // used by CPU
-int send_cpu_interrupt_response(int socket, uint32_t pid, uint32_t pc) 
+int send_cpu_interrupt_response(int socket, uint32_t pid, uint32_t pc, uint32_t interrupted_same_pid) 
 {
     t_package* package = create_cpu_interrupt_response(pid, pc);
     int bytes_sent = send_package(socket, package);

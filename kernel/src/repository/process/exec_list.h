@@ -24,6 +24,5 @@ void unlock_exec_list();
 bool find_pcb_in_exec(uint32_t pid);
 void add_pcb_to_exec(t_pcb* pcb);
 t_pcb* remove_pcb_from_exec(uint32_t pid);
-t_pcb* get_executing_pcb(); // Solo debería haber uno ejecutando
 
 #endif
