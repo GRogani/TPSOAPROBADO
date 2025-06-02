@@ -1,6 +1,5 @@
 #include "medium_scheduler.h"
 
-// TODO: en realidad el timer lo saco del archivo, no?
 void run_medium_scheduler(uint32_t  pid, uint32_t timer){
     /**
    * Aca va la implementacion del algoritmo de MEDIANO plazo
@@ -32,11 +31,10 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
         return;
     }
     LOG_INFO("MEDIUM_SCHEDULER: Solicitando Servicio de Swapping para suspender PID = %d.", pid);
-    // TODO: la memoria conoce a todos los procesos o lo tengo que mandar el PCB?
     send_memory_suspend_process(memory_socket, pid);
 
-    // TODO: espero la respuesta (qué me tendría que llegar)?
-    t_package* package; = recv_package(memory_socket);
+    // Espero la respuesta
+    t_package* package = recv_package(memory_socket);
     if(package == NULL){
         LOG_ERROR("MEDIUM_SCHEDULER: Falló la conexión con Memoria.");
         return;
@@ -55,6 +53,5 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
     // Llamo al Planificador de Largo Plazo
     LOG_INFO("MEDIUM_SCHEDULER: Llamando a planificador de largo plazo para admitir nuevos procesos.");
     if (!run_long_scheduler()) LOG_INFO("MEDIUM_SCHEDULER: El planificador de largo plazo no puede admitir nuevos procesos.");
-    // TODO: qué hago si no puede admitur nuevos procesos? Tenemos prioridad de esta cola sobre la de Ready, no?
-    LOG_INFO("MEDIUM_SCHEDULER: El planificador de largo plazo admitió a un nuevo PID [%d].", pid)
+    LOG_INFO("MEDIUM_SCHEDULER: El planificador de largo plazo admitió a un nuevo PID [%d].", pid);
 }

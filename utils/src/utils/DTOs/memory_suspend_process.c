@@ -12,7 +12,7 @@ t_package *create_memory_suspend_process(uint32_t pid){
     uint32_t buffer_size = sizeof(uint32_t);
     t_buffer* buffer = buffer_create(buffer_size);
     buffer_add_uint32(buffer, pid);
-    return package_create(SUSP_BLOCKED, buffer);
+    return package_create(SWAP, buffer);
 }
 
 uint32_t read_memory_suspend_process(t_package* package) { // Lectura para Memoria
@@ -33,7 +33,7 @@ t_package* create_memory_suspend_process_response(uint32_t success) {
     uint32_t buffer_size = sizeof(uint32_t);
     t_buffer* buffer = buffer_create(buffer_size);
     buffer_add_uint32(buffer, success);
-    return package_create(SUSP_BLOCKED, buffer);
+    return package_create(SWAP, buffer);
 }
 
 bool read_memory_suspend_process_response(t_package* package) { // Lectura para el KERNEL
