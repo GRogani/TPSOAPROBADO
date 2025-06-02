@@ -45,7 +45,7 @@ typedef struct t_pcb {
     uint32_t size;                  // Tamaño del proceso en memoria
     char* pseudocode_file;          // Nombre del archivo de pseudocódigo
     PROCESS_STATE current_state;    // Estado actual del proceso
-    struct timeval state_start_time; // Tiempo de inicio del estado actual
+    uint64_t state_start_time_ms; // Tiempo de inicio del estado actual
     t_state_metrics ME;             // Métricas de Estado
     t_time_metrics MT;              // Métricas de Tiempo
 } t_pcb;
@@ -92,6 +92,11 @@ uint64_t get_current_time_ms(void);
  * @param end Tiempo de fin.
  * @return Diferencia en milisegundos.
  */
-uint64_t time_diff_ms(struct timeval start, struct timeval end);
+//uint64_t time_diff_ms(struct timeval start, struct timeval end);
+
+/**
+ * @return Devuelve el tiempo total restando el dado al actual.
+ */
+uint64_t total_time_ms(u_int64_t start_time_ms);
 
 #endif

@@ -35,6 +35,16 @@ bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, ch
 uint32_t get_memory_free_space(int memory_socket);
 
 /**
+ * @brief Envia mensaje a memoria para eliminar el recurso mediante una coneccion efimera,
+ * espera una confirmacion por parte de memoria para terminar.
+ * @param pid PID del proceso a eliminar
+ * @return - `0 (OK)` 
+ *  
+ * - `-1 (ERROR)`
+ */
+int kill_process_in_memory(uint32_t pid);
+
+/**
  * @brief Desconecta de memoria
  * @param memory_socket Socket de conexión
  */

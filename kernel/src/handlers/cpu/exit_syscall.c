@@ -9,9 +9,21 @@ void exit_process_syscall(uint32_t pid)
 
   pcb = remove_pcb_from_exec(pid);
   add_pcb_to_exit(pcb);
+  pcb_change_state(pcb, EXIT_L);
+  
+  int mem_response = kill_process_in_memory(pid);
 
-  //dump_memory(pid);
-  LOG_WARNING("Implementar dump_memory()");
+  if (mem_response == 0)
+  {
+    LOG_INFO("## (%d) - Finaliza el proceso", pid);
+    remove_pcb_from_exit(pid);
+    pcb->MT.exit_time_ms = total_time_ms(pcb->state_start_time_ms);
+  }
+  else
+  {
+    LOG_WARNING("## (%d) - Proceso Zombie", pid);
+    pcb->MT.exec_time_ms = get_current_time_ms();
+  }
 
   log_process_metrics(pid ,pcb->ME, pcb->MT);
 

@@ -1,0 +1,6 @@
+#ifndef KERNEL_DUMP_MEMORY_SYSCALL_H
+#define KERNEL_DUMP_MEMORY_SYSCALL_H
+
+
+
+#endif

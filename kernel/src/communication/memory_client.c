@@ -61,6 +61,33 @@ bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, ch
     return success;
 }
 
+int kill_process_in_memory(uint32_t pid)
+{
+    extern t_kernel_config kernel_config; //en main
+
+    t_buffer* buffer;
+    buffer = buffer_create( sizeof(uint32_t) );
+    buffer_add_uint32(buffer, pid);
+
+    t_package *package , *response;
+    package = package_create(KILL_PROCESS, buffer);
+
+    int memsocket = connect_to_memory(&kernel_config);
+    send_package(memsocket, package);
+    package_destroy(package);
+
+    response = recv_package(memsocket);
+    disconnect_from_memory(memsocket);
+
+    if (response->opcode == OK)
+    {
+        package_destroy(response);
+        return 0;
+    }
+    else
+        return -1;
+}
+
 void disconnect_from_memory(int memory_socket) {
     if (memory_socket >= 0) {
         LOG_INFO("memory_client: Cerrando conexión con memoria (socket %d)", memory_socket);

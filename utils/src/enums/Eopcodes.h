@@ -17,9 +17,14 @@ enum
     GET_FREE_SPACE,
     CREATE_PROCESS,
     UNSUSPEND_PROCESS,
+    KILL_PROCESS,
     SWAP,
     WRITE_MEMORY,
     READ_MEMORY,
+
+    OK,
+    ERROR,
+
 
     // opcodes kernel
     IO_NEW_DEVICE,

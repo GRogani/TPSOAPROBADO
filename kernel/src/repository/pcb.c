@@ -32,7 +32,8 @@ t_pcb* pcb_create(uint32_t pid, uint32_t pc, uint32_t size, char* pseudocode_fil
     memset(&pcb->MT, 0, sizeof(t_time_metrics));
 
     // Inicializar tiempo de inicio del estado actual
-    gettimeofday(&pcb->state_start_time, NULL);
+    //gettimeofday(&pcb->state_start_time, NULL);
+    pcb->state_start_time_ms = get_current_time_ms();
     
     // Incrementar contador del estado inicial (NEW)
     pcb->ME.new_count = 1;
@@ -56,10 +57,10 @@ void pcb_change_state(t_pcb* pcb, PROCESS_STATE new_state) {
     }
 
     // Calcular tiempo transcurrido en el estado actual
-    struct timeval current_time;
-    gettimeofday(&current_time, NULL);
-    uint64_t time_in_current_state = time_diff_ms(pcb->state_start_time, current_time);
+    // struct timeval current_time;
+    // gettimeofday(&current_time, NULL);
 
+    uint64_t time_in_current_state = total_time_ms(pcb->state_start_time_ms);
     // Actualizar métricas de tiempo según el estado actual
     switch (pcb->current_state) {
         case NEW:
@@ -118,7 +119,7 @@ void pcb_change_state(t_pcb* pcb, PROCESS_STATE new_state) {
     }
 
     // Actualizar tiempo de inicio del nuevo estado
-    gettimeofday(&pcb->state_start_time, NULL);
+    pcb->state_start_time_ms = get_current_time_ms();
 }
 
 uint64_t get_current_time_ms(void) {
@@ -127,10 +128,16 @@ uint64_t get_current_time_ms(void) {
     return (uint64_t)(tv.tv_sec) * 1000 + (uint64_t)(tv.tv_usec) / 1000;
 }
 
-uint64_t time_diff_ms(struct timeval start, struct timeval end) {
-    uint64_t start_ms = (uint64_t)(start.tv_sec) * 1000 + (uint64_t)(start.tv_usec) / 1000;
-    uint64_t end_ms = (uint64_t)(end.tv_sec) * 1000 + (uint64_t)(end.tv_usec) / 1000;
-    return end_ms - start_ms;
+//????
+// uint64_t time_diff_ms(struct timeval start, struct timeval end) {
+//     uint64_t start_ms = (uint64_t)(start.tv_sec) * 1000 + (uint64_t)(start.tv_usec) / 1000;
+//     uint64_t end_ms = (uint64_t)(end.tv_sec) * 1000 + (uint64_t)(end.tv_usec) / 1000;
+//     return end_ms - start_ms;
+// }
+
+uint64_t total_time_ms(u_int64_t start_time_ms)
+{
+    return (get_current_time_ms() - start_time_ms);
 }
 
 char* pcb_get_pseudocode_file(t_pcb* pcb) {

@@ -23,5 +23,6 @@ void unlock_exit_list();
 
 bool find_pcb_in_exit(uint32_t pid);
 void add_pcb_to_exit(t_pcb* pcb);
+void remove_pcb_from_exit(uint32_t pid);
 
 #endif
