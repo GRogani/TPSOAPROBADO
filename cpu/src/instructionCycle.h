@@ -13,6 +13,7 @@
 #include "utils/DTOs/cpu_interrupt.h"
 #include "utils/DTOs/memory_get_instruction.h"
 #include "lists_and_mutex.h"
+#include "tlb&cache.h"
 
 typedef struct t_instruction
 {

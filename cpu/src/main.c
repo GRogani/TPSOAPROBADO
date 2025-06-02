@@ -1,5 +1,6 @@
 #include "main.h"
 
+t_dictionary* TLB = dictionary_create();
 
 int main(int argc, char* argv[]) 
 {

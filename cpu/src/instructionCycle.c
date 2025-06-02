@@ -274,17 +274,27 @@ uint32_t MMU(uint32_t logic_dir)
     uint32_t levels = config_get_int_value(config_memoria, "CANTIDAD_NIVELES");
     uint32_t entrys_by_table = config_get_int_value(config_memoria, "ENTRADAS_POR_TABLA");
     uint32_t size_pag = config_get_int_value(config_memoria, "TAM_PAGINA");
-
-    uint32_t num_page = logic_dir / size_pag;
+    uint32_t TLB_entrys = config_get_int_value(config_memoria, "ENTRADAS_TLB");
+        
+    
+    uint32_t num_page = floor(logic_dir / size_pag);
     uint32_t offset = logic_dir % size_pag;
     uint32_t physic_dir = 0;
-
+    
+    if(TLB_entrys > 0){
+        physic_dir = buscar_en_TLB(num_page);
+        if(physic_dir == NULL){
+            //TODO: buscar en memoria
+        }
+    }
+    else{
+    /*TODO: tengo que revisar bien esto
     for (int actual_level = 1; actual_level <= levels; actual_level++)
     {
         uint32_t divisor = pow(entrys_by_table, levels - actual_level);
         uint32_t entry = (num_page / divisor) % entrys_by_table;
         physic_dir = physic_dir * entrys_by_table + entry;
+    }*/
     }
-
     return (uint32_t)(physic_dir * size_pag + offset);
 }
