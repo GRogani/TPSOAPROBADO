@@ -102,8 +102,8 @@ bool run_long_scheduler(void)
     }
   }
 
-  unlock_ready_list();
   unlock_new_list();
+  unlock_ready_list();
 
   // Cerrar conexión con memoria
   disconnect_from_memory(memory_socket);

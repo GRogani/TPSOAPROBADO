@@ -40,6 +40,8 @@ void parse_instruction(char *instruction_string, t_instruction *instruction)
 
     switch (instruction->instruction_code)
     {
+    case DUMP_PROCESS:
+    case EXIT:
     case NOOP:
         break;
     case WRITE:
@@ -64,11 +66,6 @@ void parse_instruction(char *instruction_string, t_instruction *instruction)
         instruction->operand_string_size = strlen(instruction->operand_string);
         instruction->operand_numeric1 = atoi(strtok_r(NULL, " ", &saveptr)); // 2. memory space
         break;
-    case DUMP_PROCESS:
-    case EXIT:
-    {
-        break; // dump memory and exit syscalls has nothing to do with operands
-    }
     default:
         LOG_ERROR("Unknown instruction code: %d", instruction->instruction_code);
         break;
@@ -82,6 +79,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
     case NOOP:
     {
         // No operation
+        (*PC)++;
         break;
     }
     case WRITE:
@@ -202,29 +200,25 @@ int check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_e
     {
         int pid_received = read_cpu_interrupt_request(package);
 
-        if(pid_received == *pid_on_execute) {
+        if (pid_received == *pid_on_execute)
+        {
 
-            t_buffer* buffer = buffer_create(2 * sizeof(uint32_t));
-            buffer_add_uint32(buffer, pid_received);
-            buffer_add_uint32(buffer, *pc_on_execute);
-
-            t_package* package = package_create(CPU_INTERRUPT, buffer);
-            send_package(socket_interrupt, package);
-            package_destroy(package);
+            send_cpu_interrupt_response(socket_interrupt, pid_received, pc_on_execute, 0);
 
             LOG_DEBUG("Interrupt for PID %d executed", pid_received);
-                
-            return 1;
-        } else {
-            LOG_DEBUG("Interrupt for PID %d received, but not executing", pid_received);
-            // TODO: responder al kernel como que se "atendio" la interrupcion
-        }
 
-        send_cpu_interrupt_response(socket_interrupt, pid_received, pc_on_execute);
+            return 1;
+        }
+        else
+        {
+            LOG_ERROR("Interrupt for PID %d received, but not executing", pid_received);
+
+            send_cpu_interrupt_response(socket_interrupt, pid_received, pc_on_execute, 1); // si no fué interrumpido el mismo proceso, significa que no estaba ejecutando la CPU. el kernel necesita saber eso, para ver si debe mover el proceso a READY porque lo desalojó correctamente, o se autodesalojó por una syscall. (la syscall pasa automaticamente el proceso a su nuevo estado y guarda el PCB)
+        }
     }
     else
     {
-        LOG_WARNING("Received unexpected opcode on interrupt connection: %s", opcode_to_string(package->opcode) );
+        LOG_WARNING("Received unexpected opcode on interrupt connection: %s", opcode_to_string(package->opcode));
     }
 
     return 0;
@@ -255,13 +249,13 @@ void *interrupt_handler(void *thread_args)
     {
         wait_interrupt();
         lock_interrupt_list();
-            while(interrupt_count() > 0)
-            {
-                t_package* package = get_last_interrupt(interrupt_count());
-                lock_cpu_mutex();
-                check_interrupt(args->socket_interrupt, package, args->pid, args->pc);
-                unlock_cpu_mutex();
-            }
+        while (interrupt_count() > 0)
+        {
+            t_package *package = get_last_interrupt(interrupt_count());
+            lock_cpu_mutex();
+            check_interrupt(args->socket_interrupt, package, args->pid, args->pc);
+            unlock_cpu_mutex();
+        }
         unlock_interrupt_list();
     }
 

@@ -1,11 +1,10 @@
 #include "main.h"
 
-
-int main(int argc, char* argv[]) 
+int main(int argc, char *argv[])
 {
     init_list_and_mutex();
 
-    t_config* config_file = init_config("cpu.config");
+    t_config *config_file = init_config("cpu.config");
     t_cpu_config config_cpu = init_cpu_config(config_file);
     init_logger("cpu.log", "CPU", config_cpu.LOG_LEVEL);
 
@@ -15,9 +14,9 @@ int main(int argc, char* argv[])
 
     create_connections(config_cpu, &memory_socket, &kernel_dispatch_socket, &kernel_interrupt_socket);
 
-    t_package* kernel_package = NULL;
+    t_package *kernel_package = NULL;
     uint32_t pid, pc;
-    t_instruction* instruction = NULL;
+    t_instruction *instruction = NULL;
 
     interrupt_args_t thread_args = {kernel_interrupt_socket, &pid, &pc};
     pthread_t interrupt_handler_thread;
@@ -26,17 +25,21 @@ int main(int argc, char* argv[])
     pthread_create(&interrupt_handler_thread, NULL, interrupt_handler, &thread_args);
 
     while (1)
-    {   
+    {
         lock_cpu_mutex();
-        if(interrupt_count() > 0)
+        if (interrupt_count() > 0)
         {
             unlock_cpu_mutex();
             break;
         }
         unlock_cpu_mutex();
+
         kernel_package = receive_PID_PC_Package(kernel_dispatch_socket, &pid, &pc);
-        if(kernel_package == NULL) break;
+        if (kernel_package == NULL)
+            break;
         package_destroy(kernel_package);
+
+        // TODO: si llega a una interrupción y se atiende (PID = PID ON EXECUTE) la interrupción no va a existír más en la lista porque ya fue atendida, pero va a seguir ejecutando el ciclo de abajo con el mismo PID que fue interrumpido
 
         int syscall = 0;
         while (syscall != 1)
@@ -50,29 +53,29 @@ int main(int argc, char* argv[])
                 break;
             }
 
-                t_instruction * instruction = decode(instruction_package);
-                
-                if (instruction == NULL)
-                {
-                    LOG_ERROR("Decoding error");
-                    unlock_cpu_mutex();
-                    break;
-                }
-                package_destroy(instruction_package);
+            t_instruction *instruction = decode(instruction_package);
 
-                syscall = execute(instruction, memory_socket, kernel_dispatch_socket, &pid, &pc);
-
+            if (instruction == NULL)
+            {
+                LOG_ERROR("Decoding error");
                 unlock_cpu_mutex();
+                break;
+            }
+            package_destroy(instruction_package);
+
+            syscall = execute(instruction, memory_socket, kernel_dispatch_socket, &pid, &pc);
+
+            unlock_cpu_mutex();
         };
 
-        if (syscall == -1) 
+        if (syscall == -1)
             LOG_ERROR("Execution error");
 
-        
         cleanup_instruction(instruction);
+
         
     }
-    
+
     LOG_INFO("Closing connections...");
 
     pthread_join(interrupt_listener_thread, NULL);
@@ -89,12 +92,12 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void cleanup_instruction(t_instruction* instruction) 
+void cleanup_instruction(t_instruction *instruction)
 {
-    if (instruction != NULL) {
+    if (instruction != NULL)
+    {
         if (instruction->operand_string_size > 0)
             free(instruction->operand_string);
         free(instruction);
     }
 }
-

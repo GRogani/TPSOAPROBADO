@@ -1,17 +1,26 @@
 #include "memoria.h"
 
-glb_memory global_memory;
-
 t_list* load_script_lines(char* path) {
-    FILE* file = fopen(path, "r");
-    if (!file) return NULL;
+    char full_path[512];
+    snprintf(full_path, sizeof(full_path), "src/program/%s", path);
+    
+    LOG_INFO("Intentando abrir archivo: %s", full_path);
+    
+    FILE *file = fopen(full_path, "r");
+    if (!file) {
+        LOG_ERROR("Error al abrir archivo: %s - Error: %s", full_path, strerror(errno));
+        return NULL;
+    }
+    
+    LOG_INFO("Archivo abierto correctamente: %s", full_path);
 
     t_list* list = list_create();
     char* line = NULL;
     size_t len = 0;
 
     while (getline(&line, &len, file) != -1) {
-        string_trim(&line);
+        // Remove trailing whitespace and newline
+        string_trim_right(&line);
         if (strlen(line) > 0)
             list_add(list, strdup(line));
     }

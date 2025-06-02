@@ -18,7 +18,7 @@ t_cpu_connection* get_free_cpu(void) {
         LOG_DEBUG("short_scheduler: CPU libre encontrada");
     } else {
         free_cpu = list_get(all_cpus, 0); // Si no hay libres, tomar la primera CPU (fallback)
-        LOG_DEBUG("short_scheduler: No hay CPUs libres disponibles");
+        LOG_DEBUG("short_scheduler: No hay CPUs libres disponibles, tomando la primera en la lista de conexiones...");
     }
     
     return free_cpu;
@@ -144,20 +144,25 @@ void run_short_scheduler(void) {
             // send(interrupt) + receive(interrupt)
             t_cpu_interrupt* interrupt_info = send_and_receive_interrupt(cpu->interrupt_socket_id, cpu->current_process_executing);
 
-            // lock(EXEC_LIST) - ya está lockeada implícitamente
             lock_exec_list();
-            
-            // move current_processing from EXEC to READY
-            t_pcb* preempted_pcb = remove_pcb_from_exec(cpu->current_process_executing);
-            if (preempted_pcb != NULL) {
-                preempted_pcb->current_state = READY;
-                preempted_pcb->pc = interrupt_info->pc; // Actualizar PC del PCB preemptado
-                add_pcb_to_ready(preempted_pcb);
-                LOG_INFO("short_scheduler: Proceso %d movido de EXEC a READY por preemption", cpu->current_process_executing);
+
+            if(interrupt_info->interrupted_same_pid == 0) { // 0 = success
+    
+                // move current_processing from EXEC to READY
+                t_pcb* preempted_pcb = remove_pcb_from_exec(cpu->current_process_executing);
+                if (preempted_pcb != NULL) {
+                    preempted_pcb->current_state = READY;
+                    preempted_pcb->pc = interrupt_info->pc; // Actualizar PC del PCB preemptado
+                    add_pcb_to_ready(preempted_pcb);
+                    LOG_INFO("short_scheduler: Proceso %d movido de EXEC a READY por preemption", cpu->current_process_executing);
+                }
+                
+                // Liberar la CPU anterior
+                cpu->current_process_executing = -1;
             }
-            
-            // Liberar la CPU anterior
-            cpu->current_process_executing = -1;
+
+            // no se interrumpió el proceso porque no estaba ejecutando nada. entonces no debemos hacer nada con el proceso ejecutando.
+            // simplemente ignoramos y pasamos el nuevo proceso de READY a EXEC.
         }
     } else {
         // lock(EXEC_LIST)
@@ -172,18 +177,11 @@ void run_short_scheduler(void) {
     add_pcb_to_exec(next_ready);
     
     // send(dispatch, pid, pc)
-    bool dispatch_success = send_dispatch_to_cpu(cpu, next_ready->pid, next_ready->pc);
+    send_dispatch_to_cpu(cpu, next_ready->pid, next_ready->pc);
     
-    if (dispatch_success) {
-        cpu->current_process_executing = next_ready->pid;
-        LOG_INFO("short_scheduler: Proceso PID=%d despachado exitosamente", next_ready->pid);
-    } else {
-        LOG_ERROR("short_scheduler: Error despachando proceso PID=%d", next_ready->pid);
-        // Revertir cambios
-        remove_pcb_from_exec(next_ready->pid);
-        next_ready->current_state = READY;
-        add_pcb_to_ready(next_ready);
-    }
+    cpu->current_process_executing = next_ready->pid;
+    
+    LOG_INFO("short_scheduler: Proceso PID=%d despachado exitosamente", next_ready->pid);
     
     // unlock(READY) + unlock(EXEC) + unlock(CPU_SEM)
     unlock_ready_list();

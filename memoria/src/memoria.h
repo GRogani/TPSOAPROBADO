@@ -2,6 +2,8 @@
 #define MEMORIA_H
 
 #include <string.h>
+#include <stdio.h>
+#include <errno.h>
 #include <commons/config.h>
 #include <commons/log.h>
 #include "../utils.h"
@@ -20,6 +22,8 @@ typedef struct {
     t_list* processes;
 
 } glb_memory;
+
+extern glb_memory global_memory;
 
 
 proc_memory* find_process_by_pid(int pid);
