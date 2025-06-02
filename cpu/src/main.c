@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
             break;
         package_destroy(kernel_package);
 
-        // TODO: si llega a una interrupción y se atiende (PID = PID ON EXECUTE) la interrupción no va a existír más en la lista porque ya fue atendida, pero va a seguir ejecutando el ciclo de abajo con el mismo PID que fue interrumpido  
+        // TODO: si llega a una interrupción y se atiende (PID = PID ON EXECUTE) la interrupción no va a existír más en la lista porque ya fue atendida, pero va a seguir ejecutando el ciclo de abajo con el mismo PID que fue interrumpido
 
         int syscall = 0;
         while (syscall != 1)

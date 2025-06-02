@@ -53,7 +53,7 @@ t_package *create_cpu_interrupt_response(uint32_t pid, uint32_t pc, uint32_t int
 // used by CPU
 int send_cpu_interrupt_response(int socket, uint32_t pid, uint32_t pc, uint32_t interrupted_same_pid) 
 {
-    t_package* package = create_cpu_interrupt_response(pid, pc);
+    t_package* package = create_cpu_interrupt_response(pid, pc, interrupted_same_pid);
     int bytes_sent = send_package(socket, package);
     package_destroy(package);
     return bytes_sent;

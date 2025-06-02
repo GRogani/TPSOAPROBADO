@@ -4,6 +4,7 @@ extern t_memoria_config memoria_config;
 
 int create_server_thread(pthread_t* listener_thread)
 {
+    // TODO: esta funcion deberia crear el server y un hilo por cada cliente. ahora mismo este no hace nada, está al pedo y no cumple con su nombre (crear el server)
     int err = pthread_create(listener_thread, NULL, client_listener, NULL);
     if (err != 0) {
         LOG_ERROR("Listener thread creation failed.");

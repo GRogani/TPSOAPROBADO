@@ -40,6 +40,8 @@ void parse_instruction(char *instruction_string, t_instruction *instruction)
 
     switch (instruction->instruction_code)
     {
+    case DUMP_PROCESS:
+    case EXIT:
     case NOOP:
         break;
     case WRITE:
@@ -64,11 +66,6 @@ void parse_instruction(char *instruction_string, t_instruction *instruction)
         instruction->operand_string_size = strlen(instruction->operand_string);
         instruction->operand_numeric1 = atoi(strtok_r(NULL, " ", &saveptr)); // 2. memory space
         break;
-    case DUMP_PROCESS:
-    case EXIT:
-    {
-        break; // dump memory and exit syscalls has nothing to do with operands
-    }
     default:
         LOG_ERROR("Unknown instruction code: %d", instruction->instruction_code);
         break;
@@ -82,6 +79,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
     case NOOP:
     {
         // No operation
+        (*PC)++;
         break;
     }
     case WRITE:
@@ -255,7 +253,7 @@ void *interrupt_handler(void *thread_args)
         {
             t_package *package = get_last_interrupt(interrupt_count());
             lock_cpu_mutex();
-            check_interrupt(args->socket_interrupt, package, args->pid, args->pc, args->executing);
+            check_interrupt(args->socket_interrupt, package, args->pid, args->pc);
             unlock_cpu_mutex();
         }
         unlock_interrupt_list();

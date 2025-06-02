@@ -43,7 +43,10 @@ void init_proc(void *args)
     
     add_pcb_to_new(new_pcb);
     unlock_new_list();
-    
+
+    free(proc_args->pseudocode_file);
+    free(proc_args);
+
     LOG_INFO("init_proc: PCB agregado a lista NEW para PID=%d\n", pid);
 
     // 4. Ejecutar planificador de largo plazo
@@ -67,26 +70,20 @@ void init_proc(void *args)
 void handle_init_proc_syscall(uint32_t pid, uint32_t memory_space, char* pseudocode_file)
 {
     // Crear estructura de argumentos
-    t_init_proc_args args = {
-        .pid = pid,
-        .memory_space = memory_space,
-        .pseudocode_file = NULL  // Se asignará abajo si no es NULL
-    };
+    t_init_proc_args* args = safe_malloc(sizeof(t_init_proc_args));
+    args->pid = pid;
+    args->memory_space = memory_space;
+    args->pseudocode_file = NULL; // Inicializar a NULL para evitar problemas de acceso
     
     // Copiar el nombre del archivo si se proporciona
     if (pseudocode_file != NULL) {
         size_t filename_len = strlen(pseudocode_file) + 1;
-        args.pseudocode_file = malloc(filename_len);
-        if (args.pseudocode_file != NULL) {
-            strcpy(args.pseudocode_file, pseudocode_file);
+        args->pseudocode_file = safe_malloc(filename_len);
+        if (args->pseudocode_file != NULL) {
+            strcpy(args->pseudocode_file, pseudocode_file);
         }
     }
-    
+
     // Llamar a la syscall
-    init_proc(&args);
-    
-    // Liberar memoria temporal si fue asignada
-    if (args.pseudocode_file != NULL) {
-        free(args.pseudocode_file);
-    }
+    init_proc(args);
 }
