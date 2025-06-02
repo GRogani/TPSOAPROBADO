@@ -8,8 +8,7 @@ void *handle_dispatch_client(void* arg)
   if (cpu_connection == NULL)
   {
     LOG_ERROR("CPU connection not found for id %s", connection_id);
-    pthread_exit(0);
-    return NULL;
+    pthread_exit(-1);
   }
 
   t_package *package;
@@ -37,8 +36,8 @@ void *handle_dispatch_client(void* arg)
     else
     {
       LOG_ERROR("CPU %s disconnected", connection_id);
-      exit(EXIT_FAILURE);
-      return NULL;
+      //exit(EXIT_FAILURE);
+      pthread_exit(1);
     }
   }
 }
@@ -78,9 +77,9 @@ void handle_cpu_syscall(t_package* package, int socket)
       LOG_INFO("Dump process syscall not implemented yet");
       break;
     }
-    case SYSCALL_EXIT: {
-      // TODO: Handle exit syscall
-      LOG_INFO("Exit syscall not implemented yet");
+    case SYSCALL_EXIT: 
+    {
+      exit_process_syscall(syscall->pid);
       break;
     }
     default: {
