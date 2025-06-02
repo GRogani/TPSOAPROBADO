@@ -2,7 +2,6 @@
 #include "../pcb.h"
 #include <commons/collections/list.h>
 #include <stdlib.h>
-#include "macros/log_error.h"
 
 static sem_t sem_new;
 

@@ -32,7 +32,7 @@ void parse_instruction(char *instruction_string, t_instruction *instruction)
     char *token = strdup(strtok_r(instruction_string, " ", &saveptr)); // hago que el token tenga su propia memoria liberable, asi puedo liberar el instruction_string antes
     if (token == NULL)
     {
-        log_error(get_logger(), "Invalid instruction format");
+        LOG_ERROR("Invalid instruction format");
         return;
     }
 
@@ -70,7 +70,7 @@ void parse_instruction(char *instruction_string, t_instruction *instruction)
         break; // dump memory and exit syscalls has nothing to do with operands
     }
     default:
-        log_error(get_logger(), "Unknown instruction code: %d", instruction->instruction_code);
+        LOG_ERROR("Unknown instruction code: %d", instruction->instruction_code);
         break;
     }
 }
@@ -150,7 +150,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         int success = read_cpu_syscall_response(package);
         if (!success)
         {
-            log_error(get_logger(), "Failed to initialize process for PID %d", pid);
+            LOG_ERROR("Failed to initialize process for PID %d", pid);
             package_destroy(package);
             return -1;
         }

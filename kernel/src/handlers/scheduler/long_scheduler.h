@@ -7,8 +7,7 @@
 #include "../../repository/process/ready_list.h"
 #include "../../repository/process/susp_ready_list.h"
 #include "../../repository/pcb.h"
-#include "utils/logger/logger.h"
-#include "utils/config/t_configs.h"
+#include "../../../../utils/utils.h"
 #include <stddef.h>
 
 /**

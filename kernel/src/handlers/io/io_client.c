@@ -72,13 +72,8 @@ void handle_new_device(t_package* package, int socket) {
 
 void process_io_completion(t_package *package, int socket)
 {
-<<<<<<< HEAD
     LOG_INFO("Processing IO_COMPLETION from IO device");
-    int pid = read_io_completion(package);
-=======
-    log_info(get_logger(), "Processing IO_COMPLETION from IO device");
     char* device_name = read_io_operation_completed(package);
->>>>>>> 15155396654dd87654bb916a154b7f2bfd09641a
 
     package_destroy(package);
 
