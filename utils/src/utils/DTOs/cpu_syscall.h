@@ -5,18 +5,11 @@
 #include "utils/serialization/package.h"
 #include "utils/serialization/buffer.h"
 #include "enums/Eopcodes.h"
-
-typedef enum
-{
-    SYSCALL_INIT_PROC,
-    SYSCALL_IO,
-    SYSCALL_DUMP_PROCESS,
-    SYSCALL_EXIT
-} t_syscall_type;
+#include "enums/Esyscall_type.h"
 
 typedef struct t_cpu_syscall
 {
-    t_syscall_type syscall_type;
+    SYSCALL_TYPE syscall_type;
     uint32_t pid;
     uint32_t pc;
     union
@@ -39,7 +32,7 @@ t_package *create_cpu_syscall_request(t_cpu_syscall *syscall);
 int send_cpu_syscall_request(int socket, t_cpu_syscall *syscall);
 void destroy_cpu_syscall(t_cpu_syscall *syscall);
 
-bool *read_cpu_syscall_response(t_package *package);
+int read_cpu_syscall_response(t_package *package);
 t_package *create_cpu_syscall_response(int success);
 int send_cpu_syscall_response(int socket, uint32_t success);
 

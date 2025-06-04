@@ -6,25 +6,25 @@
 #include "utils/serialization/buffer.h"
 #include "enums/Eopcodes.h"
 
-typedef struct t_memory_get_instruction_request {
+typedef struct t_get_instruction_request {
     uint32_t pid;
     uint32_t pc;
-} t_memory_get_instruction_request;
+} t_get_instruction;
 
-// Request functions
-t_memory_get_instruction_request* read_memory_get_instruction_request(t_package* package);
+// Request packages
+t_get_instruction read_memory_get_instruction_package(t_package* package);
 
-t_package* create_memory_get_instruction_request(uint32_t pid, uint32_t pc);
+t_package* create_memory_get_instruction_package(uint32_t pid, uint32_t pc);
 
-int send_memory_get_instruction_request(int socket, uint32_t pid, uint32_t pc);
+void send_memory_get_instruction_package(int socket, uint32_t pid, uint32_t pc);
 
-void destroy_memory_get_instruction_request(t_memory_get_instruction_request* request);
+void destroy_memory_get_instruction_package(t_get_instruction request);
 
-// Response functions
-char *read_memory_get_instruction_response(t_package *package);
+// Response packages
+char *read_memory_instruction_package(t_package *package);
 
-t_package *create_memory_get_instruction_response(char *instruction);
+t_package *create_memory_instruction_package(char *instruction);
 
-int send_memory_get_instruction_response(int socket, char* instruction);
+int send_memory_instruction_package(int socket, char* instruction);
 
 #endif

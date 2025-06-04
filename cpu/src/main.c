@@ -3,7 +3,6 @@
 int main(int argc, char *argv[])
 {
     init_list_and_mutex();
-
     t_config *config_file = init_config("cpu.config");
     t_cpu_config config_cpu = init_cpu_config(config_file);
     init_logger("cpu.log", "CPU", config_cpu.LOG_LEVEL);
@@ -16,7 +15,6 @@ int main(int argc, char *argv[])
 
     t_package *kernel_package = NULL;
     uint32_t pid, pc;
-    t_instruction *instruction = NULL;
 
     interrupt_args_t thread_args = {kernel_interrupt_socket, &pid, &pc};
     pthread_t interrupt_handler_thread;
@@ -26,29 +24,23 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        lock_cpu_mutex();
-        if (interrupt_count() > 0)
-        {
-            unlock_cpu_mutex();
-            break;
-        }
-        unlock_cpu_mutex();
-
         kernel_package = receive_PID_PC_Package(kernel_dispatch_socket, &pid, &pc);
         if (kernel_package == NULL)
+        {
+            LOG_INFO("Disconneted from Kernel Dispatch");
             break;
-        package_destroy(kernel_package);
-
+        }
         // TODO: si llega a una interrupción y se atiende (PID = PID ON EXECUTE) la interrupción no va a existír más en la lista porque ya fue atendida, pero va a seguir ejecutando el ciclo de abajo con el mismo PID que fue interrumpido
 
-        int syscall = 0;
-        while (syscall != 1)
+        int desalojar = 0;
+        while (desalojar != 1)
         {
             lock_cpu_mutex();
 
             t_package *instruction_package = fetch(memory_socket, pid, pc);
             if (instruction_package == NULL)
             {
+                LOG_INFO("Disconnected from Memory");
                 unlock_cpu_mutex();
                 break;
             }
@@ -63,15 +55,23 @@ int main(int argc, char *argv[])
             }
             package_destroy(instruction_package);
 
-            syscall = execute(instruction, memory_socket, kernel_dispatch_socket, &pid, &pc);
+            desalojar = execute(instruction, memory_socket, kernel_dispatch_socket, &pid, &pc);
+
+            cleanup_instruction(instruction);
 
             unlock_cpu_mutex();
+
+            lock_interrupt_list();
+                if (interrupt_count() > 0)
+                {
+                    unlock_interrupt_list();
+                    break;
+                }
+            unlock_interrupt_list();
+
         };
 
-        if (syscall == -1)
-            LOG_ERROR("Execution error");
-
-        cleanup_instruction(instruction);
+        if (desalojar == -1) LOG_ERROR("Execution error");
 
         
     }
@@ -94,10 +94,11 @@ int main(int argc, char *argv[])
 
 void cleanup_instruction(t_instruction *instruction)
 {
-    if (instruction != NULL)
-    {
-        if (instruction->operand_string_size > 0)
-            free(instruction->operand_string);
-        free(instruction);
-    }
+    if (instruction == NULL) return;
+
+    if (instruction->operand_string == NULL) return;
+
+    free(instruction->operand_string);
+    free(instruction);
+    
 }

@@ -21,7 +21,6 @@
 #include "src/utils/config/config.h"
 #include "src/utils/config/t_configs.h"
 
-
 // Serialization
 #include "src/utils/serialization/buffer.h"
 #include "src/utils/serialization/package.h"
@@ -37,7 +36,16 @@
 #include "src/enums/Eopcodes.h"
 #include "src/enums/Eplanification_algorithm.h"
 #include "src/enums/Eprocess_state.h"
+#include "src/enums/Esyscall_type.h"
+
 // DTOs
-#include "src/utils/DTOs/dtos.h"
+#include "src/utils/DTOs/cpu_dispatch.h"
+#include "src/utils/DTOs/cpu_interrupt.h"
+#include "src/utils/DTOs/cpu_syscall.h"
+#include "src/utils/DTOs/io_new_device.h"
+#include "src/utils/DTOs/io_operation_completed.h"
+#include "src/utils/DTOs/io_operation_request.h"
+#include "src/utils/DTOs/memory_create_process.h"
+#include "src/utils/DTOs/memory_get_instruction.h"
 
 #endif 

@@ -1,6 +1,7 @@
 
+#include <stdlib.h>
 #include <semaphore.h>
-#include "../utils.h"
+#include "/home/utnso/tp-2025-1c-Mi-Grupo-1234/utils/utils.h"
 
 int dummy_connection(int server_socket) 
 {
@@ -24,8 +25,6 @@ int main(){
     init_logger("tester.log", "TESTER", LOG_LEVEL_INFO);
 
     t_package* response;
-    t_instruction* instruction = create_instruction(NOOP, 0, 0, 0, NULL);
-    t_instruction* syscall = create_instruction(EXIT, 0, 0, 0, NULL);
 
     int PID = 6,PC = 20;
 
@@ -33,7 +32,7 @@ int main(){
     // Creación de servidores
     // =========================
 
-    int memory_server = create_server("30002");
+    int memory_server = create_server("80011");
     int dispatch_server = create_server("30003");
     int interrupt_server = create_server("30004");
 
@@ -66,7 +65,7 @@ int main(){
     printf("\n\x1b[33mPress Enter to send PID & PC to CPU dispatch connection.\x1b[0m\n");
     getchar();
 
-    send_PID_PC(cpu_dispatch_connection, PID, PC);
+    send_cpu_dispatch_request(cpu_dispatch_connection, PID, PC);
     LOG_INFO("Package sent with opcode PID_PC_PACKAGE to CPU dispatch connection.");
 
     // =========================
@@ -85,7 +84,7 @@ int main(){
     printf("\n\x1b[33mPress Enter to send NOOP to CPU memory connection.\x1b[0m\n");
     getchar();
 
-    send_instruction(cpu_memory_connection, instruction);
+    send_memory_instruction_package(cpu_memory_connection, "NOOP");
     LOG_INFO("NOOP sent to CPU memory connection.");
 
     // =========================
@@ -95,7 +94,7 @@ int main(){
     printf("\n\x1b[33mPress Enter to send instruction to CPU memory connection.\x1b[0m\n");
     getchar();
 
-    send_instruction(cpu_memory_connection, syscall);
+    send_memory_instruction_package(cpu_memory_connection, "EXIT");
     LOG_INFO("Syscall sent to CPU memory connection.");
 
     // ===================================
@@ -114,24 +113,24 @@ int main(){
     printf("\n\x1b[33mPress Enter to send same PID interruption\x1b[0m\n");
     getchar();
 
-    send_interrupt(cpu_interrupt_connection, PID);
+    send_cpu_interrupt_request(cpu_interrupt_connection, PID);
 
     printf("\n\x1b[33mPress Enter to send other PID interruption\x1b[0m\n");
     getchar();
 
-    send_interrupt(cpu_interrupt_connection, PID + 1);
+    send_cpu_interrupt_request(cpu_interrupt_connection, PID + 1);
 
     printf("\n\x1b[33mPress Enter to send PID/PC and interruption simultaneously\x1b[0m\n");
     getchar();
 
     LOG_INFO("Sending PID/PC");
-    send_PID_PC(cpu_dispatch_connection, PID, PC);
+    send_cpu_dispatch_request(cpu_dispatch_connection, PID, PC);
     LOG_INFO("Sending Interruption");
-    send_interrupt(cpu_interrupt_connection, PID);
+    send_cpu_interrupt_request(cpu_interrupt_connection, PID);
 
     LOG_INFO("Sending Instruction NOOP to CPU memory connection and interruption to CPU interrupt connection");
-    send_instruction(cpu_memory_connection, instruction);
-    send_interrupt(cpu_interrupt_connection, PID);
+    send_memory_instruction_package(cpu_memory_connection, "NOOP");
+    send_cpu_interrupt_request(cpu_interrupt_connection, PID);
     
     response = recv_package(cpu_memory_connection);
     LOG_INFO("Received package from CPU memory connection with opcode: %s", opcode_to_string(response->opcode));

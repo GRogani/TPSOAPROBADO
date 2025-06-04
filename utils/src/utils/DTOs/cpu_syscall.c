@@ -103,7 +103,7 @@ void destroy_cpu_syscall(t_cpu_syscall *syscall)
 
 // RESPONSE (syscall handling from kernel to CPU)
 
-bool *read_cpu_syscall_response(t_package *package)
+int read_cpu_syscall_response(t_package *package)
 {
     package->buffer->offset = 0;
     int success = buffer_read_uint32(package->buffer);

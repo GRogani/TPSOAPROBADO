@@ -4,8 +4,7 @@
 #include <semaphore.h>
 #include <commons/collections/list.h>
 #include "../utils.h"
-#include "utils/DTOs/cpu_dispatch.h"
-#include "utils/DTOs/memory_get_instruction.h"
+#include "lists_and_mutex.h"
 
 typedef struct {
     int socket_interrupt;

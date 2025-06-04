@@ -2,17 +2,16 @@
 
 t_package* receive_PID_PC_Package(int socket_dispatch_kernel, uint32_t* PID, uint32_t* PC) 
 {
-    extern sem_t cpu_mutex; // en main
     t_package* package;
     bool corrupted_package;
 
     do{
-        LOG_DEBUG("Waiting for PID and PC package from kernel...");
+        LOG_DEBUG("Waiting PID & PC from kernel...");
         corrupted_package = false;
         package = recv_package(socket_dispatch_kernel);
         if (package == NULL) 
         {
-            LOG_INFO("Disconnected from kernel"); // ESTE CASO ES DE DESCONECCION, OSEA ESPERABLE LOS OTROS NO
+            // ESTE CASO ES DE DESCONECCION, OSEA ESPERABLE LOS OTROS NO, muevo log al main
             return NULL;
         }
         else if (package->opcode != PID_PC_PACKAGE) 
@@ -33,14 +32,13 @@ t_package* receive_PID_PC_Package(int socket_dispatch_kernel, uint32_t* PID, uin
         }
     } while (corrupted_package);
 
-    sem_wait(&cpu_mutex);
+    lock_cpu_mutex();
 
-    t_cpu_dispatch * cpu_dispatch = read_cpu_dispatch_request(package);
-    *PID = cpu_dispatch->pid;
-    *PC = cpu_dispatch->pc;
-    destroy_cpu_dispatch(cpu_dispatch);
+    t_cpu_dispatch  cpu_dispatch = read_cpu_dispatch_request(package);
+    *PID = cpu_dispatch.pid;
+    *PC = cpu_dispatch.pc;
     
-    sem_post(&cpu_mutex);
+    unlock_cpu_mutex();
 
     return package;
 }
@@ -54,12 +52,12 @@ t_package* receive_instruction(int socket)
         package = recv_package(socket);
 
         if (package == NULL) {
-            LOG_INFO("Disconnected from memory");
+            //disconnection log en main
             return NULL;
         }
         else if (package->opcode != GET_INSTRUCTION) {
             corrupted_package = true;
-            LOG_ERROR("Received package with unexpected opcode: %d", package->opcode);
+            LOG_ERROR("Received package with unexpected opcode: %s", opcode_to_string(package->opcode) );
             package_destroy(package);
         }
     }while(corrupted_package);

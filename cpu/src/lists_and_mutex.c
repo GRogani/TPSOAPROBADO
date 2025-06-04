@@ -15,12 +15,12 @@ void init_list_and_mutex()
 
 void lock_interrupt_list()
 {
-    LOG_DEBUG("Locking interrupt list");
+    //LOG_DEBUG("Locking interrupt list");
     sem_wait(&interrupt_list_mutex);
 }
 void unlock_interrupt_list()
 {
-    LOG_DEBUG("Unlocking interrupt list");
+    //LOG_DEBUG("Unlocking interrupt list");
     sem_post(&interrupt_list_mutex);
 }
 
@@ -59,13 +59,13 @@ void signal_interrupt()
 
 void lock_cpu_mutex() 
 {
-    LOG_DEBUG("Locking CPU mutex");
+    //LOG_DEBUG("Locking CPU mutex");
     sem_wait(&cpu_mutex);
 }
 
 void unlock_cpu_mutex() 
 {
-    LOG_DEBUG("Unlocking CPU mutex");
+    //LOG_DEBUG("Unlocking CPU mutex");
     sem_post(&cpu_mutex);
 }
 
