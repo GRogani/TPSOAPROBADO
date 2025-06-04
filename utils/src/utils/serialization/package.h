@@ -29,13 +29,13 @@ typedef struct t_package {
  * @param buffer puntero al buffer
  * @return Puntero al paquete creado
  */
-t_package* package_create(OPCODE opcode, t_buffer* buffer);
+t_package* create_package(OPCODE opcode, t_buffer* buffer);
 
 /**
  * @brief Libera la memoria de un paquete
  * @param package Paquete a destruir
  */
-void package_destroy(t_package* package);
+void destroy_package(t_package* package);
 
 /**
  * @brief Serializa un paquete para ser enviado por socket
@@ -43,7 +43,7 @@ void package_destroy(t_package* package);
  * @param total_size Puntero donde se guarda el tamaño total del stream serializado
  * @return Stream serializado listo para enviar
  */
-void* package_serialize(t_package* package, uint32_t* total_size);
+void* serialize_package(t_package* package, uint32_t* total_size);
 
 /**
  * @brief Envia un paquete a través de un socket

@@ -11,8 +11,8 @@
 typedef uint32_t OPCODE;
 enum
 {
-    // memoria opcodes
-    GET_INSTRUCTION,
+    FETCH,              // cpu -> memoria
+    INSTRUCTION,        // memoria -> cpu
     LIST_INSTRUCTIONS,
     GET_FREE_SPACE,
     CREATE_PROCESS,
@@ -22,9 +22,7 @@ enum
     WRITE_MEMORY,
     READ_MEMORY,
 
-    OK,
-    ERROR,
-
+    CONFIRMATION,       // server -> client
 
     // opcodes kernel
     IO_NEW_DEVICE,
@@ -32,7 +30,7 @@ enum
     CPU_SYSCALL,
 
     // opcodes CPU
-    PID_PC_PACKAGE,
+    DISPATCH, // cpu -> kernel
     CPU_INTERRUPT,
 
     // opcodes IO

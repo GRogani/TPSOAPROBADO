@@ -1,11 +1,9 @@
-#include "cpu_syscall.h"
+#include "syscall_package.h"
 
-// REQUEST (request cpu syscall from CPU to kernel)
-
-t_cpu_syscall *read_cpu_syscall_request(t_package *package)
+syscall_package_data *read_syscall_package(t_package *package)
 {
     package->buffer->offset = 0;
-    t_cpu_syscall *syscall = safe_malloc(sizeof(t_cpu_syscall));
+    syscall_package_data *syscall = safe_malloc(sizeof(syscall_package_data));
 
     syscall->syscall_type = buffer_read_uint32(package->buffer);
     syscall->pid = buffer_read_uint32(package->buffer);
@@ -37,7 +35,7 @@ t_cpu_syscall *read_cpu_syscall_request(t_package *package)
     return syscall;
 }
 
-t_package *create_cpu_syscall_request(t_cpu_syscall *syscall)
+t_package *create_syscall_package(syscall_package_data *syscall)
 {
     t_buffer* buffer = buffer_create(sizeof(uint32_t) * 3);
     buffer_add_uint32(buffer, (uint32_t)syscall->syscall_type);
@@ -64,19 +62,19 @@ t_package *create_cpu_syscall_request(t_cpu_syscall *syscall)
         break;
     }
 
-    return package_create(CPU_SYSCALL, buffer);
+    return create_package(CPU_SYSCALL, buffer);
 }
 
 // used by CPU
-int send_cpu_syscall_request(int socket, t_cpu_syscall *syscall) 
+int send_syscall_package(int socket, syscall_package_data *syscall) 
 {
-    t_package *package = create_cpu_syscall_request(syscall);
+    t_package *package = create_syscall_package(syscall);
     int bytes_sent = send_package(socket, package);
-    package_destroy(package);
+    destroy_package(package);
     return bytes_sent;
 }
 
-void destroy_cpu_syscall(t_cpu_syscall *syscall)
+void destroy_syscall_package(syscall_package_data *syscall)
 {
     if (syscall)
     {
@@ -99,28 +97,4 @@ void destroy_cpu_syscall(t_cpu_syscall *syscall)
         }
         free(syscall);
     }
-}
-
-// RESPONSE (syscall handling from kernel to CPU)
-
-int read_cpu_syscall_response(t_package *package)
-{
-    package->buffer->offset = 0;
-    int success = buffer_read_uint32(package->buffer);
-    return success == 0;
-}
-
-t_package *create_cpu_syscall_response(int success)
-{
-    t_buffer *buffer = buffer_create(sizeof(uint32_t) * 1);
-    buffer_add_uint32(buffer, (uint32_t)success);
-    return package_create(CPU_SYSCALL, buffer);
-}
-
-int send_cpu_syscall_response(int socket, uint32_t success)
-{
-    t_package *package = create_cpu_syscall_response(success);
-    int bytes_sent = send_package(socket, package);
-    package_destroy(package);
-    return bytes_sent;
 }

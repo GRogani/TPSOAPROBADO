@@ -7,7 +7,7 @@
 #include "enums/Eopcodes.h"
 #include "enums/Esyscall_type.h"
 
-typedef struct t_cpu_syscall
+typedef struct syscall_package_data
 {
     SYSCALL_TYPE syscall_type;
     uint32_t pid;
@@ -16,8 +16,8 @@ typedef struct t_cpu_syscall
     {
         struct
         {
-            uint32_t memory_space;
             char *pseudocode_file;
+            uint32_t memory_space;
         } init_proc;
         struct
         {
@@ -25,15 +25,15 @@ typedef struct t_cpu_syscall
             uint32_t sleep_time;
         } io;
     } params;
-} t_cpu_syscall;
+} syscall_package_data;
 
-t_cpu_syscall *read_cpu_syscall_request(t_package *package);
-t_package *create_cpu_syscall_request(t_cpu_syscall *syscall);
-int send_cpu_syscall_request(int socket, t_cpu_syscall *syscall);
-void destroy_cpu_syscall(t_cpu_syscall *syscall);
+syscall_package_data *read_syscall_package(t_package *package);
 
-int read_cpu_syscall_response(t_package *package);
-t_package *create_cpu_syscall_response(int success);
-int send_cpu_syscall_response(int socket, uint32_t success);
+t_package *create_syscall_package(syscall_package_data *syscall);
+
+int send_syscall_package(int socket, syscall_package_data *syscall);
+
+void destroy_syscall_package(syscall_package_data *syscall);
+
 
 #endif

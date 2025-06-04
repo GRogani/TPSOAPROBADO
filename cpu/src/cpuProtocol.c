@@ -1,6 +1,6 @@
 #include "cpuProtocol.h"
 
-t_package* receive_PID_PC_Package(int socket_dispatch_kernel, uint32_t* PID, uint32_t* PC) 
+t_package* recv_from_dispatch (int socket_dispatch_kernel, uint32_t* PID, uint32_t* PC) 
 {
     t_package* package;
     bool corrupted_package;

@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        kernel_package = receive_PID_PC_Package(kernel_dispatch_socket, &pid, &pc);
+        kernel_package = recv_dispatch(kernel_dispatch_socket, &pid, &pc);
         if (kernel_package == NULL)
         {
             LOG_INFO("Disconneted from Kernel Dispatch");
