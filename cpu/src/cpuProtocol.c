@@ -37,8 +37,6 @@ t_package* receive_PID_PC_Package(int socket_dispatch_kernel, uint32_t* PID, uin
     t_cpu_dispatch  cpu_dispatch = read_cpu_dispatch_request(package);
     *PID = cpu_dispatch.pid;
     *PC = cpu_dispatch.pc;
-    
-    unlock_cpu_mutex();
 
     return package;
 }
