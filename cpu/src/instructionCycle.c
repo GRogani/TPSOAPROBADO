@@ -120,7 +120,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         {
             LOG_DEBUG("Executing IO operation, sending syscall to kernel");
             (*PC)++;
-            t_cpu_syscall *syscall_req = safe_malloc(sizeof(t_cpu_syscall));
+            syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
             syscall_req->syscall_type = SYSCALL_IO;
             syscall_req->pid = *pid;
             syscall_req->pc = *PC;
@@ -134,7 +134,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         {
             LOG_DEBUG("Executing INIT_PROC, sending syscall to kernel");
             (*PC)++;
-            t_cpu_syscall *syscall_req = safe_malloc(sizeof(t_cpu_syscall));
+            syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
             syscall_req->syscall_type = SYSCALL_INIT_PROC;
             syscall_req->pid = *pid;
             syscall_req->pc = *PC;
@@ -158,7 +158,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         {
             LOG_DEBUG("Executing DUMP_PROCESS, sending syscall to kernel");
             (*PC)++;
-            t_cpu_syscall *syscall_req = safe_malloc(sizeof(t_cpu_syscall));
+            syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
             syscall_req->syscall_type = SYSCALL_DUMP_PROCESS;
             syscall_req->pid = *pid;
             syscall_req->pc = *PC;
@@ -170,7 +170,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         {
             LOG_DEBUG("Executing EXIT, sending syscall to kernel");
             (*PC)++;
-            t_cpu_syscall *syscall_req = safe_malloc(sizeof(t_cpu_syscall));
+            syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
             syscall_req->syscall_type = SYSCALL_EXIT;
             syscall_req->pid = *pid;
             syscall_req->pc = *PC;

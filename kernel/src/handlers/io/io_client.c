@@ -11,7 +11,7 @@ void* handle_io_client(void* socket)
         {
             switch(package->opcode)
             {
-                case IO_NEW_DEVICE: {
+                case NEW_IO: {
                     handle_new_device(package, client_socket);
                     break;
                 }
@@ -53,7 +53,7 @@ void* handle_io_client(void* socket)
 
 void handle_new_device(t_package* package, int socket) {
     LOG_INFO("Processing new_device from client");
-    char* device_name = read_new_device(package);
+    char* device_name = read_new_io_package(package);
 
     destroy_package(package);
 

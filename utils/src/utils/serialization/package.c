@@ -21,7 +21,7 @@ void destroy_package(t_package* package)
 int send_package(int socket, t_package* package) 
 {
     uint32_t bytes;
-    void* serialized_data = serialize_serialize(package, &bytes);
+    void* serialized_data = serialize_package(package, &bytes);
     int sent = send(socket, serialized_data, bytes, 0);
     free(serialized_data);
     return sent;

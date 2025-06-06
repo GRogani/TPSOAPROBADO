@@ -1,6 +1,6 @@
 #include "cpuProtocol.h"
 
-t_package* recv_from_dispatch (int socket_dispatch_kernel, uint32_t* PID, uint32_t* PC) 
+t_package* recv_dispatch (int socket_dispatch_kernel, uint32_t* PID, uint32_t* PC) 
 {
     t_package* package;
     bool corrupted_package;
@@ -14,7 +14,7 @@ t_package* recv_from_dispatch (int socket_dispatch_kernel, uint32_t* PID, uint32
             // ESTE CASO ES DE DESCONECCION, OSEA ESPERABLE LOS OTROS NO, muevo log al main
             return NULL;
         }
-        else if (package->opcode != PID_PC_PACKAGE) 
+        else if (package->opcode != DISPATCH) 
         {
             corrupted_package = true;
             LOG_ERROR("Received package with unexpected opcode: %s", opcode_to_string(package->opcode) );
@@ -55,7 +55,7 @@ t_package* receive_instruction(int socket)
             //disconnection log en main
             return NULL;
         }
-        else if (package->opcode != GET_INSTRUCTION) {
+        else if (package->opcode != FETCH) {
             corrupted_package = true;
             LOG_ERROR("Received package with unexpected opcode: %s", opcode_to_string(package->opcode) );
             destroy_package(package);

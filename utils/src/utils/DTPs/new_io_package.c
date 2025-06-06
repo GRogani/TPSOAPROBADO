@@ -3,7 +3,7 @@
 t_package* create_new_io_package(char* device_name){
     t_buffer* buffer = buffer_create(0);
     buffer_add_string(buffer, strlen(device_name) + 1, device_name);
-    return create_package(IO_NEW_DEVICE, buffer);
+    return create_package(NEW_IO, buffer);
 };
 
 int send_new_io_package(int kernel_socket, char* device_name)

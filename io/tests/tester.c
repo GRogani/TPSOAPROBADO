@@ -33,13 +33,13 @@ int main()
     buffer_add_uint32(buffer1, 1);
     buffer_add_uint32(buffer1, 10000);
 
-    package1 = create_package(REQUEST_IO, buffer1);
+    package1 = create_package(IO_OPERATION, buffer1);
 
     buffer2 = buffer_create(sizeof(uint32_t) * 2);
     buffer_add_uint32(buffer2, 2);
     buffer_add_uint32(buffer2, 20000);
 
-    package2 = create_package(REQUEST_IO, buffer2);
+    package2 = create_package(IO_OPERATION, buffer2);
 
     LOG_INFO("Sending 2 packages with opcode: %s", opcode_to_string(package1->opcode) );
 

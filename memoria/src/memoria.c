@@ -103,7 +103,7 @@ void get_instructions(int socket, t_buffer* request_buffer) {
             LOG_ERROR("## PID: %u - Instrucción %u: %s", pid, i, instr);
         }
 
-        t_package* response = create_package(GET_INSTRUCTION, response_buffer);
+        t_package* response = create_package(FETCH, response_buffer);
         send_package(socket, response);
         destroy_package(response);
     }else{

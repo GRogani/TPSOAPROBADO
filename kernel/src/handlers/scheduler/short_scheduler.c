@@ -24,7 +24,7 @@ t_cpu_connection* get_free_cpu(void) {
     return free_cpu;
 }
 
-t_cpu_interrupt *send_and_receive_interrupt(int interrupt_socket_id, uint32_t pid)
+cpu_context_package_data send_and_receive_interrupt(int interrupt_socket_id, uint32_t pid)
 {
     LOG_INFO("short_scheduler: Enviando interrupción para PID %d", pid);
     
@@ -32,20 +32,20 @@ t_cpu_interrupt *send_and_receive_interrupt(int interrupt_socket_id, uint32_t pi
     int sent_bytes = send_interrupt_package(interrupt_socket_id, pid);
     if (sent_bytes <= 0) {
         LOG_ERROR("short_scheduler: Error enviando interrupción");
-        return false;
+        //return false; ??
     }
     
     // Esperar confirmación de interrupción (CPU_INTERRUPT response)
     t_package* response = recv_package(interrupt_socket_id);
     if (response == NULL) {
         LOG_ERROR("short_scheduler: Error recibiendo confirmación de interrupción");
-        return false;
+        //return false; ??
     }
-    t_cpu_interrupt * interrupt_info = read_cpu_context_package(response);
+    cpu_context_package_data  cpu_context = read_cpu_context_package(response);
     
     destroy_package(response);
     
-    return interrupt_info;
+    return cpu_context;
 }
 
 bool send_dispatch_to_cpu(t_cpu_connection* cpu_connection, uint32_t pid, uint32_t pc) {
@@ -56,8 +56,7 @@ bool send_dispatch_to_cpu(t_cpu_connection* cpu_connection, uint32_t pid, uint32
     
     LOG_INFO("short_scheduler: Enviando dispatch PID=%d, PC=%d", pid, pc);
     
-    // Usar DTO para enviar dispatch
-    int sent_bytes = send_cpu_dispatch_request(cpu_connection->dispatch_socket_id, pid, pc);
+    int sent_bytes = send_dispatch_package(cpu_connection->dispatch_socket_id, pid, pc);
     
     if (sent_bytes <= 0) {
         LOG_ERROR("short_scheduler: Error enviando dispatch");
@@ -142,17 +141,17 @@ void run_short_scheduler(void) {
             LOG_INFO("short_scheduler: Realizando preemption del proceso %d", cpu->current_process_executing);
 
             // send(interrupt) + receive(interrupt)
-            t_cpu_interrupt* interrupt_info = send_and_receive_interrupt(cpu->interrupt_socket_id, cpu->current_process_executing);
+            cpu_context_package_data cpu_context = send_and_receive_interrupt(cpu->interrupt_socket_id, cpu->current_process_executing);
 
             lock_exec_list();
 
-            if(interrupt_info->interrupted_same_pid == 0) { // 0 = success
+            if(cpu_context.interrupted_same_pid == 0) { // 0 = success
     
                 // move current_processing from EXEC to READY
                 t_pcb* preempted_pcb = remove_pcb_from_exec(cpu->current_process_executing);
                 if (preempted_pcb != NULL) {
                     preempted_pcb->current_state = READY;
-                    preempted_pcb->pc = interrupt_info->pc; // Actualizar PC del PCB preemptado
+                    preempted_pcb->pc = cpu_context.pc; // Actualizar PC del PCB preemptado
                     add_pcb_to_ready(preempted_pcb);
                     LOG_INFO("short_scheduler: Proceso %d movido de EXEC a READY por preemption", cpu->current_process_executing);
                 }

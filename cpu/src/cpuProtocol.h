@@ -14,7 +14,7 @@ typedef struct {
 
 void request_instruction (int socket,uint32_t PID, uint32_t PC);
 
-t_package* recv_from_dispatch (int socket_dispatch_kernel, uint32_t* PID, uint32_t* PC);
+t_package* recv_dispatch (int socket_dispatch_kernel, uint32_t* PID, uint32_t* PC);
 
 t_package* receive_instruction (int socket);
 

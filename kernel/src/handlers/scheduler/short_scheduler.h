@@ -26,10 +26,10 @@ t_cpu_connection *get_free_cpu(void);
  * @param pid PID del proceso a interrumpir
  * @return true si la interrupción fue exitosa, false en caso contrario
  */
-t_cpu_interrupt *send_and_receive_interrupt(int interrupt_socket_id, uint32_t pid);
+cpu_context_package_data send_and_receive_interrupt(int interrupt_socket_id, uint32_t pid);
 
 /**
- * @brief Envía dispatch (PID_PC_PACKAGE) a CPU
+ * @brief Envía dispatch (DISPATCH) a CPU
  * @param cpu_connection CPU a la que enviar el dispatch
  * @param pid PID del proceso
  * @param pc Program Counter del proceso

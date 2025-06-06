@@ -6,7 +6,7 @@ t_package* create_io_operation_package(uint32_t pid, uint32_t time)
     t_buffer* buffer = buffer_create(size);
     buffer_add_uint32(buffer, pid);
     buffer_add_uint32(buffer, time);
-    return create_package(REQUEST_IO, buffer);
+    return create_package(IO_OPERATION, buffer);
 }
 
 int send_io_operation_package(int socket, uint32_t pid, uint32_t time) 

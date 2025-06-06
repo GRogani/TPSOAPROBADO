@@ -15,7 +15,7 @@ t_package* create_init_process_package(uint32_t pid, uint32_t size, char* pseudo
         buffer_add_string(buffer, 0, "");
     }
     
-    return create_package(CREATE_PROCESS, buffer);
+    return create_package(INIT_PROCESS, buffer);
 }
 
 int send_init_process_package(int socket, uint32_t pid, uint32_t size, char* pseudocode_path) 

@@ -50,8 +50,8 @@ bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, ch
         return false;
     }
     bool success = false;
-    if (response->opcode == CREATE_PROCESS) {
-        bool create_process_result = read_memory_create_process_response(response);
+    if (response->opcode == INIT_PROCESS) {
+        bool create_process_result = read_confirmation_package(response);
         success = create_process_result;
     } else {
         LOG_ERROR("memory_client: Respuesta inesperada de memoria (opcode: %d)", response->opcode);
@@ -79,7 +79,7 @@ int kill_process_in_memory(uint32_t pid)
     response = recv_package(memsocket);
     disconnect_from_memory(memsocket);
 
-    if (response->opcode == OK)
+    if (response->opcode == CONFIRMATION)
     {
         destroy_package(response);
         return 0;

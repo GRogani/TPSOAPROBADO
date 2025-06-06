@@ -65,8 +65,8 @@ int main(){
     printf("\n\x1b[33mPress Enter to send PID & PC to CPU dispatch connection.\x1b[0m\n");
     getchar();
 
-    send_cpu_dispatch_request(cpu_dispatch_connection, PID, PC);
-    LOG_INFO("Package sent with opcode PID_PC_PACKAGE to CPU dispatch connection.");
+    send_dispatch_package(cpu_dispatch_connection, PID, PC);
+    LOG_INFO("Package sent with opcode DISPATCH to CPU dispatch connection.");
 
     // =========================
     // Esperando respuesta de CPU memory
@@ -124,7 +124,7 @@ int main(){
     getchar();
 
     LOG_INFO("Sending PID/PC");
-    send_cpu_dispatch_request(cpu_dispatch_connection, PID, PC);
+    send_dispatch_package(cpu_dispatch_connection, PID, PC);
     LOG_INFO("Sending Interruption");
     send_interrupt_package(cpu_interrupt_connection, PID);
 
