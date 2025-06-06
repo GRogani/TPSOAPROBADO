@@ -4,9 +4,9 @@
 #include <pthread.h>
 #include "collections/collections.h"
 #include "semaphore/semaphore.h"
-#include "utils/DTOs/cpu_syscall.h"
+#include "../utils.h"
 #include "../init_proc_syscall.h"
-#include "../../../../../utils/utils.h"
+#include "../exit_syscall.h"
 
 void *handle_dispatch_client(void *);
 void handle_cpu_syscall(t_package* package, int socket);

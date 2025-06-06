@@ -11,7 +11,7 @@ void* handle_io_client(void* socket)
         {
             switch(package->opcode)
             {
-                case IO_NEW_DEVICE: {
+                case NEW_IO: {
                     handle_new_device(package, client_socket);
                     break;
                 }
@@ -23,7 +23,7 @@ void* handle_io_client(void* socket)
                 default:
                 {
                     LOG_ERROR("Unknown opcode %d from IO device", package->opcode);
-                    package_destroy(package);
+                    destroy_package(package);
                     pthread_exit(0);
                     close(client_socket); 
                     break;
@@ -53,9 +53,9 @@ void* handle_io_client(void* socket)
 
 void handle_new_device(t_package* package, int socket) {
     LOG_INFO("Processing new_device from client");
-    char* device_name = read_new_device(package);
+    char* device_name = read_new_io_package(package);
 
-    package_destroy(package);
+    destroy_package(package);
 
     t_new_device_thread_args* thread_args = safe_malloc(sizeof(t_new_device_thread_args));
     thread_args->client_socket = socket;
@@ -73,9 +73,9 @@ void handle_new_device(t_package* package, int socket) {
 void process_io_completion(t_package *package, int socket)
 {
     LOG_INFO("Processing IO_COMPLETION from IO device");
-    char* device_name = read_io_operation_completed(package);
+    char* device_name = read_io_completion_package(package);
 
-    package_destroy(package);
+    destroy_package(package);
 
     t_completion_thread_args *thread_args = safe_malloc(sizeof(t_completion_thread_args));
     thread_args->client_socket = socket;

@@ -65,8 +65,8 @@ int main(){
     printf("\n\x1b[33mPress Enter to send PID & PC to CPU dispatch connection.\x1b[0m\n");
     getchar();
 
-    send_cpu_dispatch_request(cpu_dispatch_connection, PID, PC);
-    LOG_INFO("Package sent with opcode PID_PC_PACKAGE to CPU dispatch connection.");
+    send_dispatch_package(cpu_dispatch_connection, PID, PC);
+    LOG_INFO("Package sent with opcode DISPATCH to CPU dispatch connection.");
 
     // =========================
     // Esperando respuesta de CPU memory
@@ -75,7 +75,7 @@ int main(){
     LOG_INFO("Waiting for response from CPU memory connection...");
     response = recv_package(cpu_memory_connection);
     LOG_INFO("Received package from CPU memory connection with opcode: %s", opcode_to_string(response->opcode));
-    package_destroy(response);
+    destroy_package(response);
 
     // =========================
     // Enviando instrucción
@@ -103,7 +103,7 @@ int main(){
 
     response = recv_package(cpu_dispatch_connection);
     LOG_INFO("Received package from CPU dispatch connection with opcode: %s", opcode_to_string(response->opcode));
-    package_destroy(response);
+    destroy_package(response);
 
 
     // ===================================
@@ -113,28 +113,28 @@ int main(){
     printf("\n\x1b[33mPress Enter to send same PID interruption\x1b[0m\n");
     getchar();
 
-    send_cpu_interrupt_request(cpu_interrupt_connection, PID);
+    send_interrupt_package(cpu_interrupt_connection, PID);
 
     printf("\n\x1b[33mPress Enter to send other PID interruption\x1b[0m\n");
     getchar();
 
-    send_cpu_interrupt_request(cpu_interrupt_connection, PID + 1);
+    send_interrupt_package(cpu_interrupt_connection, PID + 1);
 
     printf("\n\x1b[33mPress Enter to send PID/PC and interruption simultaneously\x1b[0m\n");
     getchar();
 
     LOG_INFO("Sending PID/PC");
-    send_cpu_dispatch_request(cpu_dispatch_connection, PID, PC);
+    send_dispatch_package(cpu_dispatch_connection, PID, PC);
     LOG_INFO("Sending Interruption");
-    send_cpu_interrupt_request(cpu_interrupt_connection, PID);
+    send_interrupt_package(cpu_interrupt_connection, PID);
 
     LOG_INFO("Sending Instruction NOOP to CPU memory connection and interruption to CPU interrupt connection");
     send_memory_instruction_package(cpu_memory_connection, "NOOP");
-    send_cpu_interrupt_request(cpu_interrupt_connection, PID);
+    send_interrupt_package(cpu_interrupt_connection, PID);
     
     response = recv_package(cpu_memory_connection);
     LOG_INFO("Received package from CPU memory connection with opcode: %s", opcode_to_string(response->opcode));
-    package_destroy(response);
+    destroy_package(response);
 
     // =========================
     // Finalizando tester

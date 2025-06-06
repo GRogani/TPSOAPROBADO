@@ -8,7 +8,7 @@ void *handle_dispatch_client(void* arg)
   if (cpu_connection == NULL)
   {
     LOG_ERROR("CPU connection not found for id %s", connection_id);
-    pthread_exit(-1);
+    pthread_exit((void*)-1);
   }
 
   t_package *package;
@@ -19,16 +19,16 @@ void *handle_dispatch_client(void* arg)
     {
       switch (package->opcode)
       {
-      case CPU_SYSCALL:
+      case SYSCALL:
       {
         handle_cpu_syscall(package, cpu_connection->dispatch_socket_id);
-        package_destroy(package);
+        destroy_package(package);
         break;
       }
       default:
       {
         LOG_ERROR("Unknown opcode %d from CPU", package->opcode);
-        package_destroy(package);        
+        destroy_package(package);        
         break;
       }
       }
@@ -37,14 +37,14 @@ void *handle_dispatch_client(void* arg)
     {
       LOG_ERROR("CPU %s disconnected", connection_id);
       //exit(EXIT_FAILURE);
-      pthread_exit(1);
+      pthread_exit((void*)1);
     }
   }
 }
 
 void handle_cpu_syscall(t_package* package, int socket) 
 {
-  t_cpu_syscall *syscall = read_cpu_syscall_request(package);
+  syscall_package_data *syscall = read_syscall_package(package);
 
   if (syscall == NULL) {
     LOG_ERROR("Failed to read CPU syscall");
@@ -63,7 +63,7 @@ void handle_cpu_syscall(t_package* package, int socket)
       
       if (syscall->pid != 0) {
         LOG_INFO("Sending syscall response for init_proc PID %d", syscall->pid);
-        send_cpu_syscall_response(socket, 0); // 0 = success
+        send_confirmation_package(socket, 0); // 0 = success
       }
       break;
     }
@@ -88,5 +88,5 @@ void handle_cpu_syscall(t_package* package, int socket)
     }
   }
   
-  destroy_cpu_syscall(syscall);
+  destroy_syscall_package(syscall);
 }

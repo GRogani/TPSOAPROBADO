@@ -34,7 +34,7 @@ bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, ch
              pid, size, pseudocode_path);
     
     // Enviar paquete usando DTO
-    int sent_bytes = send_memory_create_process_request(memory_socket, pid, size, pseudocode_path);
+    int sent_bytes = send_init_process_package(memory_socket, pid, size, pseudocode_path);
     
     if (sent_bytes <= 0) {
         LOG_ERROR("memory_client: Error enviando paquete CREATE_PROCESS");
@@ -50,14 +50,14 @@ bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, ch
         return false;
     }
     bool success = false;
-    if (response->opcode == CREATE_PROCESS) {
-        bool create_process_result = read_memory_create_process_response(response);
+    if (response->opcode == INIT_PROCESS) {
+        bool create_process_result = read_confirmation_package(response);
         success = create_process_result;
     } else {
         LOG_ERROR("memory_client: Respuesta inesperada de memoria (opcode: %d)", response->opcode);
     }
     
-    package_destroy(response);
+    destroy_package(response);
     return success;
 }
 
@@ -70,18 +70,18 @@ int kill_process_in_memory(uint32_t pid)
     buffer_add_uint32(buffer, pid);
 
     t_package *package , *response;
-    package = package_create(KILL_PROCESS, buffer);
+    package = create_package(KILL_PROCESS, buffer);
 
     int memsocket = connect_to_memory(&kernel_config);
     send_package(memsocket, package);
-    package_destroy(package);
+    destroy_package(package);
 
     response = recv_package(memsocket);
     disconnect_from_memory(memsocket);
 
-    if (response->opcode == OK)
+    if (response->opcode == CONFIRMATION)
     {
-        package_destroy(response);
+        destroy_package(response);
         return 0;
     }
     else
