@@ -3,11 +3,6 @@
 
 #include <stdint.h>
 
-/**
- * @enum OPCODE
- * @brief Códigos de operación para paquetes de comunicación
- * @note - `HANDSHAKE`
- */
 typedef uint32_t OPCODE;
 enum
 {
@@ -15,7 +10,7 @@ enum
     INSTRUCTION,        // memoria -> cpu
     LIST_INSTRUCTIONS,
     GET_FREE_SPACE,
-    CREATE_PROCESS,
+    INIT_PROCESS,       // kernel -> memoria
     UNSUSPEND_PROCESS,
     KILL_PROCESS,
     SWAP,
@@ -24,17 +19,15 @@ enum
 
     CONFIRMATION,       // server -> client
 
-    // opcodes kernel
-    IO_NEW_DEVICE,
-    IO_COMPLETION,
-    CPU_SYSCALL,
+    NEW_IO,             // io -> kernel
+    IO_COMPLETION,      // io -> kernel
+    SYSCALL,            // cpu -> kernel
 
-    // opcodes CPU
-    DISPATCH, // cpu -> kernel
-    CPU_INTERRUPT,
+    DISPATCH,           // cpu -> kernel
+    INTERRUPT,          // kernel -> cpu
+    CPU_CONTEXT,        // cpu -> kernel
 
-    // opcodes IO
-    REQUEST_IO,
+    IO_OPERATION,       // cpu -> io
 };
 
 /**

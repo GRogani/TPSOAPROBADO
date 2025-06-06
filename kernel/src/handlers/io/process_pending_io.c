@@ -37,7 +37,7 @@ void process_pending_io(t_pending_io_args args)
     t_io_request *io_request = (t_io_request *)request;
 
     // mandamos la solicitud al modulo IO
-    int err = send_io_operation_request(args.client_socket, io_request->pid, io_request->sleep_time);
+    int err = send_io_operation_package(args.client_socket, io_request->pid, io_request->sleep_time);
     if (err == -1)
     {
         LOG_ERROR("Could not sent socket %d request io message for process %d", args.client_socket, io_request->pid);

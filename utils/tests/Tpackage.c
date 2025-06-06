@@ -6,7 +6,7 @@ context(PackageTests) {
 
         it("should create a package with correct values") {
             t_buffer* buffer = buffer_create(64);
-            t_package* package = package_create(HANDSHAKE , buffer);
+            t_package* package = create_package(HANDSHAKE , buffer);
 
             should_ptr(package) not be null;
             should_int(package->opcode) be equal to(HANDSHAKE);
@@ -27,7 +27,7 @@ context(PackageTests) {
             uint32_t value = 12345;
             buffer_add_uint32(buffer, value);
 
-            t_package* package = package_create(42, buffer);
+            t_package* package = create_package(42, buffer);
 
             uint32_t serialized_size;
             void* serialized = package_serialize(package, &serialized_size);
@@ -54,7 +54,7 @@ context(PackageTests) {
             should_int(received_value) be equal to(value);
 
             free(serialized);
-            package_destroy(package);
+            destroy_package(package);
         } end
     } end
 
@@ -68,7 +68,7 @@ context(PackageTests) {
             uint32_t value = 789;
             buffer_add_uint32(buffer, value);
 
-            t_package* sent_pkg = package_create(10, buffer);
+            t_package* sent_pkg = create_package(10, buffer);
             int sent_bytes = send_package(fds[0], sent_pkg);
             should_bool(sent_bytes>0) be equal to(true);
 

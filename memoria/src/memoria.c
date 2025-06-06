@@ -31,9 +31,9 @@ t_list* load_script_lines(char* path) {
 }
 
 void create_process(int socket, t_package* package) {
-    t_memory_create_process* create_process_args = read_memory_create_process_request(package);
+    init_process_package_data* create_process_args = read_init_process_package(package);
     int result = create_process_in_memory(create_process_args->pid, create_process_args->size, create_process_args->pseudocode_path);
-    destroy_memory_create_process(create_process_args);
+    destroy_init_process_package(create_process_args);
     send_memory_create_process_response(socket, 0); // 0 indicates success
 }
 
@@ -103,9 +103,9 @@ void get_instructions(int socket, t_buffer* request_buffer) {
             LOG_ERROR("## PID: %u - Instrucción %u: %s", pid, i, instr);
         }
 
-        t_package* response = package_create(GET_INSTRUCTION, response_buffer);
+        t_package* response = create_package(GET_INSTRUCTION, response_buffer);
         send_package(socket, response);
-        package_destroy(response);
+        destroy_package(response);
     }else{
         LOG_ERROR("## PID: %u - Proceso no encontrado.", pid);
     }
@@ -120,7 +120,7 @@ void get_free_space(int socket) {
     t_buffer* buffer = buffer_create(0);
     buffer_add_uint32(buffer, mock_free);
 
-    t_package* package = package_create(GET_FREE_SPACE, buffer);
+    t_package* package = create_package(GET_FREE_SPACE, buffer);
     send_package(socket, package);
-    package_destroy(package);
+    destroy_package(package);
 }

@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
                 unlock_cpu_mutex();
                 break;
             }
-            package_destroy(instruction_package);
+            destroy_package(instruction_package);
 
             desalojar = execute(instruction, memory_socket, kernel_dispatch_socket, &pid, &pc);
 

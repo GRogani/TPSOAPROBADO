@@ -24,7 +24,7 @@ int main()
 
     response = recv_package(socket);
     LOG_INFO("Received package with opcode: %s", opcode_to_string(response->opcode) );
-    package_destroy(response);
+    destroy_package(response);
 
     printf("Press enter to send packages...\n");
     getchar();
@@ -33,25 +33,25 @@ int main()
     buffer_add_uint32(buffer1, 1);
     buffer_add_uint32(buffer1, 10000);
 
-    package1 = package_create(REQUEST_IO, buffer1);
+    package1 = create_package(REQUEST_IO, buffer1);
 
     buffer2 = buffer_create(sizeof(uint32_t) * 2);
     buffer_add_uint32(buffer2, 2);
     buffer_add_uint32(buffer2, 20000);
 
-    package2 = package_create(REQUEST_IO, buffer2);
+    package2 = create_package(REQUEST_IO, buffer2);
 
     LOG_INFO("Sending 2 packages with opcode: %s", opcode_to_string(package1->opcode) );
 
     send_package(socket, package1);
     send_package(socket, package2);
-    package_destroy(package1);
-    package_destroy(package2);
+    destroy_package(package1);
+    destroy_package(package2);
 
 
     response = recv_package(socket);
     LOG_INFO("Received package with opcode: %s",  opcode_to_string(response->opcode) );
-    package_destroy(response);
+    destroy_package(response);
 
     printf("Press enter to exit...\n");
     getchar();

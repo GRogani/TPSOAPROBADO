@@ -149,7 +149,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             if (!success)
             {
                 LOG_ERROR("Failed to initialize process for PID %d", *pid);
-                package_destroy(package);
+                destroy_package(package);
                 return -1;
             }
             break;
@@ -191,12 +191,12 @@ int check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_e
 {
     if (package->opcode == CPU_INTERRUPT)
     {
-        int pid_received = read_cpu_interrupt_request(package);
+        int pid_received = read_interrupt_package(package);
 
         if (pid_received == *pid_on_execute)
         {
 
-            send_cpu_interrupt_response(socket_interrupt, pid_received, *pc_on_execute, 0);
+            send_cpu_context_package(socket_interrupt, pid_received, *pc_on_execute, 0);
 
             LOG_DEBUG("Interrupt for PID %d executed", pid_received);
 
@@ -206,7 +206,7 @@ int check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_e
         {
             LOG_ERROR("Interrupt for PID %d received, but not executing", pid_received);
 
-            send_cpu_interrupt_response(socket_interrupt, pid_received, *pc_on_execute, 1); // si no fué interrumpido el mismo proceso, significa que no estaba ejecutando la CPU. el kernel necesita saber eso, para ver si debe mover el proceso a READY porque lo desalojó correctamente, o se autodesalojó por una syscall. (la syscall pasa automaticamente el proceso a su nuevo estado y guarda el PCB)
+            send_cpu_context_package(socket_interrupt, pid_received, *pc_on_execute, 1); // si no fué interrumpido el mismo proceso, significa que no estaba ejecutando la CPU. el kernel necesita saber eso, para ver si debe mover el proceso a READY porque lo desalojó correctamente, o se autodesalojó por una syscall. (la syscall pasa automaticamente el proceso a su nuevo estado y guarda el PCB)
         }
     }
     else

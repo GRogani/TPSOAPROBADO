@@ -29,7 +29,7 @@ t_cpu_interrupt *send_and_receive_interrupt(int interrupt_socket_id, uint32_t pi
     LOG_INFO("short_scheduler: Enviando interrupción para PID %d", pid);
     
     // Enviar interrupción
-    int sent_bytes = send_cpu_interrupt_request(interrupt_socket_id, pid);
+    int sent_bytes = send_interrupt_package(interrupt_socket_id, pid);
     if (sent_bytes <= 0) {
         LOG_ERROR("short_scheduler: Error enviando interrupción");
         return false;
@@ -41,9 +41,9 @@ t_cpu_interrupt *send_and_receive_interrupt(int interrupt_socket_id, uint32_t pi
         LOG_ERROR("short_scheduler: Error recibiendo confirmación de interrupción");
         return false;
     }
-    t_cpu_interrupt * interrupt_info = read_cpu_interrupt_response(response);
+    t_cpu_interrupt * interrupt_info = read_cpu_context_package(response);
     
-    package_destroy(response);
+    destroy_package(response);
     
     return interrupt_info;
 }

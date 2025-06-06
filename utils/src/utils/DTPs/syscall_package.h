@@ -1,5 +1,5 @@
-#ifndef UTILS_CPU_SYSCALL_H
-#define UTILS_CPU_SYSCALL_H
+#ifndef DTP_SYSCALL_H
+#define DTP_SYSCALL_H
 
 #include "utils/logger/logger.h"
 #include "utils/serialization/package.h"
@@ -27,11 +27,11 @@ typedef struct syscall_package_data
     } params;
 } syscall_package_data;
 
-syscall_package_data *read_syscall_package(t_package *package);
-
 t_package *create_syscall_package(syscall_package_data *syscall);
 
 int send_syscall_package(int socket, syscall_package_data *syscall);
+
+syscall_package_data *read_syscall_package(t_package *package);
 
 void destroy_syscall_package(syscall_package_data *syscall);
 

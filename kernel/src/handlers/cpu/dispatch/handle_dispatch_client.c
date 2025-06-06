@@ -22,13 +22,13 @@ void *handle_dispatch_client(void* arg)
       case CPU_SYSCALL:
       {
         handle_cpu_syscall(package, cpu_connection->dispatch_socket_id);
-        package_destroy(package);
+        destroy_package(package);
         break;
       }
       default:
       {
         LOG_ERROR("Unknown opcode %d from CPU", package->opcode);
-        package_destroy(package);        
+        destroy_package(package);        
         break;
       }
       }

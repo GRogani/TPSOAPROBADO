@@ -35,7 +35,7 @@ t_package* create_package(OPCODE opcode, t_buffer* buffer);
  * @brief Libera la memoria de un paquete
  * @param package Paquete a destruir
  */
-void destroy_package(t_package* package);
+void destroy_package (t_package* package);
 
 /**
  * @brief Serializa un paquete para ser enviado por socket

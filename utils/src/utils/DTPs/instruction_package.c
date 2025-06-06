@@ -1,13 +1,5 @@
 #include "instruction_package.h"
 
-char* read_instruction_package(t_package* package) 
-{
-    package->buffer->offset = 0;
-    uint32_t instruction_len;
-    char* instruction = buffer_read_string(package->buffer, &instruction_len);
-    return instruction;
-}
-
 t_package* create_instruction_package(char* instruction) 
 {
     t_buffer *buffer = buffer_create(0);
@@ -22,4 +14,12 @@ int send_instruction_package(int socket, char* instruction)
     int bytes_sent = send_package(socket, package);
     destroy_package(package);
     return bytes_sent;
+}
+
+char* read_instruction_package(t_package* package) 
+{
+    package->buffer->offset = 0;
+    uint32_t instruction_len;
+    char* instruction = buffer_read_string(package->buffer, &instruction_len);
+    return instruction;
 }
