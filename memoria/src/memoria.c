@@ -20,7 +20,7 @@ t_list* load_script_lines(char* path) {
 
     while (getline(&line, &len, file) != -1) {
         // Remove trailing whitespace and newline
-        string_trim_right(&line);
+        string_trim_right(&line);  //<- wtf ???
         if (strlen(line) > 0)
             list_add(list, strdup(line));
     }
@@ -32,9 +32,9 @@ t_list* load_script_lines(char* path) {
 
 void create_process(int socket, t_package* package) {
     init_process_package_data* create_process_args = read_init_process_package(package);
-    int result = create_process_in_memory(create_process_args->pid, create_process_args->size, create_process_args->pseudocode_path);
+    create_process_in_memory(create_process_args->pid, create_process_args->size, create_process_args->pseudocode_path);
     destroy_init_process_package(create_process_args);
-    send_memory_create_process_response(socket, 0); // 0 indicates success
+    send_confirmation_package(socket, 0); // 0 indicates success
 }
 
 
@@ -70,10 +70,9 @@ int create_process_in_memory(uint32_t pid, uint32_t size, char* script_path) {
 
 
 void get_instruction(int socket, t_package* package) {
-    t_memory_get_instruction_request* request = read_memory_get_instruction_request(package);
-    uint32_t pid = request->pid;
-    uint32_t pc = request->pc;
-    destroy_memory_get_instruction_request(request);
+    fetch_package_data request = read_fetch_package(package);
+    uint32_t pid = request.pid;
+    uint32_t pc = request.pc;
 
     // TODO: analizar concurrencia y si hay que aplicar semaforos
     proc_memory* proc = find_process_by_pid(pid);
@@ -81,7 +80,7 @@ void get_instruction(int socket, t_package* package) {
     {
         char* instruction = list_get(proc->instructions, pc);
         LOG_INFO("## PID: %u - Get Instruction: %u - Instruction: %s\n", pid, pc, instruction);
-        send_memory_get_instruction_response(socket, instruction);
+        send_instruction_package(socket, instruction);
     }
     
 }

@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     int kernel_socket;
     kernel_socket = create_kernel_connection(io_config.PUERTO_KERNEL, io_config.IP_KERNEL);
 
-    send_new_device(kernel_socket, argv[1]);
+    send_new_io_package(kernel_socket, argv[1]);
 
     waiting_requests(kernel_socket, argv[1]);
 
@@ -71,7 +71,7 @@ void processing_operation(io_operation_package_data* io)
     LOG_DEBUG("Estoy libre [%s]", io->device_name);
     
     // RESPONSE
-    send_io_operation_completed(io->kernel_socket, io->device_name);
+    send_io_completion_package(io->kernel_socket, io->device_name);
     
     //Desestimado
     // pthread_mutex_lock(&busy_mutex);

@@ -6,7 +6,7 @@ t_package *fetch(int socket, uint32_t PID, uint32_t PC)
 
     LOG_DEBUG("Fetching instruction for PID: %d, PC: %d", PID, PC);
 
-    send_memory_get_instruction_package(socket, PID, PC);
+    send_fetch_package(socket, PID, PC);
 
     package = receive_instruction(socket);
 
@@ -17,7 +17,7 @@ t_instruction *decode(t_package *package)
 {
     t_instruction *instruction = safe_calloc(1, sizeof(t_instruction));
 
-    char *instruction_string = read_memory_instruction_package(package); 
+    char *instruction_string = read_instruction_package(package); 
 
     parse_instruction(instruction_string, instruction);
 
@@ -126,7 +126,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             syscall_req->pc = *PC;
             syscall_req->params.io.device_name = instruction->operand_string;
             syscall_req->params.io.sleep_time = instruction->operand_numeric1;
-            send_cpu_syscall_request(socket_dispatch, syscall_req);
+            send_syscall_package(socket_dispatch, syscall_req);
             destroy_syscall_package(syscall_req);
             return 1;
         }
@@ -140,12 +140,12 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             syscall_req->pc = *PC;
             syscall_req->params.init_proc.pseudocode_file = instruction->operand_string;
             syscall_req->params.init_proc.memory_space = instruction->operand_numeric1;
-            send_cpu_syscall_request(socket_dispatch, syscall_req);
+            send_syscall_package(socket_dispatch, syscall_req);
             destroy_syscall_package(syscall_req);
 
             // wait for response from kernel to continue execution
             t_package *package = recv_package(socket_dispatch);
-            int success = read_cpu_syscall_response(package);
+            int success = read_confirmation_package(package);
             if (!success)
             {
                 LOG_ERROR("Failed to initialize process for PID %d", *pid);
@@ -162,7 +162,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             syscall_req->syscall_type = SYSCALL_DUMP_PROCESS;
             syscall_req->pid = *pid;
             syscall_req->pc = *PC;
-            send_cpu_syscall_request(socket_dispatch, syscall_req);
+            send_syscall_package(socket_dispatch, syscall_req);
             destroy_syscall_package(syscall_req);
             return 1;
         }
@@ -174,7 +174,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             syscall_req->syscall_type = SYSCALL_EXIT;
             syscall_req->pid = *pid;
             syscall_req->pc = *PC;
-            send_cpu_syscall_request(socket_dispatch, syscall_req);
+            send_syscall_package(socket_dispatch, syscall_req);
             destroy_syscall_package(syscall_req);
             return 1;
         }
@@ -189,7 +189,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
 
 int check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute)
 {
-    if (package->opcode == CPU_INTERRUPT)
+    if (package->opcode == INTERRUPT)
     {
         int pid_received = read_interrupt_package(package);
 

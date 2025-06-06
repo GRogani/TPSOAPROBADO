@@ -34,7 +34,7 @@ t_package* recv_dispatch (int socket_dispatch_kernel, uint32_t* PID, uint32_t* P
 
     lock_cpu_mutex();
 
-    t_cpu_dispatch  cpu_dispatch = read_cpu_dispatch_request(package);
+    dispatch_package_data  cpu_dispatch = read_dispatch_package(package);
     *PID = cpu_dispatch.pid;
     *PC = cpu_dispatch.pc;
     
