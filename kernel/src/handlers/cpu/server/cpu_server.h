@@ -9,7 +9,8 @@
 #include "handlers/cpu/client/handle_dispatch_client.h"
 #include "repository/cpu/cpu_connections.h"
 
-void* cpu_server_handler(void*);
-void finish_cpu_server();
+int connect_to_cpus();
+
+int create_cpu_servers();
 
 #endif

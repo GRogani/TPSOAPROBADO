@@ -58,12 +58,12 @@ int create_server(char* port) {
 
 int accept_connection(int socket_server)
 {
-	LOG_INFO("Awaiting for new clients...");
+	LOG_DEBUG("Awaiting for new clients...");
 
 	int client_socket = accept(socket_server, NULL, NULL);
 	if (client_socket == -1)
 	{
-		LOG_ERROR("accept failed");
+		LOG_ERROR("Accept failed for server socket: %d", socket_server);
 		return client_socket;
 	}
 

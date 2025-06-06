@@ -1,62 +1,31 @@
-
 #include "cpu_server.h"
 
-bool should_exit = false;
+extern t_kernel_config kernel_config; // en globals.h
+
 int socket_server_dispatch = -1;
 int socket_server_interrupt = -1;
 
-void *cpu_server_handler(void *args)
+int connect_to_cpus(int cpus_quantity)
 {
-    extern t_kernel_config kernel_config;
 
-    socket_server_dispatch = create_server(kernel_config.cpu_dispatch_port);
-    LOG_INFO("CPU dispatch server available on port %s", kernel_config.cpu_dispatch_port);
+    int err = create_cpu_servers();
+    if (err < 0) return err;
 
-    socket_server_interrupt = create_server(kernel_config.cpu_interrupt_port);
-    LOG_INFO("CPU interrupt server available on port %s", kernel_config.cpu_interrupt_port);
-
-    while (true)
+    for (int i = 0; i < cpus_quantity; i++)
     {
+        int socket_dispatch_connection = -1;
+        int socket_interrupt_connection = -1;
 
-        if(should_exit) {
-            break;
-        }
-
-        LOG_INFO("Accepting dispatch connection");
-        int socket_dispatch_connection = accept_connection(socket_server_dispatch);
-        if (socket_dispatch_connection == -1)
+        LOG_INFO("Accepting dispatch & interrupt connections");
+        while ( (socket_dispatch_connection < 0) || (socket_interrupt_connection < 0) )
         {
-            LOG_ERROR("Error accepting dispatch connection");
-            
-            if(should_exit) {
-                break;
-            }
+            if (socket_dispatch_connection < 0)
+                socket_dispatch_connection = accept_connection(socket_server_dispatch);
 
-            continue;
-        }
+            if (socket_interrupt_connection < 0)
+                socket_interrupt_connection = accept_connection(socket_interrupt_connection);
 
-        if(should_exit) {
-            close(socket_dispatch_connection);
-            break;
-        }
-
-        int socket_interrupt_connection = accept_connection(socket_server_interrupt);
-        if (socket_interrupt_connection == -1)
-        {
-            LOG_ERROR("Error accepting interrupt connection");
-            close(socket_dispatch_connection);
-
-            if(should_exit) {
-                break;
-            }
-
-            continue;
-        }
-
-        if(should_exit) {
-            close(socket_dispatch_connection);
-            close(socket_interrupt_connection);
-            break;
+            sleep(3);
         }
 
         LOG_INFO("CPU connected successfully. Adding connection to list of connected CPUs");
@@ -73,25 +42,16 @@ void *cpu_server_handler(void *args)
             close(socket_dispatch_connection);
             close(socket_interrupt_connection);
 
-            if(should_exit) {
-                break;
-            }
-
             continue;
         }
         pthread_detach(t1);
 
+        i++;
+
         // Do not create thread for interrupt.
         // interruptions should be awaited and sent into the short term scheduler
-
     }
 
-    if (socket_server_dispatch != -1) {
-        close(socket_server_dispatch);
-    }
-    if (socket_server_interrupt != -1) {
-        close(socket_server_interrupt);
-    }
     LOG_INFO("CPU server finished");
 
     signal_cpu_connected();
@@ -99,18 +59,26 @@ void *cpu_server_handler(void *args)
     return 0;
 }
 
-void finish_cpu_server() {
-    should_exit = true;
-    
-    // Shutdown and close server sockets to interrupt any blocking accept() calls
-    if (socket_server_dispatch != -1) {
-        shutdown(socket_server_dispatch, SHUT_RDWR);
-        close(socket_server_dispatch);
-        socket_server_dispatch = -1;
+int create_cpu_servers()
+{
+    socket_server_dispatch = create_server(kernel_config.cpu_dispatch_port);
+    if (socket_server_dispatch > 0)
+    {
+        LOG_INFO ("CPU dispatch server available on port %s", kernel_config.cpu_dispatch_port);
     }
-    if (socket_server_interrupt != -1) {
-        shutdown(socket_server_interrupt, SHUT_RDWR);
-        close(socket_server_interrupt);
-        socket_server_interrupt = -1;
+    else
+    {
+        LOG_ERROR ("CPU dispatch server creation failed");
+        return -1;
     }
+    socket_server_interrupt = create_server(kernel_config.cpu_interrupt_port);
+    if (socket_server_interrupt < 0)
+        LOG_INFO("CPU interrupt server available on port %s", kernel_config.cpu_interrupt_port);
+    else
+    {
+        LOG_ERROR ("CPU interrupt server creation failed");
+        return -1;
+    }
+
+    return 0;
 }

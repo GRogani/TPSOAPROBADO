@@ -49,6 +49,8 @@ t_kernel_config init_kernel_config(t_config* config) {
     conf.cpu_interrupt_port = config_get_string_value(config, "CPU_INTERRUPT_PORT");
     conf.io_port = config_get_string_value(config, "IO_PORT");
 
+    conf.cpu_quantity = config_get_int_value(config, "CPU_QUANTITY");
+
     return conf;
 }
 

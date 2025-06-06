@@ -1,18 +1,18 @@
 #include "create_threads.h"
 
-int create_servers_threads(pthread_t* io_thread, pthread_t* cpu_thread)
+int create_io_server_thread(pthread_t* io_thread)
 {
 
-    //CPU SERVER T
-    int err_cpu = pthread_create(cpu_thread, NULL, cpu_server_handler, NULL);
-    if (err_cpu != 0) 
-    {
-        LOG_ERROR("Failed to create CPU server thread");
-        return -1;
-    } else 
-    {
-        LOG_INFO("Successfully created CPU server thread");
-    }
+    // //CPU SERVER T
+    // int err_cpu = pthread_create(cpu_thread, NULL, cpu_server_handler, NULL);
+    // if (err_cpu != 0) 
+    // {
+    //     LOG_ERROR("Failed to create CPU server thread");
+    //     return -1;
+    // } else 
+    // {
+    //     LOG_DEBUG("Successfully created CPU server thread");
+    // }
 
     //SERVER IO T
     int err_io = pthread_create(io_thread, NULL, io_server_handler, NULL);
@@ -22,7 +22,7 @@ int create_servers_threads(pthread_t* io_thread, pthread_t* cpu_thread)
         return -1;
     } else 
     {
-        LOG_INFO("Successfully created IO server thread");
+        LOG_DEBUG("Successfully created IO server thread");
     }
 
     return 0;
