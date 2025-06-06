@@ -17,10 +17,9 @@ int main(int argc, char *argv[])
     uint32_t pid, pc;
 
     interrupt_args_t thread_args = {kernel_interrupt_socket, &pid, &pc};
-    pthread_t interrupt_handler_thread;
+    
     pthread_t interrupt_listener_thread;
-    pthread_create(&interrupt_listener_thread, NULL, interrupt_listener, &kernel_interrupt_socket);
-    pthread_create(&interrupt_handler_thread, NULL, interrupt_handler, &thread_args);
+    pthread_create(&interrupt_listener_thread, NULL, interrupt_listener, &thread_args);
 
     while (1)
     {
@@ -30,12 +29,9 @@ int main(int argc, char *argv[])
             LOG_INFO("Disconneted from Kernel Dispatch");
             break;
         }
-        // TODO: si llega a una interrupción y se atiende (PID = PID ON EXECUTE) la interrupción no va a existír más en la lista porque ya fue atendida, pero va a seguir ejecutando el ciclo de abajo con el mismo PID que fue interrumpido
 
-        int desalojar = 0;
-        while (desalojar != 1)
+        while (1)
         {
-            lock_cpu_mutex();
 
             t_package *instruction_package = fetch(memory_socket, pid, pc);
             if (instruction_package == NULL)
@@ -55,31 +51,23 @@ int main(int argc, char *argv[])
             }
             destroy_package(instruction_package);
 
-            desalojar = execute(instruction, memory_socket, kernel_dispatch_socket, &pid, &pc);
+            bool should_preempt = execute(instruction, memory_socket, kernel_dispatch_socket, &pid, &pc);
 
             cleanup_instruction(instruction);
 
-            unlock_cpu_mutex();
+            bool should_interrupt = interrupt_handler(&thread_args);
 
-            lock_interrupt_list();
-                if (interrupt_count() > 0)
-                {
-                    unlock_interrupt_list();
-                    break;
-                }
-            unlock_interrupt_list();
-
+            if (should_preempt || should_interrupt)
+            {
+                unlock_cpu_mutex();
+                break;
+            }
         };
-
-        if (desalojar == -1) LOG_ERROR("Execution error");
-
-        
     }
 
     LOG_INFO("Closing connections...");
 
     pthread_join(interrupt_listener_thread, NULL);
-    pthread_join(interrupt_handler_thread, NULL);
 
     close(memory_socket);
     close(kernel_dispatch_socket);
@@ -94,11 +82,12 @@ int main(int argc, char *argv[])
 
 void cleanup_instruction(t_instruction *instruction)
 {
-    if (instruction == NULL) return;
+    if (instruction == NULL)
+        return;
 
-    if (instruction->operand_string == NULL) return;
+    if (instruction->operand_string == NULL)
+        return;
 
     free(instruction->operand_string);
     free(instruction);
-    
 }

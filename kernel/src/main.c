@@ -1,8 +1,8 @@
 #include "main.h"
-
-t_kernel_config kernel_config;  
                                 
 int main(int argc, char* argv[]) {
+
+    extern t_kernel_config kernel_config;  // en globals.h
 
     t_config* config = init_config("kernel.config");
 
@@ -12,20 +12,20 @@ int main(int argc, char* argv[]) {
 
     initialize_global_semaphores();
 
-    init_logger("kernel.log", "[Main]", kernel_config.log_level);
+    init_logger("kernel.log", "[Kernel]", kernel_config.log_level);
 
     pthread_t io_server_hanlder;
     pthread_t cpu_server_hanlder;
    
-    create_servers_threads(&io_server_hanlder, &cpu_server_hanlder);
+    create_io_server_thread(&io_server_hanlder);
 
-    // el cpu se crea y una vez que se aprieta enter, se cierra la escucha.
+    connect_to_cpus(kernel_config.cpu_quantity); // Levanta el server entran los N cpu y lo baja.
+
     process_enter(argv[1], atoi(argv[2]));
 
     pthread_join(io_server_hanlder, NULL);
 
     close(io_server_hanlder);          
-    close(cpu_server_hanlder); 
 
     shutdown_hook(config);  
 
@@ -34,24 +34,15 @@ int main(int argc, char* argv[]) {
 }
 
 void process_enter(char* pseudocode_file_name, uint32_t program_size)
-{
-    printf("Presione Enter para comenzar...\n");
-    int c;
-    do {
-        c = getchar();
-    } while (c != '\n' && c != EOF);
-
-    LOG_DEBUG("Finalizando CPU servers, arrancando planificacion...");
-
-    finish_cpu_server(); // hacemos que el while deje de correr para siempre.
-
+{   
     wait_cpu_connected(); // esperamos a que el thread nos notifique que terminó de correr y limpiar todo antes de cerrar.
-    destroy_cpu_connected_sem(); // no lo usaremos mas luego de que cerramos el thread que escucha nuevas conexiones.
+    destroy_cpu_connected_sem();
+
+    printf("Presione Enter para comenzar...\n");
+    getchar();
 
     // TODO: validar si hay algun cpu conectado. Si no hay ninguno, tirar error y salir.
 
-    // ejecutamos a mano la syscall init_proc para el proceso 0
     LOG_INFO("Ejecutando syscall init_proc para el proceso 0");
-
     handle_init_proc_syscall(0, program_size, pseudocode_file_name);
 }
