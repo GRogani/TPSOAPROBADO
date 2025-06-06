@@ -9,7 +9,7 @@ t_package* create_io_completion_package(char* device_name){
 
 int send_io_completion_package(int kernel_socket, char* device_name){
     t_package* package;
-    package = create_io_operation_completed(device_name);
+    package = create_io_completion_package(device_name);
     int bytes_sent = send_package(kernel_socket, package);
     destroy_package(package);
     return bytes_sent;

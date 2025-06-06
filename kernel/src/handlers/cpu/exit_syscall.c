@@ -37,7 +37,7 @@ void exit_process_syscall(uint32_t pid)
 
 void log_process_metrics(uint32_t pid, t_state_metrics state_metrics, t_time_metrics time_metrics)
 {
-  LOG_INFO("## (%d) - Metricas de estado: NEW (%d) (%dms), READY (%d) (%dms),  SUSPEND REDY (%d) (%dms), EXEC (%d) (%dms), BLOCK (%d) (%dms), SUSPEND BLOCK (%d) (%dms), EXIT (%d) (%dms)", 
+  LOG_INFO("## (%d) - Metricas de estado: NEW (%d) (%ldms), READY (%d) (%ldms),  SUSPEND REDY (%d) (%ldms), EXEC (%d) (%ldms), BLOCK (%d) (%ldms), SUSPEND BLOCK (%d) (%ldms), EXIT (%d) (%ldms)", 
           pid, 
           state_metrics.new_count          , time_metrics.new_time_ms, 
           state_metrics.ready_count        , time_metrics.ready_time_ms,

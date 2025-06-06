@@ -73,7 +73,7 @@ void handle_new_device(t_package* package, int socket) {
 void process_io_completion(t_package *package, int socket)
 {
     LOG_INFO("Processing IO_COMPLETION from IO device");
-    char* device_name = read_io_operation_completed(package);
+    char* device_name = read_io_completion_package(package);
 
     destroy_package(package);
 

@@ -127,7 +127,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             syscall_req->params.io.device_name = instruction->operand_string;
             syscall_req->params.io.sleep_time = instruction->operand_numeric1;
             send_cpu_syscall_request(socket_dispatch, syscall_req);
-            destroy_cpu_syscall(syscall_req);
+            destroy_syscall_package(syscall_req);
             return 1;
         }
         case INIT_PROC:
@@ -141,7 +141,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             syscall_req->params.init_proc.pseudocode_file = instruction->operand_string;
             syscall_req->params.init_proc.memory_space = instruction->operand_numeric1;
             send_cpu_syscall_request(socket_dispatch, syscall_req);
-            destroy_cpu_syscall(syscall_req);
+            destroy_syscall_package(syscall_req);
 
             // wait for response from kernel to continue execution
             t_package *package = recv_package(socket_dispatch);
@@ -163,7 +163,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             syscall_req->pid = *pid;
             syscall_req->pc = *PC;
             send_cpu_syscall_request(socket_dispatch, syscall_req);
-            destroy_cpu_syscall(syscall_req);
+            destroy_syscall_package(syscall_req);
             return 1;
         }
         case EXIT:
@@ -175,7 +175,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             syscall_req->pid = *pid;
             syscall_req->pc = *PC;
             send_cpu_syscall_request(socket_dispatch, syscall_req);
-            destroy_cpu_syscall(syscall_req);
+            destroy_syscall_package(syscall_req);
             return 1;
         }
         default:

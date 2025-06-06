@@ -63,7 +63,7 @@ void handle_cpu_syscall(t_package* package, int socket)
       
       if (syscall->pid != 0) {
         LOG_INFO("Sending syscall response for init_proc PID %d", syscall->pid);
-        send_cpu_syscall_response(socket, 0); // 0 = success
+        send_confirmation_package(socket, 0); // 0 = success
       }
       break;
     }
@@ -88,5 +88,5 @@ void handle_cpu_syscall(t_package* package, int socket)
     }
   }
   
-  destroy_cpu_syscall(syscall);
+  destroy_syscall_package(syscall);
 }

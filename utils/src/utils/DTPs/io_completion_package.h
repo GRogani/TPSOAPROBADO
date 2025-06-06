@@ -9,6 +9,6 @@ t_package* create_io_completion_package (char*);
 
 int send_io_completion_package (int, char*);
 
-char* read_io_completion__package (t_package*);
+char* read_io_completion_package (t_package*);
 
 #endif
