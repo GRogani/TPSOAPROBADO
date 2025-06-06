@@ -218,7 +218,7 @@ void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_
 
 void *interrupt_listener(void *args)
 {
-    interrupt_args_t thread_args = (interrupt_args_t *)args;
+    interrupt_args_t* thread_args = (interrupt_args_t *)args;
 
     while (1)
     {
@@ -241,6 +241,7 @@ void *interrupt_listener(void *args)
 
 bool interrupt_handler(void *thread_args)
 {
+    LOG_DEBUG("Interrupt handler working...");
     interrupt_args_t *args = (interrupt_args_t *)thread_args;
     bool interrupted = false;
 
@@ -250,8 +251,11 @@ bool interrupt_handler(void *thread_args)
         interrupted = true;
         t_package *package = get_last_interrupt(interrupt_count());
         check_interrupt(args->socket_interrupt, package, args->pid, args->pc);
+        package_destroy(package);
     }
     unlock_interrupt_list();
+
+    LOG_DEBUG("Interrupt found: %s", interrupted ? "yes" : "no");
 
     return interrupted;
 }

@@ -1,7 +1,7 @@
 
 #include <stdlib.h>
 #include <semaphore.h>
-#include "/home/utnso/tp-2025-1c-Mi-Grupo-1234/utils/utils.h"
+#include "../utils.h"
 
 int dummy_connection(int server_socket) 
 {
@@ -130,7 +130,7 @@ int main(){
 
     LOG_INFO("Sending Instruction NOOP to CPU memory connection and interruption to CPU interrupt connection");
     send_memory_instruction_package(cpu_memory_connection, "NOOP");
-    send_cpu_interrupt_request(cpu_interrupt_connection, PID);
+    // send_cpu_interrupt_request(cpu_interrupt_connection, PID);
     
     response = recv_package(cpu_memory_connection);
     LOG_INFO("Received package from CPU memory connection with opcode: %s", opcode_to_string(response->opcode));

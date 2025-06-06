@@ -44,7 +44,6 @@ bool run_long_scheduler(void)
       // Éxito: mover de SUSP_READY a READY
       LOG_INFO("long_scheduler: Proceso PID=%d des-suspendido exitosamente", pcb->pid);
 
-      pcb->current_state = READY;
       add_pcb_to_ready(pcb);
       processes_initialized = true;
 
@@ -87,7 +86,6 @@ bool run_long_scheduler(void)
       // Éxito: mover de NEW a READY
       LOG_INFO("long_scheduler: Proceso PID=%d inicializado exitosamente", pcb->pid);
 
-      pcb->current_state = READY;
       add_pcb_to_ready(pcb);
       processes_initialized = true;
 

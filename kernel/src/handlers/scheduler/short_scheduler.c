@@ -151,7 +151,6 @@ void run_short_scheduler(void) {
                 // move current_processing from EXEC to READY
                 t_pcb* preempted_pcb = remove_pcb_from_exec(cpu->current_process_executing);
                 if (preempted_pcb != NULL) {
-                    preempted_pcb->current_state = READY;
                     preempted_pcb->pc = interrupt_info->pc; // Actualizar PC del PCB preemptado
                     add_pcb_to_ready(preempted_pcb);
                     LOG_INFO("short_scheduler: Proceso %d movido de EXEC a READY por preemption", cpu->current_process_executing);
@@ -173,7 +172,6 @@ void run_short_scheduler(void) {
     LOG_INFO("short_scheduler: Moviendo proceso PID=%d de READY a EXEC", next_ready->pid);
     
     // Mover de READY a EXEC
-    next_ready->current_state = EXEC;
     add_pcb_to_exec(next_ready);
     
     // send(dispatch, pid, pc)
