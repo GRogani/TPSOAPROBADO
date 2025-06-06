@@ -1,5 +1,5 @@
 #include "new_list.h"
-#include "../pcb.h"
+#include "repository/pcb/pcb.h"
 #include <commons/collections/list.h>
 #include <stdlib.h>
 

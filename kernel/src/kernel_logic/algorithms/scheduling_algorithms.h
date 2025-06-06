@@ -1,12 +1,12 @@
 #ifndef KERNEL_SCHEDULING_ALGORITHMS_H
 #define KERNEL_SCHEDULING_ALGORITHMS_H
 
-#include "../repository/pcb.h"
 #include "utils/config/t_configs.h"
-#include "../repository/process/new_list.h"
-#include "../repository/process/ready_list.h"
-#include "../repository/process/susp_ready_list.h"
-#include "../../utils/utils.h"
+#include "repository/pcb/pcb.h"
+#include "repository/process/new_list.h"
+#include "repository/process/ready_list.h"
+#include "repository/process/susp_ready_list.h"
+#include "../utils.h"
 
 /**
  * @brief Funciones de abstracción para algoritmos de planificación

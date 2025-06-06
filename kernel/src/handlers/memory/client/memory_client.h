@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "../repository/pcb.h"
-#include "../../../utils/utils.h"
+#include "../utils.h"
+#include "repository/pcb/pcb.h"
 
 
 /**

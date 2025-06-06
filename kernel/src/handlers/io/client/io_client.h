@@ -2,9 +2,9 @@
 #define IO_CLIENT_HANDLER_H
 
 #include <pthread.h>
-#include "../../utils/utils.h"
-#include "./process_new_device.h"
-#include "./io_completion.h"
+#include "../utils.h"
+#include "handlers/io/process_new_device.h"
+#include "handlers/io/io_completion.h"
 
 void* handle_io_client(void*);
 void handle_new_device(t_package*, int);

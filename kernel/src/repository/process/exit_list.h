@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "../utils.h"
-#include "../pcb.h"
+#include "repository/pcb/pcb.h"
 #include "collections/collections.h"
 #include <commons/collections/list.h>
 

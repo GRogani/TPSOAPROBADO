@@ -2,10 +2,10 @@
 #define KERNEL_EXIT_SYSCALL_H
 
 #include "../utils.h"
-#include "../../repository/process/exit_list.h"
-#include "../scheduler/long_scheduler.h"
-#include "../scheduler/short_scheduler.h"
-#include "../../repository/pcb.h"
+#include "repository/process/exit_list.h"
+#include "kernel_logic/scheduler/long_scheduler.h"
+#include "kernel_logic/scheduler/short_scheduler.h"
+#include "repository/pcb/pcb.h"
 
 void exit_process_syscall(uint32_t syscall);
 

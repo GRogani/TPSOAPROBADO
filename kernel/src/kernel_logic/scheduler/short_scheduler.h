@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include "../utils.h"
 #include "enums/Eopcodes.h"
-#include "../../collections/collections.h"
-#include "../../algorithms/scheduling_algorithms.h"
+#include "collections/collections.h"
+#include "kernel_logic/algorithms/scheduling_algorithms.h"
 
 /**
  * @brief Ejecuta el planificador de corto plazo

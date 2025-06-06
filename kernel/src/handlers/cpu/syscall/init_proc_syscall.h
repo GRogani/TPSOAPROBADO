@@ -6,11 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../utils.h"
-#include "../../collections/collections.h"
-#include "../../repository/pcb.h"
-#include "../../repository/process/new_list.h"
-#include "../scheduler/long_scheduler.h"
-#include "../scheduler/short_scheduler.h"
+#include "collections/collections.h"
+#include "repository/pcb/pcb.h"
+#include "repository/process/new_list.h"
+#include "kernel_logic/scheduler/long_scheduler.h"
+#include "kernel_logic/scheduler/short_scheduler.h"
 
 /**
  * @brief Estructura para los argumentos de init_proc

@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <commons/collections/list.h>
 #include "../utils.h"
-#include "../pcb.h"
+#include "repository/pcb/pcb.h"
 #include "collections/collections.h"
 
 // Forward declaration

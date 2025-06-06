@@ -1,14 +1,15 @@
 #ifndef KERNEL_LONG_SCHEDULER_H
 #define KERNEL_LONG_SCHEDULER_H
 
-#include "../../algorithms/scheduling_algorithms.h"
-#include "../../communication/memory_client.h"
-#include "../../repository/process/new_list.h"
-#include "../../repository/process/ready_list.h"
-#include "../../repository/process/susp_ready_list.h"
-#include "../../repository/pcb.h"
-#include "../../../../utils/utils.h"
 #include <stddef.h>
+#include "kernel_logic/algorithms/scheduling_algorithms.h"
+#include "handlers/memory/client/memory_client.h"
+#include "repository/process/new_list.h"
+#include "repository/process/ready_list.h"
+#include "repository/process/susp_ready_list.h"
+#include "repository/pcb/pcb.h"
+#include "../utils.h"
+
 
 /**
  * @brief Ejecuta el planificador de largo plazo
