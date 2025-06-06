@@ -1,4 +1,4 @@
-#include "memoria.h"
+ ..#include "memoria.h"
 
 t_list* load_script_lines(char* path) {
     char full_path[512];
