@@ -11,6 +11,6 @@
 //pthread_mutex_t busy_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void waiting_requests(int kernel_socket, char* id_IO);
-void processing_operation(t_request_io* args);
+void processing_operation(io_operation_package_data* args);
 
 #endif

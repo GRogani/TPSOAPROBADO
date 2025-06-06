@@ -1,0 +1,36 @@
+name: COMPILATION
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Clonar repositorio
+      uses: actions/checkout@v3
+
+    - name: Instalar dependencias de sistema
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential git cmake libreadline-dev
+
+    - name: Clonar y compilar so-commons-library
+      run: |
+        git clone https://github.com/sisoputnfrba/so-commons-library.git commons
+        cd commons
+        make
+        sudo make install
+
+    - name: Compilar todos los módulos (sin tests)
+      run: |
+        for dir in utils kernel io memoria cpu; do
+          if [ -f "$dir/Makefile" ]; then
+            echo "Compilando módulo $dir"
+            make -C $dir
+          fi
+        done

@@ -39,13 +39,16 @@
 #include "src/enums/Esyscall_type.h"
 
 // DTOs
-#include "src/utils/DTOs/cpu_dispatch.h"
-#include "src/utils/DTOs/cpu_interrupt.h"
-#include "src/utils/DTOs/cpu_syscall.h"
-#include "src/utils/DTOs/io_new_device.h"
-#include "src/utils/DTOs/io_operation_completed.h"
-#include "src/utils/DTOs/io_operation_request.h"
-#include "src/utils/DTOs/memory_create_process.h"
-#include "src/utils/DTOs/memory_get_instruction.h"
+#include "src/utils/DTPs/confirmation_package.h"
+#include "src/utils/DTPs/cpu_context_package.h"
+#include "src/utils/DTPs/dispatch_package.h"
+#include "src/utils/DTPs/fetch_package.h"
+#include "src/utils/DTPs/init_process_package.h"
+#include "src/utils/DTPs/instruction_package.h"
+#include "src/utils/DTPs/interrupt_package.h"
+#include "src/utils/DTPs/io_completion_package.h"
+#include "src/utils/DTPs/io_operation_package.h"
+#include "src/utils/DTPs/new_io_package.h"
+#include "src/utils/DTPs/syscall_package.h"
 
 #endif 

@@ -2,7 +2,7 @@
 #define PROCESS_PENDING_IO_H
 
 #include <collections/collections.h>
-#include <utils/DTOs/dtos.h>
+#include "../utils.h"
 
 typedef struct t_pending_io_args
 {

@@ -41,7 +41,7 @@ void process_enter(char* pseudocode_file_name, uint32_t program_size)
         c = getchar();
     } while (c != '\n' && c != EOF);
 
-    printf("FINALIZANDO CPU SERVERS, ARRANCANDO PLANIFICACION...\n");
+    LOG_DEBUG("Finalizando CPU servers, arrancando planificacion...");
 
     finish_cpu_server(); // hacemos que el while deje de correr para siempre.
 

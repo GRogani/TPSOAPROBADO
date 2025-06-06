@@ -1,6 +1,6 @@
 #include "package.h"
 
-t_package* package_create(OPCODE opcode, t_buffer* buffer) 
+t_package* create_package(OPCODE opcode, t_buffer* buffer) 
 {
     t_package* package = safe_malloc(sizeof(t_package));
     package->opcode = opcode;
@@ -8,7 +8,7 @@ t_package* package_create(OPCODE opcode, t_buffer* buffer)
     return package;
 }
 
-void package_destroy(t_package* package) 
+void destroy_package(t_package* package) 
 {
     if (package) {
         buffer_destroy(package->buffer);
@@ -21,14 +21,14 @@ void package_destroy(t_package* package)
 int send_package(int socket, t_package* package) 
 {
     uint32_t bytes;
-    void* serialized_data = package_serialize(package, &bytes);
+    void* serialized_data = serialize_package(package, &bytes);
     int sent = send(socket, serialized_data, bytes, 0);
     free(serialized_data);
     return sent;
 }
 
 
-void* package_serialize(t_package* package, uint32_t* total_size) 
+void* serialize_package(t_package* package, uint32_t* total_size) 
 {
     *total_size = sizeof(OPCODE) + sizeof(uint32_t) + package->buffer->stream_size;
 
@@ -73,7 +73,7 @@ t_package* recv_package(int socket)
     t_buffer* buffer = buffer_create(buffer_stream_size);
     buffer_add(buffer, buffer_stream_data, buffer_stream_size);
 
-    t_package* package = package_create(opcode, buffer);
+    t_package* package = create_package(opcode, buffer);
 
     free(buffer_stream_data);
 

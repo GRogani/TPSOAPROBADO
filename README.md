@@ -1,5 +1,5 @@
 ### Status
-[![Tests](https://github.com/sisoputnfrba/tp-2025-1c-Mi-Grupo-1234/actions/workflows/test.yml/badge.svg)](https://github.com/sisoputnfrba/tp-2025-1c-Mi-Grupo-1234/actions/workflows/test.yml)
+[![Tests](https://github.com/sisoputnfrba/tp-2025-1c-Mi-Grupo-1234/actions/workflows/compilation.yml/badge.svg)](https://github.com/sisoputnfrba/tp-2025-1c-Mi-Grupo-1234/actions/workflows/test.yml)
 
 # tp-scaffold
 
