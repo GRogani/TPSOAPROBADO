@@ -6,7 +6,7 @@ t_package *fetch(int socket, uint32_t PID, uint32_t PC)
 
     LOG_DEBUG("Fetching instruction for PID: %d, PC: %d", PID, PC);
 
-    send_memory_get_instruction_package(socket, PID, PC);
+    send_fetch_package(socket, PID, PC);
 
     package = receive_instruction(socket);
 
@@ -17,7 +17,7 @@ t_instruction *decode(t_package *package)
 {
     t_instruction *instruction = safe_calloc(1, sizeof(t_instruction));
 
-    char *instruction_string = read_memory_instruction_package(package);
+    char *instruction_string = read_instruction_package(package); 
 
     parse_instruction(instruction_string, instruction);
 
@@ -120,36 +120,36 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
     {
         LOG_DEBUG("Executing IO operation, sending syscall to kernel");
         (*PC)++;
-        t_cpu_syscall *syscall_req = safe_malloc(sizeof(t_cpu_syscall));
+        syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_IO;
         syscall_req->pid = *pid;
         syscall_req->pc = *PC;
         syscall_req->params.io.device_name = instruction->operand_string;
         syscall_req->params.io.sleep_time = instruction->operand_numeric1;
-        send_cpu_syscall_request(socket_dispatch, syscall_req);
-        destroy_cpu_syscall(syscall_req);
+        send_syscall_package(socket_dispatch, syscall_req);
+        destroy_syscall_package(syscall_req);
         return true;
     }
     case INIT_PROC:
     {
         LOG_DEBUG("Executing INIT_PROC, sending syscall to kernel");
         (*PC)++;
-        t_cpu_syscall *syscall_req = safe_malloc(sizeof(t_cpu_syscall));
+        syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_INIT_PROC;
         syscall_req->pid = *pid;
         syscall_req->pc = *PC;
         syscall_req->params.init_proc.pseudocode_file = instruction->operand_string;
         syscall_req->params.init_proc.memory_space = instruction->operand_numeric1;
-        send_cpu_syscall_request(socket_dispatch, syscall_req);
-        destroy_cpu_syscall(syscall_req);
+        send_syscall_package(socket_dispatch, syscall_req);
+        destroy_syscall_package(syscall_req);
 
         // wait for response from kernel to continue execution
         t_package *package = recv_package(socket_dispatch);
-        int success = read_cpu_syscall_response(package);
+        int success = read_confirmation_package(package);
         if (!success)
         {
             LOG_ERROR("Failed to initialize process for PID %d", *pid);
-            package_destroy(package);
+            destroy_package(package);
             return true;
         }
         break;
@@ -158,24 +158,24 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
     {
         LOG_DEBUG("Executing DUMP_PROCESS, sending syscall to kernel");
         (*PC)++;
-        t_cpu_syscall *syscall_req = safe_malloc(sizeof(t_cpu_syscall));
+        syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_DUMP_PROCESS;
         syscall_req->pid = *pid;
         syscall_req->pc = *PC;
-        send_cpu_syscall_request(socket_dispatch, syscall_req);
-        destroy_cpu_syscall(syscall_req);
+        send_syscall_package(socket_dispatch, syscall_req);
+        destroy_syscall_package(syscall_req);
         return true;
     }
     case EXIT:
     {
         LOG_DEBUG("Executing EXIT, sending syscall to kernel");
         (*PC)++;
-        t_cpu_syscall *syscall_req = safe_malloc(sizeof(t_cpu_syscall));
+        syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_EXIT;
         syscall_req->pid = *pid;
         syscall_req->pc = *PC;
-        send_cpu_syscall_request(socket_dispatch, syscall_req);
-        destroy_cpu_syscall(syscall_req);
+        send_syscall_package(socket_dispatch, syscall_req);
+        destroy_syscall_package(syscall_req);
         return true;
     }
     default:
@@ -189,14 +189,14 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
 
 void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute)
 {
-    if (package->opcode == CPU_INTERRUPT)
+    if (package->opcode == INTERRUPT)
     {
-        int pid_received = read_cpu_interrupt_request(package);
+        int pid_received = read_interrupt_package(package);
 
         if (pid_received == *pid_on_execute)
         {
 
-            send_cpu_interrupt_response(socket_interrupt, pid_received, *pc_on_execute, 0);
+            send_cpu_context_package(socket_interrupt, pid_received, *pc_on_execute, 0);
 
             LOG_DEBUG("Interrupt for PID %d executed", pid_received);
 
@@ -206,7 +206,7 @@ void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_
         {
             LOG_ERROR("Interrupt for PID %d received, but not executing", pid_received);
 
-            send_cpu_interrupt_response(socket_interrupt, pid_received, *pc_on_execute, 1); // si no fué interrumpido el mismo proceso, significa que no estaba ejecutando la CPU. el kernel necesita saber eso, para ver si debe mover el proceso a READY porque lo desalojó correctamente, o se autodesalojó por una syscall. (la syscall pasa automaticamente el proceso a su nuevo estado y guarda el PCB)
+            send_cpu_context_package(socket_interrupt, pid_received, *pc_on_execute, 1); // si no fué interrumpido el mismo proceso, significa que no estaba ejecutando la CPU. el kernel necesita saber eso, para ver si debe mover el proceso a READY porque lo desalojó correctamente, o se autodesalojó por una syscall. (la syscall pasa automaticamente el proceso a su nuevo estado y guarda el PCB)
         }
     }
     else
@@ -251,7 +251,7 @@ bool interrupt_handler(void *thread_args)
         interrupted = true;
         t_package *package = get_last_interrupt(interrupt_count());
         check_interrupt(args->socket_interrupt, package, args->pid, args->pc);
-        package_destroy(package);
+        destroy_package(package);
     }
     unlock_interrupt_list();
 

@@ -74,5 +74,5 @@ void destroy_list_and_mutex()
     sem_destroy(&interrupt_list_mutex);
     sem_destroy(&cpu_mutex);
     sem_destroy(&interrupt);
-    list_destroy_and_destroy_elements(interrupt_list, (void*)package_destroy);
+    list_destroy_and_destroy_elements(interrupt_list, (void*)destroy_package);
 }

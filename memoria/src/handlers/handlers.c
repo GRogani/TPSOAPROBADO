@@ -47,7 +47,7 @@ void* client_handler(void* client_fd_ptr) {
 
         switch (package->opcode) 
         {   
-            case GET_INSTRUCTION:
+            case FETCH:
                 get_instruction(client_fd, package);
                 break;
                 
@@ -59,7 +59,7 @@ void* client_handler(void* client_fd_ptr) {
                 get_free_space(client_fd);
                 break;
 
-            case CREATE_PROCESS:
+            case INIT_PROCESS:
                 create_process(client_fd, package);
                 break;
 

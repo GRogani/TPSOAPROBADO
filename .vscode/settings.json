@@ -19,6 +19,8 @@
         "io_connections.h": "c",
         "handlers.h": "c",
         "handle_dispatch_client.h": "c",
-        "semaphore.h": "c"
+        "semaphore.h": "c",
+        "short_scheduler.h": "c",
+        "utils.h": "c"
     }
 }

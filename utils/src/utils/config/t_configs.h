@@ -15,6 +15,7 @@ typedef struct t_kernel_config{
     char* cpu_dispatch_port;
     char* cpu_interrupt_port;
     char* io_port;
+    int cpu_quantity;
 } t_kernel_config;
 
 typedef struct t_memoria_config {
