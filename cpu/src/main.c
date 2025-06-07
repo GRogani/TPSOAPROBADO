@@ -59,6 +59,10 @@ int main(int argc, char *argv[])
 
             if (should_preempt || should_interrupt)
             {
+                LOG_DEBUG("Preemption or interruption detected, breaking the instruction cycle.");
+                // limpiamos PC y PID
+                pid = 93847593; // un valor que es imposible que sea un PID real, lo consideramos basura
+                pc = 0;
                 unlock_cpu_mutex();
                 break;
             }

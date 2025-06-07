@@ -218,7 +218,7 @@ void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_
 
 void *interrupt_listener(void *args)
 {
-    interrupt_args_t thread_args = (interrupt_args_t *)args;
+    interrupt_args_t* thread_args = (interrupt_args_t *)args;
 
     while (1)
     {
@@ -233,7 +233,7 @@ void *interrupt_listener(void *args)
         add_interrupt(package);
         unlock_interrupt_list();
 
-        lock_cpu_mutex(); // no importa que trabe el ciclo while. si se atiende la interrupcion dentro del ciclo main, entonces no hay problema porque cuando se atienda, no va a encontrar interrupciones y no va a hacer nada.
+        lock_cpu_mutex();
         interrupt_handler(args);
         unlock_cpu_mutex();
     }
@@ -241,6 +241,7 @@ void *interrupt_listener(void *args)
 
 bool interrupt_handler(void *thread_args)
 {
+    LOG_DEBUG("Interrupt handler working...");
     interrupt_args_t *args = (interrupt_args_t *)thread_args;
     bool interrupted = false;
 
@@ -250,8 +251,11 @@ bool interrupt_handler(void *thread_args)
         interrupted = true;
         t_package *package = get_last_interrupt(interrupt_count());
         check_interrupt(args->socket_interrupt, package, args->pid, args->pc);
+        destroy_package(package);
     }
     unlock_interrupt_list();
+
+    LOG_DEBUG("Interrupt found: %s", interrupted ? "yes" : "no");
 
     return interrupted;
 }

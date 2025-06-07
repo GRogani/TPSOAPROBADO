@@ -1,7 +1,7 @@
 
 #include <stdlib.h>
 #include <semaphore.h>
-#include "/home/utnso/tp-2025-1c-Mi-Grupo-1234/utils/utils.h"
+#include "../utils.h"
 
 int dummy_connection(int server_socket) 
 {
