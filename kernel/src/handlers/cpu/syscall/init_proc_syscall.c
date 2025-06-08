@@ -7,23 +7,29 @@
  */
 void init_proc(void *args)
 {
-    if (args == NULL) {
+    if (args == NULL)
+    {
         LOG_ERROR("init_proc: argumentos nulos recibidos");
         return;
     }
 
+    // TODO: get current pid in exec list
+    // TODO: update process PC.
+
     // 1. Extraer argumentos
-    t_init_proc_args *proc_args = (t_init_proc_args*)args;
-    uint32_t pid = proc_args->pid;
+    t_init_proc_args *proc_args = (t_init_proc_args *)args;
+    uint32_t pid = proc_args->pid; // GENERATE RANDOM PID, do not use the incoming PC in params
+    uint32_t pc = proc_args->pc;
     uint32_t memory_space = proc_args->memory_space;
-    char* pseudocode_file = proc_args->pseudocode_file;
-    
-    LOG_INFO("init_proc: Inicializando proceso PID=%d con memoria=%d bytes, archivo=%s\n", 
+    char *pseudocode_file = proc_args->pseudocode_file;
+
+    LOG_INFO("init_proc: Inicializando proceso PID=%d con memoria=%d bytes, archivo=%s\n",
              pid, memory_space, pseudocode_file ? pseudocode_file : "NULL");
 
     // 2. Crear nuevo PCB con archivo de pseudocódigo y tamaño
-    t_pcb* new_pcb = pcb_create(pid, 0, memory_space, pseudocode_file); // PC inicial en 0
-    if (new_pcb == NULL) {
+    t_pcb *new_pcb = pcb_create(pid, 0, memory_space, pseudocode_file); // PC inicial en 0
+    if (new_pcb == NULL)
+    {
         LOG_ERROR("init_proc: Error al crear PCB para PID %d", pid);
         return;
     }
@@ -32,15 +38,16 @@ void init_proc(void *args)
 
     // 3. Agregar PCB a la lista NEW (con semáforos)
     lock_new_list();
-    
+
     // Verificar si el proceso ya existe antes de agregarlo
-    if (find_pcb_in_new(pid)) {
+    if (find_pcb_in_new(pid))
+    {
         unlock_new_list();
         pcb_destroy(new_pcb);
         LOG_ERROR("init_proc: Proceso con PID %d ya existe en lista NEW", pid);
         return;
     }
-    
+
     add_pcb_to_new(new_pcb);
     unlock_new_list();
 
@@ -54,7 +61,8 @@ void init_proc(void *args)
     bool success = run_long_scheduler();
     LOG_INFO("init_proc: Planificador de largo plazo completado\n");
 
-    if(success) {
+    if (success)
+    {
         LOG_INFO("init_proc: Ejecutando planificador de corto plazo\n");
         run_short_scheduler();
         LOG_INFO("init_proc: Proceso PID=%d inicializado completamente\n", pid);
@@ -67,19 +75,22 @@ void init_proc(void *args)
  * @param memory_space Espacio en memoria asignado al proceso
  * @param pseudocode_file Nombre del archivo de pseudocódigo del proceso
  */
-void handle_init_proc_syscall(uint32_t pid, uint32_t memory_space, char* pseudocode_file)
+void handle_init_proc_syscall(uint32_t pid, uint32_t pc, uint32_t memory_space, char *pseudocode_file)
 {
     // Crear estructura de argumentos
-    t_init_proc_args* args = safe_malloc(sizeof(t_init_proc_args));
+    t_init_proc_args *args = safe_malloc(sizeof(t_init_proc_args));
     args->pid = pid;
+    args->pc = pc;
     args->memory_space = memory_space;
     args->pseudocode_file = NULL; // Inicializar a NULL para evitar problemas de acceso
-    
+
     // Copiar el nombre del archivo si se proporciona
-    if (pseudocode_file != NULL) {
+    if (pseudocode_file != NULL)
+    {
         size_t filename_len = strlen(pseudocode_file) + 1;
         args->pseudocode_file = safe_malloc(filename_len);
-        if (args->pseudocode_file != NULL) {
+        if (args->pseudocode_file != NULL)
+        {
             strcpy(args->pseudocode_file, pseudocode_file);
         }
     }

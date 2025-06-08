@@ -71,8 +71,8 @@ void parse_instruction(char *instruction_string, t_instruction *instruction)
         break;
     }
 }
-
 bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch, uint32_t *pid, uint32_t *PC)
+
 {
     switch (instruction->instruction_code)
     {
@@ -124,7 +124,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         syscall_req->syscall_type = SYSCALL_IO;
         syscall_req->pid = *pid;
         syscall_req->pc = *PC;
-        syscall_req->params.io.device_name = instruction->operand_string;
+        syscall_req->params.io.device_name = strdup(instruction->operand_string);
         syscall_req->params.io.sleep_time = instruction->operand_numeric1;
         send_syscall_package(socket_dispatch, syscall_req);
         destroy_syscall_package(syscall_req);
@@ -145,6 +145,11 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
 
         // wait for response from kernel to continue execution
         t_package *package = recv_package(socket_dispatch);
+        if (package->opcode != CONFIRMATION)
+        {
+            LOG_ERROR("Failed to receive confirmation package from kernel for PID %d", *pid);
+            return true; // should preempt due an issue
+        }
         int success = read_confirmation_package(package);
         if (!success)
         {

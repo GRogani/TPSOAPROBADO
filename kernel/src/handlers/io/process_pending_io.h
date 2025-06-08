@@ -10,6 +10,6 @@ typedef struct t_pending_io_args
     int client_socket;
 } t_pending_io_args;
 
-void process_pending_io(t_pending_io_args);
+bool process_pending_io(t_pending_io_args);
 
 #endif

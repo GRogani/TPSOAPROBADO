@@ -7,6 +7,6 @@
 #include "handlers/cpu/server/cpu_server.h"
 #include "handlers/io/server/io_server.h"
 
-int create_servers_threads(pthread_t* io_thread);
+int create_io_server_thread(pthread_t *io_thread);
 
 #endif

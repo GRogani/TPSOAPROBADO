@@ -17,7 +17,7 @@ int main()
     int socket = -1;
     while(socket < 0)
     {
-        socket = accept_connection(kernel_server);
+        socket = accept_connection("kernel test server", kernel_server);
     }
 
     LOG_INFO("Connected to kernel server on socket %d", socket);

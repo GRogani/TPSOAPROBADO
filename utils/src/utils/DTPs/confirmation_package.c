@@ -19,5 +19,5 @@ int read_confirmation_package(t_package *package)
 {
     package->buffer->offset = 0;
     int success = buffer_read_uint32(package->buffer);
-    return success;
+    return success == 0; // Return 0 for success, otherwise failure
 }

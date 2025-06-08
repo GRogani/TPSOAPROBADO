@@ -17,6 +17,7 @@
  */
 typedef struct {
     uint32_t pid;           // Process ID
+    uint32_t pc;           // Program counter
     uint32_t memory_space;  // Espacio en memoria asignado
     char* pseudocode_file;  // Nombre del archivo de pseudocódigo
 } t_init_proc_args;

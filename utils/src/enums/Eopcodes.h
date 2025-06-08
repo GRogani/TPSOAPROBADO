@@ -17,7 +17,7 @@ enum
     WRITE_MEMORY,
     READ_MEMORY,
 
-    CONFIRMATION,       // server -> client
+    CONFIRMATION,       // server -> client // TODO: ???  PODEMOS USAR EL MISMO KILL_PROCESS pero de retorno, es decir, que lo lea el kernel en vez de la memoria. no es necesario crear OPCODES nuevos...
 
     NEW_IO,             // io -> kernel
     IO_COMPLETION,      // io -> kernel
@@ -27,7 +27,7 @@ enum
     INTERRUPT,          // kernel -> cpu
     CPU_CONTEXT,        // cpu -> kernel
 
-    IO_OPERATION,       // cpu -> io
+    IO_OPERATION,       // cpu ->  // TODO: ???? lo que sea para tests, lo ponemos por separado porfa, sino se complica de entender. en este enum solo lo que se usa en la logica, nada de tests
 };
 
 /**

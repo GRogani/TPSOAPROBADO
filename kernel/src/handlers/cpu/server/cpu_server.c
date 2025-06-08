@@ -16,14 +16,13 @@ int connect_to_cpus(int cpus_quantity)
         int socket_dispatch_connection = -1;
         int socket_interrupt_connection = -1;
 
-        LOG_INFO("Accepting dispatch & interrupt connections");
         while ( (socket_dispatch_connection < 0) || (socket_interrupt_connection < 0) )
         {
             if (socket_dispatch_connection < 0)
-                socket_dispatch_connection = accept_connection(socket_server_dispatch);
+                socket_dispatch_connection = accept_connection("DISPATCH SERVER", socket_server_dispatch);
 
             if (socket_interrupt_connection < 0)
-                socket_interrupt_connection = accept_connection(socket_interrupt_connection);
+                socket_interrupt_connection = accept_connection("INTERRUPT SERVER", socket_server_interrupt);
 
             sleep(3);
         }
@@ -72,7 +71,7 @@ int create_cpu_servers()
         return -1;
     }
     socket_server_interrupt = create_server(kernel_config.cpu_interrupt_port);
-    if (socket_server_interrupt < 0)
+    if (socket_server_interrupt > 0)
         LOG_INFO("CPU interrupt server available on port %s", kernel_config.cpu_interrupt_port);
     else
     {

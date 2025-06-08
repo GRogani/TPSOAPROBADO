@@ -1,17 +1,84 @@
+#include "io_syscall.h"
 
+void handle_io_process_syscall(uint32_t pid, uint32_t pc, uint32_t sleep_time, char *device_name)
+{
+  lock_io_connections();
 
-// void* request_io(void* args) {
-//   /**
-//    * 1. obtener el pid, device_name y el tiempo del dto (en args)
-//    * 2. verificar si existe el device_name en el diccionario de conexiones
-//    * 3. si existe, obtener el link y lockear la cola de requests
-//    *    3.1. mandar a correr en un hilo detachable, el proceso para pasar de BLOCKED A SUSP. BLOCKED
-//    *    3.2. pasar el proceso de EXEC a BLOCKED
-//    *    3.3. crear la request en la cola de requests para ese device
-//    *    3.4. mandar a replanificar (correr corto plazo)
-//    * 4. si no existe
-//    *    4.1. eliminar de EXEC el proceso
-//    *    4.2. lockear lista EXIT
-//    *    4.3. llamar rutina para agregar el proceso a la lista de EXIT
-//    */
-// }
+  t_io_connection_status io_connection = get_io_connection_status_by_device_name(device_name);
+  if (!io_connection.found)
+  {
+    handle_io_connection_not_found(pid, sleep_time, device_name);
+    return;
+  }
+
+  lock_io_requests_link();
+
+  void *io_request_link = find_io_request_by_device_name(device_name);
+  if (io_request_link == NULL)
+  {
+    LOG_ERROR("No IO request link found for device %s", device_name);
+    unlock_io_requests_link();
+    unlock_io_connections();
+    return;
+  }
+  t_io_requests_link *io_request = (t_io_requests_link *)io_request_link;
+
+  lock_io_requests_queue(&io_request->io_requests_queue_semaphore);
+  lock_exec_list();
+  lock_blocked_list();
+
+  t_pcb *pcb = remove_pcb_from_exec(pid);
+  if (pcb == NULL)
+  {
+    LOG_ERROR("PCB with PID %d not found in EXEC list", pid);
+    unlock_blocked_list();
+    unlock_exec_list();
+    unlock_io_requests_queue(&io_request->io_requests_queue_semaphore);
+    unlock_io_requests_link();
+    unlock_io_connections();
+    return;
+  }
+
+  LOG_INFO("Process with PID %d is going to BLOCKED state for device %s", pid, device_name);
+  // save pc for future completion IO event, to pass the correct PC in the short_scheduler
+  pcb->pc = pc;
+  add_pcb_to_blocked(pcb);
+  create_io_request_element(io_request->io_requests_queue, pid, sleep_time);
+
+  unlock_blocked_list();
+  unlock_exec_list();
+  unlock_io_requests_queue(&io_request->io_requests_queue_semaphore);
+  unlock_io_requests_link();
+  unlock_io_connections();
+
+  t_pending_io_args pending_io_args;
+  pending_io_args.device_name = strdup(device_name);
+  pending_io_args.client_socket = io_connection.socket_id;
+  process_pending_io(pending_io_args);
+
+  LOG_INFO("Process with PID %d added to BLOCKED state for device %s", pid, device_name);
+  // TODO: create detachable thread and run medium_scheduler
+
+  run_short_scheduler();
+}
+
+void handle_io_connection_not_found(uint32_t pid, uint32_t sleep_time, char *device_name)
+{
+  LOG_INFO("IO connection not found for device %s in PID %d", device_name, pid);
+
+  lock_exec_list();
+
+  t_pcb *pcb = remove_pcb_from_exec(pid);
+
+  bool memory_space_free = exit_rutine(pcb);
+  unlock_exec_list();
+
+  unlock_io_connections();
+
+  if (memory_space_free) // si no se pudo sacar de la memoria, no tenemos que correr esto, no tiene sentido porque no se liberó memoria, quedo el proceso ahi zombie.
+  {
+    run_long_scheduler();
+  }
+
+  run_short_scheduler(); // si o si lo corremos, porque el proceso pasó a EXIT y tenemos que replanificar.
+}

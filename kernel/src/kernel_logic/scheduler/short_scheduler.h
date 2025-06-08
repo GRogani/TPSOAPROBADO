@@ -37,4 +37,6 @@ cpu_context_package_data send_and_receive_interrupt(int interrupt_socket_id, uin
  */
 bool send_dispatch_to_cpu(t_cpu_connection *cpu_connection, uint32_t pid, uint32_t pc);
 
+void check_cpu_executing(t_cpu_connection *cpu);
+
 #endif

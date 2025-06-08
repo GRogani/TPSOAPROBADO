@@ -32,6 +32,7 @@ t_list* load_script_lines(char* path) {
 
 void create_process(int socket, t_package* package) {
     init_process_package_data* create_process_args = read_init_process_package(package);
+    LOG_INFO("## PID: %d - Create Process Request Received", create_process_args->pid);
     create_process_in_memory(create_process_args->pid, create_process_args->size, create_process_args->pseudocode_path);
     destroy_init_process_package(create_process_args);
     send_confirmation_package(socket, 0); // 0 indicates success

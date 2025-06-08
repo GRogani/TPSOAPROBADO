@@ -14,18 +14,17 @@ int main(int argc, char* argv[]) {
 
     init_logger("kernel.log", "[Kernel]", kernel_config.log_level);
 
-    pthread_t io_server_hanlder;
-    pthread_t cpu_server_hanlder;
-   
-    create_io_server_thread(&io_server_hanlder);
+    pthread_t io_server_handler;
+
+    create_io_server_thread(&io_server_handler);
 
     connect_to_cpus(kernel_config.cpu_quantity); // Levanta el server entran los N cpu y lo baja.
 
     process_enter(argv[1], atoi(argv[2]));
 
-    pthread_join(io_server_hanlder, NULL);
+    pthread_join(io_server_handler, NULL);
 
-    close(io_server_hanlder);          
+    close(io_server_handler);
 
     shutdown_hook(config);  
 

@@ -19,7 +19,7 @@ void* client_listener(void* arg) {
     LOG_INFO("Memoria server listening on port: %s", memoria_config.PUERTO_ESCUCHA);
 
     while (1) {
-        int client_fd = accept_connection(server_fd);
+        int client_fd = accept_connection("MEMORY SERVER", server_fd);
         if (client_fd < 0) continue;
 
 

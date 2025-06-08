@@ -53,7 +53,7 @@ t_package* receive_instruction(int socket)
             //disconnection log en main
             return NULL;
         }
-        else if (package->opcode != FETCH) {
+        else if (package->opcode != INSTRUCTION) {
             corrupted_package = true;
             LOG_ERROR("Received package with unexpected opcode: %s", opcode_to_string(package->opcode) );
             destroy_package(package);
