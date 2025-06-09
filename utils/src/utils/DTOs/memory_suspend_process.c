@@ -27,6 +27,7 @@ int send_memory_suspend_process_response(int socket_fd, uint32_t success) {
     int bytes_sent = send_package(socket_fd, package);
     if (bytes_sent < 0) LOG_ERROR("DTO: Error al enviar paquete SUSPEND_PROCESS_RESPONSE a Kernel");
     package_destroy(package);
+    return bytes_sent;
 }
 
 t_package* create_memory_suspend_process_response(uint32_t success) {

@@ -41,10 +41,12 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
     }
     if(!read_memory_suspend_process_response(package)) {
         LOG_INFO("MEDIUM_SCHEDULER: Falló el SWAP [%d]", pid);
+        // TODO: si falla el SWAP, tengo que hacer SUSPEND_BLOCKED -> BLOCKED? o cómo trato esto?
         return;
     }
     LOG_INFO("MEDIUM_SCHEDULER: Swap Exitoso del PID [%d]", pid);
     disconnect_from_memory(memory_socket);
+    package_destroy(package);
 
     lock_susp_blocked_list();
     add_pcb_to_susp_blocked(pcb);
@@ -52,6 +54,9 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
 
     // Llamo al Planificador de Largo Plazo
     LOG_INFO("MEDIUM_SCHEDULER: Llamando a planificador de largo plazo para admitir nuevos procesos.");
-    if (!run_long_scheduler()) LOG_INFO("MEDIUM_SCHEDULER: El planificador de largo plazo no puede admitir nuevos procesos.");
+    if (!run_long_scheduler()) {
+        LOG_INFO("MEDIUM_SCHEDULER: El planificador de largo plazo no puede admitir nuevos procesos.");
+        return;
+    }        
     LOG_INFO("MEDIUM_SCHEDULER: El planificador de largo plazo admitió a un nuevo PID [%d].", pid);
 }
