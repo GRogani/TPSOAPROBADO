@@ -38,7 +38,7 @@
 #include "src/enums/Eprocess_state.h"
 #include "src/enums/Esyscall_type.h"
 
-// DTOs
+// DTPs
 #include "src/utils/DTPs/confirmation_package.h"
 #include "src/utils/DTPs/cpu_context_package.h"
 #include "src/utils/DTPs/dispatch_package.h"
@@ -50,5 +50,6 @@
 #include "src/utils/DTPs/io_operation_package.h"
 #include "src/utils/DTPs/new_io_package.h"
 #include "src/utils/DTPs/syscall_package.h"
+#include "src/utils/DTPs/kill_process_memory.h"
 
 #endif 

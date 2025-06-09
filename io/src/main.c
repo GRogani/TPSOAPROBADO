@@ -36,7 +36,7 @@ void waiting_requests(int kernel_socket, char* id_IO)
         }
         // if (io_busy) 
         // {
-        //     log_debug(get_logger(), "OJO, estoy ocupado procesando una operación de I/O.");
+        //     LOG_INFO(get_logger(), "OJO, estoy ocupado procesando una operación de I/O.");
         //     destroy_package(package);
         //     continue;
         // } else 
@@ -68,7 +68,7 @@ void processing_operation(io_operation_package_data* io)
     
     LOG_INFO("## PID: %d - Fin de IO", io->pid);
     
-    LOG_DEBUG("Estoy libre [%s]", io->device_name);
+    LOG_INFO("Estoy libre [%s]", io->device_name);
     
     // RESPONSE
     send_io_completion_package(io->kernel_socket, io->device_name);

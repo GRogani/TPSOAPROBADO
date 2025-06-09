@@ -22,7 +22,7 @@ int create_io_server_thread(pthread_t* io_thread)
         return -1;
     } else 
     {
-        LOG_DEBUG("Successfully created IO server thread");
+        LOG_INFO("Successfully created IO server thread");
     }
 
     return 0;

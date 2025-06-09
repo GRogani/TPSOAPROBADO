@@ -53,19 +53,19 @@ t_package* recv_package(int socket)
     uint32_t buffer_stream_size;
 
     if (recv(socket, &opcode, sizeof(OPCODE), MSG_WAITALL) <= 0) {
-        LOG_DEBUG("Failed to receive opcode from socket %d", socket);
+        LOG_ERROR("Failed to receive opcode from socket %d", socket);
         return NULL; 
     }
 
     if (recv(socket, &buffer_stream_size, sizeof(uint32_t), MSG_WAITALL) <= 0) {
-        LOG_DEBUG("Failed to receive buffer stream size from socket %d", socket);
+        LOG_ERROR("Failed to receive buffer stream size from socket %d", socket);
         return NULL; 
     }
 
     void* buffer_stream_data = safe_malloc(buffer_stream_size);
 
     if (recv(socket, buffer_stream_data, buffer_stream_size, MSG_WAITALL) <= 0) {
-        LOG_DEBUG("Failed to receive buffer stream data from socket %d", socket);
+        LOG_ERROR("Failed to receive buffer stream data from socket %d", socket);
         free(buffer_stream_data); 
         return NULL;
     }

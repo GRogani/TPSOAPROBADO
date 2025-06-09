@@ -27,7 +27,7 @@ enum
     INTERRUPT,          // kernel -> cpu
     CPU_CONTEXT,        // cpu -> kernel
 
-    IO_OPERATION,       // cpu -> io
+    IO_OPERATION,       // cpu -> kernel
 };
 
 /**

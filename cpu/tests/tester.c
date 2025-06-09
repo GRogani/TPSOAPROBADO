@@ -9,7 +9,7 @@ int dummy_connection(int server_socket)
 
     do
     {
-        connection = accept_connection(server_socket);
+        connection = accept_connection("test server", server_socket);
         if (connection < 0)
             printf("Waiting for connection...\n");
 

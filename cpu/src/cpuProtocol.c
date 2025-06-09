@@ -6,7 +6,7 @@ t_package* recv_dispatch (int socket_dispatch_kernel, uint32_t* PID, uint32_t* P
     bool corrupted_package;
 
     do{
-        LOG_DEBUG("Waiting PID & PC from kernel...");
+        LOG_INFO("Waiting PID & PC from kernel...");
         corrupted_package = false;
         package = recv_package(socket_dispatch_kernel);
         if (package == NULL) 
@@ -53,7 +53,7 @@ t_package* receive_instruction(int socket)
             //disconnection log en main
             return NULL;
         }
-        else if (package->opcode != FETCH) {
+        else if (package->opcode != INSTRUCTION) {
             corrupted_package = true;
             LOG_ERROR("Received package with unexpected opcode: %s", opcode_to_string(package->opcode) );
             destroy_package(package);
@@ -64,7 +64,7 @@ t_package* receive_instruction(int socket)
 }
 
 
-// TODO: move these to DTOs
+// TODO: move these to DTPs
 void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* valor_write) 
 {
     t_buffer* buffer = buffer_create(sizeof(uint32_t) + strlen(valor_write) + 1);
@@ -75,7 +75,7 @@ void write_memory_request(int socket_memory, uint32_t direccion_fisica, char* va
     destroy_package(package);
 }
 
-// TODO: move these to DTOs
+// TODO: move these to DTPs
 void read_memory_request(int socket_memory, uint32_t direccion_fisica, uint32_t size) 
 {
     t_buffer* buffer = buffer_create( 2 * sizeof(uint32_t));
@@ -86,7 +86,7 @@ void read_memory_request(int socket_memory, uint32_t direccion_fisica, uint32_t 
     destroy_package(package);
 }
 
-// TODO: move these to DTOs
+// TODO: move these to DTPs
 char* read_memory_response(int socket_memory) {
     t_package* package = recv_package(socket_memory);
     if (package == NULL) {

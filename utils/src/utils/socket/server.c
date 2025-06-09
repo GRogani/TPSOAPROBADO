@@ -56,18 +56,18 @@ int create_server(char* port) {
 	return socket_server;
 }
 
-int accept_connection(int socket_server)
+int accept_connection(char* prefix, int socket_server)
 {
-	LOG_DEBUG("Awaiting for new clients...");
+	LOG_INFO("[%s] Awaiting for new clients...", prefix);
 
 	int client_socket = accept(socket_server, NULL, NULL);
 	if (client_socket == -1)
 	{
-		LOG_ERROR("Accept failed for server socket: %d", socket_server);
+		LOG_ERROR("[%s] Accept failed for server socket: %d", prefix, socket_server);
 		return client_socket;
 	}
 
-	LOG_INFO("Client connected. Socket fd: %d", client_socket);
+	LOG_INFO("[%s] Client connected. Socket fd: %d", prefix, client_socket);
 	
 	return client_socket;
 }

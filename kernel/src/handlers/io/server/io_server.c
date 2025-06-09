@@ -8,7 +8,7 @@ void* io_server_handler(void* args) {
 
     while (1)
     {
-        int socket_client = accept_connection(socket_server);
+        int socket_client = accept_connection("IO SERVER", socket_server);
         if(socket_client == -1) {
             LOG_ERROR("Error accepting i/o connection");
             break;

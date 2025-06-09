@@ -14,18 +14,17 @@ int main(int argc, char* argv[]) {
 
     init_logger("kernel.log", "[Kernel]", kernel_config.log_level);
 
-    pthread_t io_server_hanlder;
-    pthread_t cpu_server_hanlder;
-   
-    create_io_server_thread(&io_server_hanlder);
+    pthread_t io_server_handler;
+
+    create_io_server_thread(&io_server_handler);
 
     connect_to_cpus(kernel_config.cpu_quantity); // Levanta el server entran los N cpu y lo baja.
 
     process_enter(argv[1], atoi(argv[2]));
 
-    pthread_join(io_server_hanlder, NULL);
+    pthread_join(io_server_handler, NULL);
 
-    close(io_server_hanlder);          
+    close(io_server_handler);
 
     shutdown_hook(config);  
 
@@ -41,8 +40,6 @@ void process_enter(char* pseudocode_file_name, uint32_t program_size)
     printf("Presione Enter para comenzar...\n");
     getchar();
 
-    // TODO: validar si hay algun cpu conectado. Si no hay ninguno, tirar error y salir.
-
     LOG_INFO("Ejecutando syscall init_proc para el proceso 0");
-    handle_init_proc_syscall(0, program_size, pseudocode_file_name);
+    initialize_root_process(0, program_size, pseudocode_file_name);
 }

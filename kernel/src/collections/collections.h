@@ -28,12 +28,6 @@ typedef struct t_cpu_connection
     sem_t cpu_exec_sem;
 } t_cpu_connection;
 
-typedef struct t_io_connection
-{
-    char *device_name;
-    int current_process_executing;
-} t_io_connection;
-
 typedef struct t_io_request
 {
     int pid;

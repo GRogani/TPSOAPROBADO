@@ -34,7 +34,7 @@ bool find_pcb_in_exit (uint32_t pid) {
 void add_pcb_to_exit (t_pcb* pcb) {
     if (pcb == NULL) return;
     
-    pcb_change_state(pcb, EXIT);
+    pcb_change_state(pcb, EXIT_L);
     list_add(get_exit_list(), pcb);
 }
 

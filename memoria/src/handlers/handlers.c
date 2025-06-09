@@ -4,7 +4,6 @@ extern t_memoria_config memoria_config;
 
 int create_server_thread(pthread_t* listener_thread)
 {
-    // TODO: esta funcion deberia crear el server y un hilo por cada cliente. ahora mismo este no hace nada, está al pedo y no cumple con su nombre (crear el server)
     int err = pthread_create(listener_thread, NULL, client_listener, NULL);
     if (err != 0) {
         LOG_ERROR("Listener thread creation failed.");
@@ -19,7 +18,7 @@ void* client_listener(void* arg) {
     LOG_INFO("Memoria server listening on port: %s", memoria_config.PUERTO_ESCUCHA);
 
     while (1) {
-        int client_fd = accept_connection(server_fd);
+        int client_fd = accept_connection("MEMORY SERVER", server_fd);
         if (client_fd < 0) continue;
 
 
@@ -69,6 +68,12 @@ void* client_handler(void* client_fd_ptr) {
 
             case SWAP:
                 // TODO: suspend process and move to another space (free some memory)
+                break;
+
+            case KILL_PROCESS:
+                // TODO: exit process, free memory
+                send_confirmation_package(client_fd, 0);
+                LOG_INFO("KILL_PROCESS received, but not implemented yet.");
                 break;
 
             default:

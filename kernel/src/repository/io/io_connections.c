@@ -1,4 +1,5 @@
 #include "io_connections.h"
+#include <stdlib.h>
 
 static sem_t sem_io_connections;
 
@@ -94,4 +95,53 @@ void delete_io_connection(int socket) {
 
 void unlock_io_connections() {
     sem_post(&sem_io_connections);
+}
+
+t_io_connection_status get_io_connection_status_by_device_name(char *device_name)
+{
+    t_io_connection_status status = {-1, false, false, NULL};
+    t_io_connection_status first_match = {-1, false, false, NULL};
+    
+    t_list *connections_list = dictionary_elements(get_io_connections_dict());
+    t_list *keys_list = dictionary_keys(get_io_connections_dict());
+    
+    for (int i = 0; i < list_size(connections_list); i++) {
+        t_io_connection *connection = (t_io_connection *)list_get(connections_list, i);
+        if (strcmp(connection->device_name, device_name) == 0) {
+            // Found a connection with the requested device name
+            bool is_busy = (connection->current_process_executing != -1);
+            char *socket_key = (char *)list_get(keys_list, i);
+            int socket_id = atoi(socket_key);
+            
+            // If this is the first match, save it as fallback
+            if (!first_match.found) {
+                first_match.found = true;
+                first_match.is_busy = is_busy;
+                first_match.socket_id = socket_id;
+                first_match.connection = connection;
+            }
+            
+            // If this connection is not busy, return it immediately
+            if (!is_busy) {
+                status.found = true;
+                status.is_busy = false;
+                status.socket_id = socket_id;
+                status.connection = connection;
+                
+                list_destroy(connections_list);
+                list_destroy(keys_list);
+                return status;
+            }
+        }
+    }
+    
+    list_destroy(connections_list);
+    list_destroy(keys_list);
+    
+    // If we found at least one connection but none were free, return the first one
+    if (first_match.found) {
+        return first_match;
+    }
+    
+    return status; // Not found
 }
