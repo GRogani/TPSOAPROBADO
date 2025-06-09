@@ -10,5 +10,5 @@ NOOP
 NOOP
 NOOP
 NOOP
-IO teclado 10000
+IO teclado 100
 EXIT

@@ -1,4 +1,39 @@
- #include "memoria.h"
+#include "memoria.h"
+
+// Implementación de funciones de semáforos
+void initialize_memory_semaphores() {
+    if (sem_init(&sem_global_processes, 0, 1) != 0) {
+        LOG_ERROR("sem_init for global_processes failed");
+        exit(EXIT_FAILURE);
+    }
+    
+    if (sem_init(&sem_process_instructions, 0, 1) != 0) {
+        LOG_ERROR("sem_init for process_instructions failed");
+        sem_destroy(&sem_global_processes);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void destroy_memory_semaphores() {
+    sem_destroy(&sem_global_processes);
+    sem_destroy(&sem_process_instructions);
+}
+
+void lock_global_processes() {
+    sem_wait(&sem_global_processes);
+}
+
+void unlock_global_processes() {
+    sem_post(&sem_global_processes);
+}
+
+void lock_process_instructions() {
+    sem_wait(&sem_process_instructions);
+}
+
+void unlock_process_instructions() {
+    sem_post(&sem_process_instructions);
+}
 
 t_list* load_script_lines(char* path) {
     char full_path[512];
@@ -41,12 +76,18 @@ void create_process(int socket, t_package* package) {
 
 proc_memory* find_process_by_pid(int pid) {
     proc_memory* proc = NULL;
+    
+    lock_global_processes();
+    
     for (int i = 0; i < list_size(global_memory.processes); i++) {
        proc = list_get(global_memory.processes, i);
         if (proc->pid == pid) {
             break;
         }
     }
+    
+    unlock_global_processes();
+    
     return proc;
 }
 
@@ -57,7 +98,9 @@ int create_process_in_memory(uint32_t pid, uint32_t size, char* script_path) {
     proc->process_size = size;
     proc->instructions = load_script_lines(script_path);
 
+    lock_global_processes();
     list_add(global_memory.processes, proc);
+    unlock_global_processes();
 
     // TODO: ir restando el size total de la memoria
     // si se queda sin size disponible para crear el proceso, entonces debemos devolver -1
@@ -75,15 +118,23 @@ void get_instruction(int socket, t_package* package) {
     uint32_t pid = request.pid;
     uint32_t pc = request.pc;
 
-    // TODO: analizar concurrencia y si hay que aplicar semaforos
+    // Proteger acceso a la lista de procesos
     proc_memory* proc = find_process_by_pid(pid);
-    if (proc && pc <= list_size(proc->instructions)) 
-    {
-        char* instruction = list_get(proc->instructions, pc);
-        LOG_INFO("## PID: %u - Get Instruction: %u - Instruction: %s\n", pid, pc, instruction);
-        send_instruction_package(socket, instruction);
+    if (proc) {
+        lock_process_instructions();
+        
+        if (pc < list_size(proc->instructions)) {
+            char* instruction = list_get(proc->instructions, pc);
+            LOG_INFO("## PID: %u - Get Instruction: %u - Instruction: %s\n", pid, pc, instruction);
+            send_instruction_package(socket, instruction);
+        } else {
+            LOG_ERROR("## PID: %u - PC %u out of bounds", pid, pc);
+        }
+        
+        unlock_process_instructions();
+    } else {
+        LOG_ERROR("## PID: %u - Process not found", pid);
     }
-    
 }
 
 void get_instructions(int socket, t_buffer* request_buffer) {
@@ -92,6 +143,8 @@ void get_instructions(int socket, t_buffer* request_buffer) {
     proc_memory* proc = find_process_by_pid(pid);
     if (proc) 
     {
+        lock_process_instructions();
+        
         t_buffer* response_buffer = buffer_create(0);
 
         uint32_t instr_count = list_size(proc->instructions);
@@ -103,14 +156,14 @@ void get_instructions(int socket, t_buffer* request_buffer) {
             LOG_ERROR("## PID: %u - Instrucción %u: %s", pid, i, instr);
         }
 
+        unlock_process_instructions();
+
         t_package* response = create_package(FETCH, response_buffer);
         send_package(socket, response);
         destroy_package(response);
-    }else{
+    } else {
         LOG_ERROR("## PID: %u - Proceso no encontrado.", pid);
     }
-
-    
 }
 
 

@@ -64,7 +64,7 @@ void processing_operation(io_operation_package_data* io)
 {
     LOG_INFO("## PID: %d - Inicio de IO - Tiempo: %d", io->pid, io->sleep_time);
     
-    usleep(io->sleep_time);
+    usleep(io->sleep_time * 1000000); // Convert seconds to microseconds
     
     LOG_INFO("## PID: %d - Fin de IO", io->pid);
     

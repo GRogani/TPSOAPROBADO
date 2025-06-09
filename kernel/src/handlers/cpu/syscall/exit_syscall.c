@@ -8,7 +8,7 @@ void exit_process_syscall(uint32_t pid)
 
   t_pcb *pcb = remove_pcb_from_exec(pid);
 
-  bool memory_space_free = exit_rutine(pcb);
+  bool memory_space_free = exit_routine(pcb);
   unlock_exec_list();
 
   if (memory_space_free) // si no se pudo sacar de la memoria, no tenemos que correr esto, no tiene sentido porque no se liberó memoria, quedo el proceso ahi zombie.
@@ -19,7 +19,7 @@ void exit_process_syscall(uint32_t pid)
   run_short_scheduler(); // si o si lo corremos, porque el proceso pasó a EXIT y tenemos que replanificar.
 }
 
-bool exit_rutine(t_pcb* pcb) {
+bool exit_routine(t_pcb* pcb) {
   bool memory_space_free = false;
   lock_exit_list();
 

@@ -70,7 +70,7 @@ void handle_io_connection_not_found(uint32_t pid, uint32_t sleep_time, char *dev
 
   t_pcb *pcb = remove_pcb_from_exec(pid);
 
-  bool memory_space_free = exit_rutine(pcb);
+  bool memory_space_free = exit_routine(pcb);
   unlock_exec_list();
 
   unlock_io_connections();
