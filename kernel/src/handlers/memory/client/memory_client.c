@@ -65,19 +65,10 @@ int kill_process_in_memory(uint32_t pid)
 {
     extern t_kernel_config kernel_config; //en main
 
-    // TODO: mover esto a unos dtos
-    t_buffer* buffer;
-    buffer = buffer_create( sizeof(uint32_t) );
-    buffer_add_uint32(buffer, pid);
-
-    t_package *package , *response;
-    package = create_package(KILL_PROCESS, buffer);
-
     int memsocket = connect_to_memory(&kernel_config);
-    send_package(memsocket, package);
-    destroy_package(package);
+    send_kill_process_package(memsocket, pid);
 
-    response = recv_package(memsocket);
+    t_package* response = recv_package(memsocket);
     disconnect_from_memory(memsocket);
 
     if (response->opcode == CONFIRMATION)

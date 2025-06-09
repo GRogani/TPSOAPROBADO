@@ -14,7 +14,7 @@ void shutdown_hook(t_config *config)
 
     destroy_logger(get_logger());
 
-    LOG_DEBUG("Kernel died gracefuly");
+    LOG_INFO("Kernel died gracefuly");
 
     exit(EXIT_SUCCESS);
 }

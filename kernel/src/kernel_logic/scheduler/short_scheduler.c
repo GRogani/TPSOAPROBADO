@@ -2,7 +2,7 @@
 
 t_cpu_connection *get_free_cpu(void)
 {
-    LOG_DEBUG("short_scheduler: Buscando CPU libre");
+    LOG_INFO("short_scheduler: Buscando CPU libre");
 
     // Buscar CPU que no esté procesando (current_process_executing == -1)
     t_list *all_cpus = (t_list *)get_all_cpu_connections();
@@ -17,12 +17,12 @@ t_cpu_connection *get_free_cpu(void)
 
     if (free_cpu != NULL)
     {
-        LOG_DEBUG("short_scheduler: CPU libre encontrada");
+        LOG_INFO("short_scheduler: CPU libre encontrada");
     }
     else
     {
         free_cpu = list_get(all_cpus, 0); // Si no hay libres, tomar la primera CPU (fallback)
-        LOG_DEBUG("short_scheduler: No hay CPUs libres disponibles, tomando la primera en la lista de conexiones...");
+        LOG_INFO("short_scheduler: No hay CPUs libres disponibles, tomando la primera en la lista de conexiones...");
     }
 
     list_destroy(all_cpus);
@@ -96,7 +96,7 @@ void run_short_scheduler(void)
     if (list_size(get_ready_list()) == 0)
     {
         // no hay más en ready, vemos si podemos marcar la cpu como libre.
-        LOG_DEBUG("short_scheduler: No hay procesos en READY");
+        LOG_INFO("short_scheduler: No hay procesos en READY");
         check_cpu_executing(cpu);
         return;
     }
@@ -111,7 +111,7 @@ void run_short_scheduler(void)
         if (!preemption_enabled)
         {
             // do nothing
-            LOG_DEBUG("short_scheduler: CPU ocupada, preemption deshabilitado");
+            LOG_INFO("short_scheduler: CPU ocupada, preemption deshabilitado");
             unlock_cpu(&cpu->cpu_exec_sem);
             return;
         }
@@ -198,12 +198,12 @@ void check_cpu_executing(t_cpu_connection *cpu)
     lock_exec_list();
 
     // cpu is currently processing? (check for existence of current_processing in EXEC list)
-    bool process_exists_in_exec = find_pcb_in_exec(cpu->current_process_executing);
+    bool process_exists_in_exec = find_pcb_in_exec(cpu->current_process_executing) != NULL;
 
     if (process_exists_in_exec)
     {
         // si existe en EXEC, no hacer nada, todavia sigue ejecutando y cuando llegue la syscall la vamos a marcar correctamente como no ejecutando.
-        LOG_DEBUG("short_scheduler: Proceso %d sigue en EXEC", cpu->current_process_executing);
+        LOG_INFO("short_scheduler: Proceso %d sigue en EXEC", cpu->current_process_executing);
         unlock_ready_list();
         unlock_exec_list();
         unlock_cpu(&cpu->cpu_exec_sem);

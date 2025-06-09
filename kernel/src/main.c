@@ -40,8 +40,6 @@ void process_enter(char* pseudocode_file_name, uint32_t program_size)
     printf("Presione Enter para comenzar...\n");
     getchar();
 
-    // TODO: validar si hay algun cpu conectado. Si no hay ninguno, tirar error y salir.
-
     LOG_INFO("Ejecutando syscall init_proc para el proceso 0");
-    handle_init_proc_syscall(0, program_size, pseudocode_file_name);
+    initialize_root_process(0, program_size, pseudocode_file_name);
 }

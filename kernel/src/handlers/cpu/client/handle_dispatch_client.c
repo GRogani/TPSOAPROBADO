@@ -1,5 +1,6 @@
 #include "handle_dispatch_client.h"
 
+
 void *handle_dispatch_client(void *arg)
 {
   char *connection_id = (char *)arg;
@@ -52,40 +53,38 @@ void handle_cpu_syscall(t_package *package, int socket)
     return;
   }
 
-  LOG_INFO("Processing CPU syscall type %d for PID %d",
-           syscall->syscall_type, syscall->pid);
-
   switch (syscall->syscall_type)
   {
   case SYSCALL_INIT_PROC:
   {
+    LOG_INFO("PROCESSING INIT_PROC SYSCALL");
     // Execute init_proc syscall
     handle_init_proc_syscall(syscall->pid,
-                             syscall->params.init_proc.memory_space,
-                             syscall->params.init_proc.pseudocode_file);
-
-    if (syscall->pid != 0)
-    {
-      LOG_INFO("Sending syscall response for init_proc PID %d", syscall->pid);
-      send_confirmation_package(socket, 0); // 0 = success
-    }
+                                     syscall->pc,
+                                     syscall->params.init_proc.memory_space,
+                                     syscall->params.init_proc.pseudocode_file,
+                                     socket);
     break;
   }
   case SYSCALL_IO:
   {
+    LOG_INFO("PROCESSING IO SYSCALL");
     handle_io_process_syscall(syscall->pid,
+                              syscall->pc,
                               syscall->params.io.sleep_time,
                               syscall->params.io.device_name);
     break;
   }
   case SYSCALL_DUMP_PROCESS:
   {
+    LOG_INFO("PROCESSING DUMP_PROCESS SYSCALL");
     // TODO: Handle dump process syscall
     LOG_INFO("Dump process syscall not implemented yet");
     break;
   }
   case SYSCALL_EXIT:
   {
+    LOG_INFO("PROCESSING EXIT SYSCALL");
     exit_process_syscall(syscall->pid);
     break;
   }

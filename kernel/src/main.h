@@ -12,7 +12,7 @@
 #include "collections/collections.h"
 #include "kernel_logic/threads/create_threads.h"
 #include "semaphore/semaphore.h"
-#include "handlers/cpu/syscall/init_proc_syscall.h"
+#include "kernel_logic/process_initialization.h"
 #include "globals.h"
 
 int main(int, char*[]);

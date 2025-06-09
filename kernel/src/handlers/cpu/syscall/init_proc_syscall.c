@@ -1,100 +1,86 @@
 #include "init_proc_syscall.h"
 
-/**
- * @brief Syscall for process initialization.
- * Creates a new PCB, adds it to NEW list, runs long-term scheduler, and optionally short-term scheduler.
- * @param args Structure containing pid and memory_space (t_init_proc_args*)
- */
-void init_proc(void *args)
+void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc, 
+                                     uint32_t new_process_memory_space, 
+                                     char *new_process_pseudocode_file,
+                                     int response_socket)
 {
-    if (args == NULL)
+    LOG_INFO("init_proc_syscall: Procesando syscall INIT_PROC desde PID=%d, creando proceso con memoria=%d bytes, archivo=%s",
+             caller_pid, new_process_memory_space, new_process_pseudocode_file ? new_process_pseudocode_file : "NULL");
+
+    // 1. Actualizar PC del proceso actual que está en EXEC
+    lock_exec_list();
+    t_pcb *current_pcb = find_pcb_in_exec(caller_pid);
+    if (current_pcb == NULL)
     {
-        LOG_ERROR("init_proc: argumentos nulos recibidos");
+        LOG_ERROR("init_proc_syscall: Proceso caller con PID %d NO está en EXEC, no se puede actualizar el PC", caller_pid);
+        unlock_exec_list();
+        send_confirmation_package(response_socket, 1); // 1 = error
         return;
     }
+    
+    current_pcb->pc = caller_pc;
+    LOG_INFO("init_proc_syscall: PC actualizado para proceso caller PID=%d", caller_pid);
+    unlock_exec_list();
 
-    // TODO: get current pid in exec list
-    // TODO: update process PC.
-
-    // 1. Extraer argumentos
-    t_init_proc_args *proc_args = (t_init_proc_args *)args;
-    uint32_t pid = proc_args->pid; // GENERATE RANDOM PID, do not use the incoming PC in params
-    uint32_t pc = proc_args->pc;
-    uint32_t memory_space = proc_args->memory_space;
-    char *pseudocode_file = proc_args->pseudocode_file;
-
-    LOG_INFO("init_proc: Inicializando proceso PID=%d con memoria=%d bytes, archivo=%s\n",
-             pid, memory_space, pseudocode_file ? pseudocode_file : "NULL");
-
-    // 2. Crear nuevo PCB con archivo de pseudocódigo y tamaño
-    t_pcb *new_pcb = pcb_create(pid, 0, memory_space, pseudocode_file); // PC inicial en 0
+    // 2. Crear PCB del nuevo proceso
+    uint32_t new_pid = generate_new_pid();
+    t_pcb *new_pcb = pcb_create(new_pid, 0, new_process_memory_space, new_process_pseudocode_file); // PC inicial en 0
     if (new_pcb == NULL)
     {
-        LOG_ERROR("init_proc: Error al crear PCB para PID %d", pid);
+        LOG_ERROR("init_proc_syscall: Error al crear PCB para nuevo proceso PID %d", new_pid);
+        
+        // Enviar respuesta de error
+        send_confirmation_package(response_socket, 1); // 1 = error
         return;
     }
 
-    LOG_INFO("init_proc: PCB creado exitosamente para PID=%d\n", pid);
+    LOG_INFO("init_proc_syscall: PCB creado exitosamente para nuevo proceso PID=%d", new_pid);
 
-    // 3. Agregar PCB a la lista NEW (con semáforos)
+    // 3. Agregar PCB a la lista NEW
     lock_new_list();
-
-    // Verificar si el proceso ya existe antes de agregarlo
-    if (find_pcb_in_new(pid))
+    
+    // Verificar si el proceso ya existe antes de agregarlo (aunque no debería pasar con PIDs únicos)
+    if (find_pcb_in_new(new_pid))
     {
         unlock_new_list();
         pcb_destroy(new_pcb);
-        LOG_ERROR("init_proc: Proceso con PID %d ya existe en lista NEW", pid);
+        LOG_ERROR("init_proc_syscall: Proceso con PID %d ya existe en lista NEW", new_pid);
+        
+        // Enviar respuesta de error
+        send_confirmation_package(response_socket, 1); // 1 = error
         return;
     }
 
     add_pcb_to_new(new_pcb);
     unlock_new_list();
 
-    free(proc_args->pseudocode_file);
-    free(proc_args);
+    LOG_INFO("init_proc_syscall: PCB agregado a lista NEW para nuevo proceso PID=%d", new_pid);
 
-    LOG_INFO("init_proc: PCB agregado a lista NEW para PID=%d\n", pid);
+    // 4. Mandar respuesta de que se agregó exitosamente
+    send_confirmation_package(response_socket, 0); // 0 = success
+    LOG_INFO("init_proc_syscall: Respuesta de confirmación enviada para nuevo proceso PID=%d", new_pid);
 
-    // 4. Ejecutar planificador de largo plazo
-    LOG_INFO("init_proc: Planificador de largo plazo iniciado\n");
+    // 5. Correr largo plazo para intentar inicializar
+    LOG_INFO("init_proc_syscall: Ejecutando planificador de largo plazo");
     bool success = run_long_scheduler();
-    LOG_INFO("init_proc: Planificador de largo plazo completado\n");
+    LOG_INFO("init_proc_syscall: Planificador de largo plazo completado");
 
-    if (success)
-    {
-        LOG_INFO("init_proc: Ejecutando planificador de corto plazo\n");
-        run_short_scheduler();
-        LOG_INFO("init_proc: Proceso PID=%d inicializado completamente\n", pid);
-    }
+    // 6. Correr corto plazo
+    LOG_INFO("init_proc_syscall: Ejecutando planificador de corto plazo");
+    run_short_scheduler();
+    LOG_INFO("init_proc_syscall: Syscall INIT_PROC completada para nuevo proceso PID=%d", new_pid);
 }
 
-/**
- * @brief Función auxiliar para manejar la syscall init_proc desde handlers externos
- * @param pid Process ID del nuevo proceso
- * @param memory_space Espacio en memoria asignado al proceso
- * @param pseudocode_file Nombre del archivo de pseudocódigo del proceso
- */
-void handle_init_proc_syscall(uint32_t pid, uint32_t pc, uint32_t memory_space, char *pseudocode_file)
-{
-    // Crear estructura de argumentos
-    t_init_proc_args *args = safe_malloc(sizeof(t_init_proc_args));
-    args->pid = pid;
-    args->pc = pc;
-    args->memory_space = memory_space;
-    args->pseudocode_file = NULL; // Inicializar a NULL para evitar problemas de acceso
-
-    // Copiar el nombre del archivo si se proporciona
-    if (pseudocode_file != NULL)
-    {
-        size_t filename_len = strlen(pseudocode_file) + 1;
-        args->pseudocode_file = safe_malloc(filename_len);
-        if (args->pseudocode_file != NULL)
-        {
-            strcpy(args->pseudocode_file, pseudocode_file);
-        }
-    }
-
-    // Llamar a la syscall
-    init_proc(args);
+uint32_t generate_new_pid(void)
+{    
+    // Generar PID basado en tiempo actual y número aleatorio
+    // Evitamos PID 0 que está reservado para el proceso root
+    uint32_t new_pid;
+    do {
+        new_pid = (uint32_t)(time(NULL) % 10000) + (rand() % 1000) + 1;
+    } while (new_pid == 0); // Asegurar que no sea 0
+    
+    LOG_INFO("init_proc_syscall: PID generado: %d", new_pid);
+    return new_pid;
 }

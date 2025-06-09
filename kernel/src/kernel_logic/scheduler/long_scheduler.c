@@ -17,7 +17,7 @@ bool run_long_scheduler(void)
   bool processes_initialized = false;
 
   // Fase 1: Procesar procesos suspendidos listos (SUSP_READY)
-  LOG_DEBUG("long_scheduler: Procesando lista SUSP_READY");
+  LOG_INFO("long_scheduler: Procesando lista SUSP_READY");
 
   lock_ready_list();
   lock_susp_ready_list();
@@ -28,7 +28,7 @@ bool run_long_scheduler(void)
     t_pcb *pcb = get_next_process_to_initialize_from_susp_ready();
     if (pcb == NULL)
     {
-      LOG_DEBUG("long_scheduler: No hay más procesos en SUSP_READY");
+      LOG_INFO("long_scheduler: No hay más procesos en SUSP_READY");
       break;
     }
 
@@ -62,7 +62,7 @@ bool run_long_scheduler(void)
 
   unlock_susp_ready_list();
   // Fase 2: Procesar procesos nuevos (NEW)
-  LOG_DEBUG("long_scheduler: Procesando lista NEW");
+  LOG_INFO("long_scheduler: Procesando lista NEW");
 
   lock_new_list();
 
@@ -72,7 +72,7 @@ bool run_long_scheduler(void)
     t_pcb *pcb = get_next_process_to_initialize_from_new();
     if (pcb == NULL)
     {
-      LOG_DEBUG("long_scheduler: No hay más procesos en NEW");
+      LOG_INFO("long_scheduler: No hay más procesos en NEW");
       break;
     }
 

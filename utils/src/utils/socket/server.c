@@ -58,7 +58,7 @@ int create_server(char* port) {
 
 int accept_connection(char* prefix, int socket_server)
 {
-	LOG_DEBUG("[%s] Awaiting for new clients...", prefix);
+	LOG_INFO("[%s] Awaiting for new clients...", prefix);
 
 	int client_socket = accept(socket_server, NULL, NULL);
 	if (client_socket == -1)
