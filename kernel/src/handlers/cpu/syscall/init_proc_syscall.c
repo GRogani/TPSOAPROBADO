@@ -63,7 +63,7 @@ void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc,
 
     // 5. Correr largo plazo para intentar inicializar
     LOG_INFO("init_proc_syscall: Ejecutando planificador de largo plazo");
-    bool success = run_long_scheduler();
+    run_long_scheduler();
     LOG_INFO("init_proc_syscall: Planificador de largo plazo completado");
 
     // 6. Correr corto plazo

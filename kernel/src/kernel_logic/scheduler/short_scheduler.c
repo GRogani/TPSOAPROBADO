@@ -113,6 +113,7 @@ void run_short_scheduler(void)
             // do nothing
             LOG_INFO("short_scheduler: CPU ocupada, preemption deshabilitado");
             unlock_cpu(&cpu->cpu_exec_sem);
+            unlock_ready_list();
             return;
         }
         // si preemption está habilitado, go to next
@@ -124,6 +125,8 @@ void run_short_scheduler(void)
     {
         // no deberia ser posible, tiramos error
         LOG_ERROR("short_scheduler: No se encontró ningún proceso en READY, pero la lista no está vacía");
+        unlock_cpu(&cpu->cpu_exec_sem);
+        unlock_ready_list();
         return;
     }
 
@@ -167,7 +170,6 @@ void run_short_scheduler(void)
     }
     else
     {
-        // lock(EXEC_LIST)
         lock_exec_list();
     }
 
@@ -184,7 +186,6 @@ void run_short_scheduler(void)
 
     LOG_INFO("short_scheduler: Proceso PID=%d despachado exitosamente", next_ready->pid);
 
-    // unlock(READY) + unlock(EXEC) + unlock(CPU_SEM)
     unlock_ready_list();
     unlock_exec_list();
     unlock_cpu_connections();
