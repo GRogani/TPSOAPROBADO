@@ -92,7 +92,7 @@ int dump_memory_routine(uint32_t pid)
 
     if (response == NULL) return -1;
 
-    if (respone->opcode == CONFIRMATION)
+    if (response->opcode == CONFIRMATION)
     {
         int status = read_confirmation_package(response);
         destroy_package(response);

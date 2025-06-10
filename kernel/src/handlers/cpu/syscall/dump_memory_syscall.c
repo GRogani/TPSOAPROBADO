@@ -1,13 +1,13 @@
 #include "dump_memory_syscall.h"
 
-extern t_kernel_config kernel_config
+extern t_kernel_config kernel_config;
 
 void dump_memory_syscall(uint32_t pid) 
 {
     LOG_INFO("Dump memory syscall called for PID %d", pid);
     
     lock_exec_list();
-        t_pcb *pcb = get_pcb_from_exec(pid);
+        t_pcb *pcb = (t_pcb*)find_pcb_in_exec(pid);
         if (pcb == NULL) {
             LOG_ERROR("No process found with PID %d", pid);
             unlock_exec_list();
@@ -25,7 +25,7 @@ void dump_memory_syscall(uint32_t pid)
     if (confirmation == 0)
     {
         lock_blocked_list(pcb);
-            remove_pcb_from_blocked(pcb)
+            remove_pcb_from_blocked(pcb);
         unlock_blocked_list(pcb);
 
         lock_ready_list();
@@ -37,7 +37,7 @@ void dump_memory_syscall(uint32_t pid)
     else
     {
         LOG_ERROR("Failed to dump memory for PID %d", pid);
-        
+
         lock_blocked_list(pcb);
             remove_pcb_from_blocked(pcb);
         unlock_blocked_list(pcb);

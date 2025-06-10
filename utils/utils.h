@@ -51,6 +51,6 @@
 #include "src/utils/DTPs/io_operation_package.h"
 #include "src/utils/DTPs/new_io_package.h"
 #include "src/utils/DTPs/syscall_package.h"
-#include "src/utils/DTPs/kill_process_memory.h"
+#include "src/utils/DTPs/kill_process_package.h"
 
 #endif 

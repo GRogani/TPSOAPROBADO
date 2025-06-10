@@ -52,7 +52,7 @@ int kill_process_in_memory(uint32_t pid);
  * 
  * - `-1 (ERROR)` 
  */
-int dump_memory_routine(uint32_t pid)
+int dump_memory_routine(uint32_t pid);
 
 /**
  * @brief Desconecta de memoria

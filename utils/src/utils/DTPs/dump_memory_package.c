@@ -2,7 +2,7 @@
 
 t_package *create_dump_memory_package(uint32_t pid) 
 {
-    t_buffer *buffer = create_buffer(sizeof(uint32_t));
+    t_buffer *buffer = buffer_create(sizeof(uint32_t));
     
     buffer_add_uint32(buffer, pid);
 
