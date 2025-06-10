@@ -34,11 +34,13 @@ t_pcb* get_next_process_to_initialize_from_susp_ready(void);
 // ========== ALGORITMOS DE CORTO PLAZO ==========
 
 /**
- * @brief Obtiene el siguiente proceso a despachar de la lista READY
+ * @brief Obtiene el siguiente proceso a despachar. Sin desalojo solo chequea la lista READY.
  * @return PCB del proceso seleccionado o NULL si no hay procesos
  * @note Inicialmente usa FIFO, pero puede cambiarse por SJF con/sin preemption
  */
-t_pcb* get_next_process_to_dispatch_from_ready(void);
+t_pcb* get_next_process_to_dispatch(void);
+
+t_cpu_connection* get_cpu_by_algorithm(t_list *cpus);
 
 /**
  * @brief Verifica si se debe realizar preemption en el scheduler de corto plazo
@@ -54,5 +56,17 @@ bool should_preempt_current_process(void);
  * @param config Configuración del kernel
  */
 void configure_scheduling_algorithms(t_kernel_config* config);
+
+// SJF
+
+bool compare_cpu_bursts(void *a, void *b);
+
+void sort_ready_list_by_SJF();
+
+void sort_exec_list_by_SJF();
+
+void sort_susp_ready_list_by_SJF();
+
+void sort_cpu_list_by_SJF(t_list *cpus);
 
 #endif

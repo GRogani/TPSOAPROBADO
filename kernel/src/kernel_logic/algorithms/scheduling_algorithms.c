@@ -33,12 +33,12 @@ t_pcb* get_next_process_to_initialize_from_susp_ready(void)
 
 // ========== ALGORITMOS DE CORTO PLAZO ==========
 
-t_cpu_connection get_cpu_by_algorithm(t_list *cpus)
+t_cpu_connection* get_cpu_by_algorithm(t_list *cpus)
 {
     if (short_term_algorithm == SJF)
         sort_cpu_list_by_SJF (cpus);
 
-    return = list_get(cpus, 0);
+    return (t_cpu_connection*)list_get(cpus, 0);
 }
 
 t_pcb* get_next_process_to_dispatch(void) 
