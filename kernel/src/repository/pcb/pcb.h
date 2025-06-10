@@ -27,6 +27,8 @@ typedef struct {
  * @brief Estructura para métricas de tiempo (MT) - tiempo en milisegundos en cada estado
  */
 typedef struct {
+    uint64_t last_estimated_cpu_busrt_ms;
+    uint64_t last_cpu_burst_ms;          
     uint64_t new_time_ms;
     uint64_t ready_time_ms;
     uint64_t exec_time_ms;

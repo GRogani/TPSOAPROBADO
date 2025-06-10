@@ -19,11 +19,8 @@ t_cpu_connection *get_free_cpu(void)
     {
         LOG_INFO("short_scheduler: CPU libre encontrada");
     }
-    else
-    {
-        free_cpu = list_get(all_cpus, 0); // Si no hay libres, tomar la primera CPU (fallback)
-        LOG_INFO("short_scheduler: No hay CPUs libres disponibles, tomando la primera en la lista de conexiones...");
-    }
+    
+    free_cpu =  get_cpu_by_algorithm(all_cpus);
 
     list_destroy(all_cpus);
 
@@ -119,11 +116,12 @@ void run_short_scheduler(void)
         // si preemption está habilitado, go to next
     }
 
-    t_pcb *next_ready = get_next_process_to_dispatch_from_ready();
+    t_pcb *next_ready = get_next_process_to_dispatch();
 
     if (next_ready == NULL)
     {
         // no deberia ser posible, tiramos error
+        // ?? si podria pasar
         LOG_INFO("short_scheduler: No se encontró ningún proceso en READY");
         unlock_cpu(&cpu->cpu_exec_sem);
         unlock_ready_list();
