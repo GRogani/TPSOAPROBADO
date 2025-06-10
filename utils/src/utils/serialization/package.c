@@ -53,7 +53,7 @@ t_package* recv_package(int socket)
     uint32_t buffer_stream_size;
 
     if (recv(socket, &opcode, sizeof(OPCODE), MSG_WAITALL) <= 0) {
-        LOG_ERROR("Failed to receive opcode from socket %d", socket);
+        LOG_WARNING("socket %d disconnected", socket);
         return NULL; 
     }
 

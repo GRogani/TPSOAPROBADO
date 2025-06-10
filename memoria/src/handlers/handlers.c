@@ -81,6 +81,8 @@ void* client_handler(void* client_fd_ptr) {
                 close(client_fd);
                 break;
         }
+        
+        destroy_package(package);
     }
     return NULL;
 }

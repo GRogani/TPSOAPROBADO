@@ -225,14 +225,15 @@ void *interrupt_listener(void *args)
 {
     interrupt_args_t* thread_args = (interrupt_args_t *)args;
 
-    while (1)
+    while (!should_interrupt_thread_exit())
     {
         t_package *package = recv_package(thread_args->socket_interrupt);
         if (package == NULL)
         {
-            LOG_INFO("Disconnected from Kernel Interrupt");
-            return NULL;
+            LOG_INFO("Disconnected from Kernel Interrupt - interrupt_listener exiting");
+            break;
         }
+        
         lock_interrupt_list();
         LOG_INFO("Received interrupt package with opcode: %s", opcode_to_string(package->opcode));
         add_interrupt(package);
@@ -242,6 +243,9 @@ void *interrupt_listener(void *args)
         interrupt_handler(args);
         unlock_cpu_mutex();
     }
+    
+    LOG_INFO("Interrupt listener thread exiting cleanly");
+    pthread_exit(NULL);
 }
 
 bool interrupt_handler(void *thread_args)
@@ -283,5 +287,10 @@ uint32_t MMU(uint32_t logic_dir)
         physic_dir = physic_dir * entrys_by_table + entry;
     }
 
-    return (uint32_t)(physic_dir * size_pag + offset);
+    uint32_t result = (uint32_t)(physic_dir * size_pag + offset);
+    
+    // Liberar la configuración para evitar memory leak
+    config_destroy(config_memoria);
+    
+    return result;
 }
