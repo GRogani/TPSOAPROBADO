@@ -24,8 +24,6 @@ void* io_completion(void *thread_args)
         goto cleanup;
     }
 
-    LOG_INFO("IO completion for PID %d on device %s", pid, args->device_name);
-
     // 2. Actualizar current_processing de la conexión a -1 (liberar dispositivo)
     connection->current_process_executing = -1;
     
@@ -83,16 +81,16 @@ void* io_completion(void *thread_args)
     // 5. Ejecutar schedulers según corresponda
     if (found_in_blocked) {
         // Proceso pasó de BLOCKED a READY - ejecutar planificador de corto plazo
-        LOG_INFO("Running short scheduler after IO completion for PID %d", pid);
+        LOG_INFO("io_completion: running short scheduler after IO completion for PID %d", pid);
         run_short_scheduler();
     } else if (found_in_susp_blocked) {
         // Proceso pasó de SUSPENDED_BLOCKED a SUSPENDED_READY - ejecutar planificador de largo plazo
-        LOG_INFO("Running long scheduler after IO completion for suspended PID %d", pid);
+        LOG_INFO("io_completion: running long scheduler after IO completion for suspended PID %d", pid);
         bool process_moved_to_ready = run_long_scheduler();
         
         // Si el proceso pasó a READY, ejecutar corto plazo
         if (process_moved_to_ready) {
-            LOG_INFO("Running short scheduler after long scheduler moved process to ready");
+            LOG_INFO("io_completion: running short scheduler after long scheduler moved process to ready");
             run_short_scheduler();
         }
     } else {
@@ -109,8 +107,6 @@ cleanup:
 void* process_pending_io_thread(void* thread_args)
 {
     t_pending_io_thread_args *args = (t_pending_io_thread_args *)thread_args;
-    
-    LOG_INFO("Processing pending IO in detached thread for device %s", args->pending_args.device_name);
     
     // Ejecutar la rutina para procesar IO pendiente
     process_pending_io(args->pending_args);

@@ -92,14 +92,14 @@ void run_short_scheduler(void)
 
     lock_cpu(&cpu->cpu_exec_sem);
     lock_ready_list();
-
-    if (list_size(get_ready_list()) == 0)
+    
+    lock_exec_list();
+    bool cpu_executing = find_pcb_in_exec(cpu->current_process_executing) != NULL;
+    if (!cpu_executing)
     {
-        // no hay más en ready, vemos si podemos marcar la cpu como libre.
-        LOG_INFO("short_scheduler: No hay procesos en READY");
-        check_cpu_executing(cpu);
-        return;
+        cpu->current_process_executing = -1;
     }
+    unlock_exec_list();
 
     bool cpu_is_processing = (cpu->current_process_executing != -1);
     LOG_INFO("short_scheduler: CPU procesando? %s", cpu_is_processing ? "Sí" : "No");
@@ -124,7 +124,7 @@ void run_short_scheduler(void)
     if (next_ready == NULL)
     {
         // no deberia ser posible, tiramos error
-        LOG_ERROR("short_scheduler: No se encontró ningún proceso en READY, pero la lista no está vacía");
+        LOG_INFO("short_scheduler: No se encontró ningún proceso en READY");
         unlock_cpu(&cpu->cpu_exec_sem);
         unlock_ready_list();
         return;
@@ -192,30 +192,4 @@ void run_short_scheduler(void)
     unlock_cpu(&cpu->cpu_exec_sem);
 
     LOG_INFO("short_scheduler: Planificador de corto plazo completado");
-}
-
-void check_cpu_executing(t_cpu_connection *cpu)
-{
-    lock_exec_list();
-
-    // cpu is currently processing? (check for existence of current_processing in EXEC list)
-    bool process_exists_in_exec = find_pcb_in_exec(cpu->current_process_executing) != NULL;
-
-    if (process_exists_in_exec)
-    {
-        // si existe en EXEC, no hacer nada, todavia sigue ejecutando y cuando llegue la syscall la vamos a marcar correctamente como no ejecutando.
-        LOG_INFO("short_scheduler: Proceso %d sigue en EXEC", cpu->current_process_executing);
-        unlock_ready_list();
-        unlock_exec_list();
-        unlock_cpu(&cpu->cpu_exec_sem);
-    }
-    else
-    {
-        // no existe en EXEC (syscall lo movió a otro estado, es el momento de marcarla como no ejecutando)
-        LOG_INFO("short_scheduler: Proceso %d ya no está en EXEC, liberando CPU", cpu->current_process_executing);
-        cpu->current_process_executing = -1;
-        unlock_ready_list();
-        unlock_exec_list();
-        unlock_cpu(&cpu->cpu_exec_sem);
-    }
 }

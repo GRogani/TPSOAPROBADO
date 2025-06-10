@@ -20,7 +20,6 @@ void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc,
     }
     
     current_pcb->pc = caller_pc;
-    LOG_INFO("init_proc_syscall: PC actualizado para proceso caller PID=%d", caller_pid);
     unlock_exec_list();
 
     // 2. Crear PCB del nuevo proceso
@@ -34,8 +33,6 @@ void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc,
         send_confirmation_package(response_socket, 1); // 1 = error
         return;
     }
-
-    LOG_INFO("init_proc_syscall: PCB creado exitosamente para nuevo proceso PID=%d", new_pid);
 
     // 3. Agregar PCB a la lista NEW
     lock_new_list();
@@ -55,11 +52,9 @@ void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc,
     add_pcb_to_new(new_pcb);
     unlock_new_list();
 
-    LOG_INFO("init_proc_syscall: PCB agregado a lista NEW para nuevo proceso PID=%d", new_pid);
-
-    // 4. Mandar respuesta de que se agregó exitosamente
     send_confirmation_package(response_socket, 0); // 0 = success
-    LOG_INFO("init_proc_syscall: Respuesta de confirmación enviada para nuevo proceso PID=%d", new_pid);
+
+    LOG_INFO("init_proc_syscall: Respuesta de confirmación enviada a CPU.");
 
     // 5. Correr largo plazo para intentar inicializar
     LOG_INFO("init_proc_syscall: Ejecutando planificador de largo plazo");
@@ -80,7 +75,6 @@ uint32_t generate_new_pid(void)
     do {
         new_pid = (uint32_t)(time(NULL) % 10000) + (rand() % 1000) + 1;
     } while (new_pid == 0); // Asegurar que no sea 0
-    
-    LOG_INFO("init_proc_syscall: PID generado: %d", new_pid);
+
     return new_pid;
 }

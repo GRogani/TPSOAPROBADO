@@ -14,15 +14,13 @@ void io_disconnected(int socket_id)
     return;
   }
 
-  LOG_INFO("Client disconnected %s", io_connection->device_name);
-
   if (io_connection->current_process_executing != -1)
   {
     LOG_INFO("Process %d was executing on device %s but it was disconnected.", io_connection->current_process_executing, io_connection->device_name);
     handle_found_process(io_connection);
   }
 
-  LOG_INFO("Deleting IO connection for socket %d", socket_id);
+  LOG_INFO("device disconnected %s", io_connection->device_name);
 
   delete_io_connection(socket_id);
   unlock_io_connections();
