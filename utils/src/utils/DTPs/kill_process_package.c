@@ -1,4 +1,4 @@
-#include "kill_process_memory.h"
+#include "kill_process_package.h"
 
 t_package *create_kill_process_package(uint32_t pid)
 {

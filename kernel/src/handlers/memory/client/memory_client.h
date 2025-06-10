@@ -44,6 +44,16 @@ uint32_t get_memory_free_space(int memory_socket);
  */
 int kill_process_in_memory(uint32_t pid);
 
+
+/**
+ * @brief Crea una coneccion con la memoria y enviua un paquete DUMP_MEMORY y espera una confimacion.
+ * 
+ * @return - `0 (OK)`
+ * 
+ * - `-1 (ERROR)` 
+ */
+int dump_memory_routine(uint32_t pid)
+
 /**
  * @brief Desconecta de memoria
  * @param memory_socket Socket de conexión

@@ -42,6 +42,7 @@
 #include "src/utils/DTPs/confirmation_package.h"
 #include "src/utils/DTPs/cpu_context_package.h"
 #include "src/utils/DTPs/dispatch_package.h"
+#include "src/utils/DTPs/dump_memory_package.h"
 #include "src/utils/DTPs/fetch_package.h"
 #include "src/utils/DTPs/init_process_package.h"
 #include "src/utils/DTPs/instruction_package.h"

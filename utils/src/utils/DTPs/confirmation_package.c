@@ -1,6 +1,6 @@
 #include "confirmation_package.h"
 
-t_package *create_confirmation_package(int success)
+t_package *create_confirmation_package(uint32_t success)
 {
     t_buffer *buffer = buffer_create(sizeof(uint32_t) * 1);
     buffer_add_uint32(buffer, (uint32_t)success);
@@ -15,7 +15,7 @@ int send_confirmation_package(int socket, uint32_t success)
     return bytes_sent;
 }
 
-int read_confirmation_package(t_package *package)
+uint32_t read_confirmation_package(t_package *package)
 {
     package->buffer->offset = 0;
     int success = buffer_read_uint32(package->buffer);

@@ -12,10 +12,11 @@ enum
     GET_FREE_SPACE,
     INIT_PROCESS,       // kernel -> memoria
     UNSUSPEND_PROCESS,
-    KILL_PROCESS,
+    KILL_PROCESS,       // kernel -> memoria
     SWAP,
     WRITE_MEMORY,
     READ_MEMORY,
+    DUMP_MEMORY,        // kernel -> memoria
 
     CONFIRMATION,       // server -> client
 

@@ -1,5 +1,5 @@
-#ifndef DTP_KILL_PROCESS_MEMORY_H
-#define DTP_KILL_PROCESS_MEMORY_H
+#ifndef DTP_KILL_PROCESS_H
+#define DTP_KILL_PROCESS_H
 
 #include "utils/serialization/package.h"
 #include "utils/serialization/buffer.h"

@@ -61,7 +61,7 @@ bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, ch
 
 int kill_process_in_memory(uint32_t pid)
 {
-    extern t_kernel_config kernel_config; //en main
+    extern t_kernel_config kernel_config; // en globals.h
 
     int memsocket = connect_to_memory(&kernel_config);
     send_kill_process_package(memsocket, pid);
@@ -76,6 +76,32 @@ int kill_process_in_memory(uint32_t pid)
     }
     else
         return -1;
+}
+
+int dump_memory_routine(uint32_t pid)
+{
+    extern t_kernel_config kernel_config; // en globals.h
+
+    int memsocket = connect_to_memory(&kernel_config);
+    if (memsocket < 0) return -1;
+    
+    send_dump_memory_package(memsocket, pid);
+
+    t_package* response = recv_package(memsocket);
+    disconnect_from_memory(memsocket);
+
+    if (response == NULL) return -1;
+
+    if (respone->opcode == CONFIRMATION)
+    {
+        int status = read_confirmation_package(response);
+        destroy_package(response);
+        return status;
+    }
+
+    destroy_package(response);
+    return -1;
+
 }
 
 void disconnect_from_memory(int memory_socket) {
