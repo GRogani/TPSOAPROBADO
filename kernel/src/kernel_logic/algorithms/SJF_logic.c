@@ -44,9 +44,14 @@ void sort_susp_ready_list_by_SJF()
     unlock_susp_ready_list();
 }
 
-void sort_cpu_list_by_SJF(t_list *cpus)
+t_cpu_connection *get_cpu_by_SJF(t_list *cpus)
 {
     lock_exec_list();
-    sort_exec_list_by_SJF();
+        sort_exec_list_by_SJF();
+        t_pcb* pcb = (t_pcb*) list_get(get_exec_list(), list_size(cpus) - 1);
+        t_cpu_connection *cpu = (t_cpu_connection*)get_cpu_connection_by_pid(pcb->pid);
+    unlock_exec_list();
+
+    return cpu;
 }
 

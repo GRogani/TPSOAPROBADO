@@ -67,6 +67,12 @@ void sort_exec_list_by_SJF();
 
 void sort_susp_ready_list_by_SJF();
 
-void sort_cpu_list_by_SJF(t_list *cpus);
+
+/**
+ * @brief Obtiene el CPU con el proceso de mayor estimacion de CPU burst
+ * @param cpus Lista de CPUs disponibles
+ * @note Ordena la lista de Exec y selecciona el último elemento, con el busca el cpu asociado.
+ */
+t_cpu_connection* get_cpu_by_SJF(t_list *cpus);
 
 #endif
