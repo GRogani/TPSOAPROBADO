@@ -39,8 +39,6 @@ void handle_io_process_syscall(uint32_t pid, uint32_t pc, uint32_t sleep_time, c
     return;
   }
 
-  LOG_INFO("Process with PID %d is going to BLOCKED state for device %s", pid, device_name);
-  // save pc for future completion IO event, to pass the correct PC in the short_scheduler
   pcb->pc = pc;
   add_pcb_to_blocked(pcb);
   create_io_request_element(io_request->io_requests_queue, pid, sleep_time);
@@ -59,7 +57,9 @@ void handle_io_process_syscall(uint32_t pid, uint32_t pc, uint32_t sleep_time, c
   LOG_INFO("Process with PID %d added to BLOCKED state for device %s", pid, device_name);
   // TODO: create detachable thread and run medium_scheduler
 
+  LOG_INFO("io_syscall: running short scheduler");
   run_short_scheduler();
+  LOG_INFO("io_syscall: short scheduler finished");
 }
 
 void handle_io_connection_not_found(uint32_t pid, uint32_t sleep_time, char *device_name)
@@ -70,7 +70,7 @@ void handle_io_connection_not_found(uint32_t pid, uint32_t sleep_time, char *dev
 
   t_pcb *pcb = remove_pcb_from_exec(pid);
 
-  bool memory_space_free = exit_rutine(pcb);
+  bool memory_space_free = exit_routine(pcb);
   unlock_exec_list();
 
   unlock_io_connections();

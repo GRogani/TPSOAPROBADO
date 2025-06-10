@@ -71,11 +71,18 @@ int main(int argc, char *argv[])
 
     LOG_INFO("Closing connections...");
 
+    // Señalar al thread de interrupciones que debe terminar
+    signal_interrupt_thread_exit();
+    
+    // Cerrar el socket de interrupciones para forzar que recv_package retorne NULL
+    close(kernel_interrupt_socket);
+    
+    // Esperar a que el thread termine
     pthread_join(interrupt_listener_thread, NULL);
+    LOG_INFO("Interrupt listener thread joined successfully");
 
     close(memory_socket);
     close(kernel_dispatch_socket);
-    close(kernel_interrupt_socket);
 
     destroy_list_and_mutex();
     log_destroy(get_logger());
@@ -89,9 +96,8 @@ void cleanup_instruction(t_instruction *instruction)
     if (instruction == NULL)
         return;
 
-    if (instruction->operand_string == NULL)
-        return;
+    if (instruction->operand_string != NULL)
+        free(instruction->operand_string);
 
-    free(instruction->operand_string);
     free(instruction);
 }

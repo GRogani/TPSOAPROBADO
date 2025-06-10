@@ -65,6 +65,7 @@ void create_io_connection(int socket, char* device_name) {
     char* stringified_socket = string_itoa(socket);
 
     dictionary_put(get_io_connections_dict(), stringified_socket, connection);
+    free(stringified_socket);
 }
 
 void update_io_connection_current_processing(int socket, int process_id) {

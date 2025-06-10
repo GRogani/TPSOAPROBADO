@@ -3,10 +3,9 @@
 void* handle_io_client(void* socket)
 {
     int client_socket = *(int*) socket;
-    t_package* package = safe_malloc(sizeof(t_package));
     while (1)
     {
-        package = recv_package(client_socket);
+        t_package *package = recv_package(client_socket);
         if(package != NULL)
         {
             switch(package->opcode)
@@ -24,28 +23,11 @@ void* handle_io_client(void* socket)
                 {
                     LOG_ERROR("Unknown opcode %d from IO device", package->opcode);
                     destroy_package(package);
-                    pthread_exit(0);
-                    close(client_socket); 
                     break;
                 }
             }
         } else {
-            lock_io_connections();
-            
-            t_io_connection *io_connection = (t_io_connection *)find_io_connection_by_socket(client_socket);
-            if(io_connection == NULL) {
-                LOG_ERROR("Failed to find IO connection by socket");
-                close(client_socket);
-                pthread_exit(0);
-                return NULL;
-            }
-            
-            LOG_ERROR("Client disconnected %s", io_connection->device_name);
-
-            // TODO: handle closed connection
-            close(client_socket);
-
-            unlock_io_connections();
+            io_disconnected(client_socket);
             break;
         }
     }

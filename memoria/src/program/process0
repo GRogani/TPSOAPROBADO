@@ -1,14 +1,6 @@
+IO teclado 10
+IO teclado 5
 NOOP
 NOOP
-NOOP
-NOOP
-NOOP
-NOOP
-NOOP
-NOOP
-NOOP
-NOOP
-NOOP
-NOOP
-IO teclado 10000
+INIT_PROC process1 100
 EXIT

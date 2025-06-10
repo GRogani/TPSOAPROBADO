@@ -1,4 +1,39 @@
- #include "memoria.h"
+#include "memoria.h"
+
+// Implementación de funciones de semáforos
+void initialize_memory_semaphores() {
+    if (sem_init(&sem_global_processes, 0, 1) != 0) {
+        LOG_ERROR("sem_init for global_processes failed");
+        exit(EXIT_FAILURE);
+    }
+    
+    if (sem_init(&sem_process_instructions, 0, 1) != 0) {
+        LOG_ERROR("sem_init for process_instructions failed");
+        sem_destroy(&sem_global_processes);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void destroy_memory_semaphores() {
+    sem_destroy(&sem_global_processes);
+    sem_destroy(&sem_process_instructions);
+}
+
+void lock_global_processes() {
+    sem_wait(&sem_global_processes);
+}
+
+void unlock_global_processes() {
+    sem_post(&sem_global_processes);
+}
+
+void lock_process_instructions() {
+    sem_wait(&sem_process_instructions);
+}
+
+void unlock_process_instructions() {
+    sem_post(&sem_process_instructions);
+}
 
 t_list* load_script_lines(char* path) {
     char full_path[512];
@@ -19,9 +54,15 @@ t_list* load_script_lines(char* path) {
     size_t len = 0;
 
     while (getline(&line, &len, file) != -1) {
-        // Remove trailing whitespace and newline
-        string_trim_right(&line);  //<- wtf ???
-        if (strlen(line) > 0)
+        // Remove trailing whitespace and newline manually (safe way)
+        size_t line_len = strlen(line);
+        while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r' || 
+               line[line_len - 1] == ' ' || line[line_len - 1] == '\t')) {
+            line[line_len - 1] = '\0';
+            line_len--;
+        }
+        
+        if (line_len > 0)
             list_add(list, strdup(line));
     }
 
@@ -41,12 +82,14 @@ void create_process(int socket, t_package* package) {
 
 proc_memory* find_process_by_pid(int pid) {
     proc_memory* proc = NULL;
+    
     for (int i = 0; i < list_size(global_memory.processes); i++) {
        proc = list_get(global_memory.processes, i);
         if (proc->pid == pid) {
             break;
         }
     }
+
     return proc;
 }
 
@@ -57,7 +100,9 @@ int create_process_in_memory(uint32_t pid, uint32_t size, char* script_path) {
     proc->process_size = size;
     proc->instructions = load_script_lines(script_path);
 
+    lock_global_processes();
     list_add(global_memory.processes, proc);
+    unlock_global_processes();
 
     // TODO: ir restando el size total de la memoria
     // si se queda sin size disponible para crear el proceso, entonces debemos devolver -1
@@ -68,52 +113,39 @@ int create_process_in_memory(uint32_t pid, uint32_t size, char* script_path) {
     return 0;
 }
 
-
-
 void get_instruction(int socket, t_package* package) {
     fetch_package_data request = read_fetch_package(package);
     uint32_t pid = request.pid;
     uint32_t pc = request.pc;
 
-    // TODO: analizar concurrencia y si hay que aplicar semaforos
-    proc_memory* proc = find_process_by_pid(pid);
-    if (proc && pc <= list_size(proc->instructions)) 
-    {
-        char* instruction = list_get(proc->instructions, pc);
-        LOG_INFO("## PID: %u - Get Instruction: %u - Instruction: %s\n", pid, pc, instruction);
-        send_instruction_package(socket, instruction);
-    }
-    
-}
+    lock_global_processes();
 
-void get_instructions(int socket, t_buffer* request_buffer) {
-    uint32_t pid = buffer_read_uint32(request_buffer);
-
-    proc_memory* proc = find_process_by_pid(pid);
-    if (proc) 
-    {
-        t_buffer* response_buffer = buffer_create(0);
-
-        uint32_t instr_count = list_size(proc->instructions);
-        buffer_add_uint32(response_buffer, instr_count);  // Enviar cantidad de instrucciones
-
-        for (uint32_t i = 0; i < instr_count; i++) {
-            char* instr = list_get(proc->instructions, i);
-            buffer_add_string(response_buffer, strlen(instr) + 1, instr); 
-            LOG_ERROR("## PID: %u - Instrucción %u: %s", pid, i, instr);
+    proc_memory *proc = find_process_by_pid(pid);
+    if (proc != NULL) {
+        // Verificar bounds de manera thread-safe
+        if (proc->instructions && pc < list_size(proc->instructions)) {
+            char* instruction = list_get(proc->instructions, pc);
+            if (instruction) {
+                LOG_INFO("## PID: %u - Get Instruction: %u - Instruction: %s\n", pid, pc, instruction);
+                send_instruction_package(socket, instruction);
+            } else {
+                LOG_ERROR("## PID: %u - PC %u instruction is NULL", pid, pc);
+                send_instruction_package(socket, ""); // Send empty instruction
+            }
+        } else {
+            LOG_ERROR("## PID: %u - PC %u out of bounds (max: %d)", pid, pc, 
+                     proc->instructions ? list_size(proc->instructions) : 0);
+            send_instruction_package(socket, ""); // Send empty instruction
         }
-
-        t_package* response = create_package(FETCH, response_buffer);
-        send_package(socket, response);
-        destroy_package(response);
-    }else{
-        LOG_ERROR("## PID: %u - Proceso no encontrado.", pid);
+    } else {
+        LOG_ERROR("## PID: %u - Process not found", pid);
+        send_instruction_package(socket, ""); // Send empty instruction
     }
-
     
+    unlock_global_processes();
 }
 
-
+// TODO: pasarlo a un DTP
 void get_free_space(int socket) {
     uint32_t mock_free = 2048;
 

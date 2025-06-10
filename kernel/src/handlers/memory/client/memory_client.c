@@ -41,8 +41,6 @@ bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, ch
         return false;
     }
     
-    LOG_INFO("memory_client: Paquete CREATE_PROCESS enviado (%d bytes)", sent_bytes);
-    
     // Recibir respuesta de memoria
     t_package* response = recv_package(memory_socket);
     if (response == NULL) {
