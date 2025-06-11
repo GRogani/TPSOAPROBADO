@@ -1,6 +1,8 @@
 #include "../utils.h"
 #include "kernel_logic/algorithms/scheduling_algorithms.h"
 #include "semaphore/semaphore.h"
+#include "globals.h"
+
 
 void log_ready_list(const char* title) {
     LOG_INFO("%s", title);
@@ -14,9 +16,10 @@ void log_ready_list(const char* title) {
 
 }
 
+
 int main() 
-{
-    t_kernel_config kernel_config;  // en globals.h
+{  
+    extern t_kernel_config kernel_config;// en globals.h
     t_config* config = init_config("kernel.config");
     kernel_config = init_kernel_config(config);
     initialize_global_lists(); 

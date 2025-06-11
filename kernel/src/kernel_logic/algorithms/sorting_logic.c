@@ -1,5 +1,7 @@
 #include "scheduling_algorithms.h"
 
+// SFJ (SHORT PLANNING)
+
 bool compare_cpu_bursts(void *a, void *b) 
 {
     extern t_kernel_config kernel_config; // en globals.h
@@ -19,39 +21,57 @@ bool compare_cpu_bursts(void *a, void *b)
 
 void sort_ready_list_by_SJF()
 {
-    lock_ready_list();
+    //lock_ready_list();
 
     list_sort ( get_ready_list(), compare_cpu_bursts );
     
-    unlock_ready_list();
+    //unlock_ready_list();
 }
 
 void sort_exec_list_by_SJF()
 {
-    lock_exec_list();
+    //lock_exec_list();
 
     list_sort ( get_exec_list(), compare_cpu_bursts );
 
-    unlock_exec_list();
-}
-
-void sort_susp_ready_list_by_SJF()
-{
-    lock_susp_ready_list();
-
-    list_sort ( get_susp_ready_list(), compare_cpu_bursts );
-
-    unlock_susp_ready_list();
+    //unlock_exec_list();
 }
 
 t_cpu_connection *get_cpu_by_SJF(t_list *cpus)
 {
-    lock_exec_list();
+    //lock_exec_list();
         sort_exec_list_by_SJF();
         t_pcb* pcb = (t_pcb*) list_get(get_exec_list(), list_size(cpus) - 1);
         t_cpu_connection *cpu = (t_cpu_connection*)get_cpu_connection_by_pid(pcb->pid);
-    unlock_exec_list();
+    //unlock_exec_list();
 
     return cpu;
 }
 
+// SHORTEST SIZE FIRST (LONG PLANNING)
+
+bool compare_process_size(void *a, void *b) 
+{
+    t_pcb *pcb_a = (t_pcb *)a;
+    t_pcb *pcb_b = (t_pcb *)b;
+
+    return pcb_a->size < pcb_b->size;
+}
+
+void sort_new_list_by_SSF()
+{
+    //lock_new_list();
+
+    list_sort(get_new_list(), compare_process_size);
+
+    //unlock_new_list();
+}
+
+void sort_susp_ready_list_by_SSF()
+{
+    //lock_susp_ready_list();
+
+    list_sort(get_susp_ready_list(), compare_process_size);
+
+    //unlock_susp_ready_list();
+}

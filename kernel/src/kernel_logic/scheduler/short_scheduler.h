@@ -18,7 +18,7 @@ void run_short_scheduler(void);
  * @brief Obtiene una CPU libre del pool de conexiones
  * @return Puntero a CPU connection disponible o NULL si no hay disponibles
  */
-t_cpu_connection *get_free_cpu(void);
+t_cpu_connection *get_cpu_to_dispatch(void);
 
 /**
  * @brief Envía interrupción a CPU y espera confirmación
