@@ -10,15 +10,14 @@ static int memory_suspend_requests = 0;
 
 // Servidor mock que simula el módulo de memoria
 void* memory_server_mock(void* arg) {
-    int server_port = kernel_config.memory_port;
-    int server_socket = create_server(server_port);
+    int server_socket = create_server(kernel_config.memory_port);
     
     if (server_socket == -1) {
-        printf("[MEMORY MOCK] Error creando servidor en puerto %d\n", server_port);
+        printf("[MEMORY MOCK] Error creando servidor en puerto %d\n", kernel_config.memory_port);
         return NULL;
     }
     
-    printf("[MEMORY MOCK] Servidor iniciado en puerto %d\n", server_port);
+    LOG_DEBUG("[MEMORY MOCK] Servidor iniciado en puerto %d\n", kernel_config.memory_port);
     
     // Esperar una sola conexión
     int client_socket = accept_connection(server_socket);
@@ -28,7 +27,7 @@ void* memory_server_mock(void* arg) {
         return NULL;
     }
     
-    printf("[MEMORY MOCK] Cliente conectado\n");
+    LOG_DEBUG("[MEMORY MOCK] Cliente conectado\n");
     
     // Recibir el paquete de suspensión
     t_package* request = recv_package(client_socket);
@@ -85,7 +84,7 @@ t_pcb* create_test_pcb(uint32_t pid, uint32_t size, const char* filename) {
 }
 
 void test_successful_medium_scheduling() {
-    LOG_INFO("=== TEST: Planificación de Mediano Plazo Exitosa ===");
+    LOG_DEBUG("=== TEST: Planificación de Mediano Plazo Exitosa ===");
     
     // Resetear contadores
     memory_suspend_requests = 0;
@@ -104,56 +103,54 @@ void test_successful_medium_scheduling() {
     assert(!find_pcb_in_susp_blocked(100));
     
     // Ejecutar el planificador de mediano plazo
-    printf("Ejecutando planificador de mediano plazo...\n");
+    LOG_INFO("Ejecutando planificador de mediano plazo...\n");
     run_medium_scheduler(100, 1);
     
     // IMPORTANTE: Dar tiempo para que todas las conexiones se cierren
     usleep(200000); // 200ms
     
     // Verificaciones principales
-    printf("Verificando resultados...\n");
+    LOG_DEBUG("Verificando resultados...\n");
     
     // Verificar que se hizo la solicitud a memoria
     assert(memory_suspend_requests == 1);
-    printf("✓ Se realizó 1 solicitud de suspensión a memoria\n");
+    LOG_DEBUG("✓ Se realizó 1 solicitud de suspensión a memoria\n");
     
     // Verificar que el proceso no está más en BLOCKED
     assert(!find_pcb_in_blocked(100));
-    printf("✓ El proceso ya no está en la lista BLOCKED\n");
+    LOG_DEBUG("✓ El proceso ya no está en la lista BLOCKED\n");
     
     // Verificar que el proceso está en SUSP_BLOCKED
     assert(find_pcb_in_susp_blocked(100));
-    printf("✓ El proceso está en la lista SUSP_BLOCKED\n");
+    LOG_DEBUG("✓ El proceso está en la lista SUSP_BLOCKED\n");
     
     // Verificar el estado del PCB
-    assert(find_pcb_in_susp_blocked(100));
     assert(test_pcb->current_state == SUSP_BLOCKED);
-    printf("✓ El estado del PCB es SUSP_BLOCKED\n");
+    LOG_DEBUG("✓ El estado del PCB es SUSP_BLOCKED\n");
     
-    printf("✓ TEST EXITOSO: El proceso fue correctamente suspendido\n");
+    LOG_DEBUG("✓ TEST EXITOSO: El proceso fue correctamente suspendido\n");
     pcb_destroyer(test_pcb);
 }
 
 int main() {
     printf("========================================\n");
-    printf("  TEST DEL PLANIFICADOR DE MEDIANO PLAZO\n");
+    printf(" TEST DEL PLANIFICADOR DE MEDIANO PLAZO\n");
     printf("========================================\n");
     
     // Inicializar configuración del kernel
-    printf("Inicializando configuración del kernel...\n");
+    init_logger("tester.log", "[TESTER]", LOG_LEVEL_DEBUG);
+    LOG_DEBUG("Inicializando configuración del kernel...\n");
     t_config* config = init_config("kernel.config");
     kernel_config = init_kernel_config(config);
-    init_logger("tester.log", "TESTER", LOG_LEVEL_INFO);
-
     // Inicializar las listas globales del kernel
     initialize_global_lists();
     initialize_global_semaphores();
-    LOG_INFO("Configuración completada. Iniciando tests...\n");
+    LOG_DEBUG("Configuración completada. Iniciando tests...\n");
     
     // Ejecutar los tests
     test_successful_medium_scheduling();
     printf("\n");
-    LOG_INFO("TODOS LOS TESTS COMPLETADOS EXITOSAMENTE");
+    LOG_DEBUG("TODOS LOS TESTS COMPLETADOS EXITOSAMENTE");
 
     // Cleanup
     destroy_global_lists();
