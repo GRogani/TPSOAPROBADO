@@ -23,12 +23,11 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
     // BLOCKED -> BLOCKED_SUSPEND
     t_pcb* pcb = remove_pcb_from_blocked(pid);
     unlock_blocked_list();
-    pcb->current_state = SUSP_BLOCKED;
     LOG_INFO("MEDIUM_SCHEDULER: Cambio de Estado BLOCKED->SUSPENDED_BLOCKED del PID = %d.", pid);
 
     int memory_socket = connect_to_memory(&kernel_config);
     if (memory_socket == -1){
-        LOG_INFO("MEDIUM_SCHEDULER: No se pudo conectar con Memoria para suspender PID = %d.", pid);
+        LOG_ERROR("MEDIUM_SCHEDULER: Falló la conexión con Memoria.");
         return;
     }
     LOG_INFO("MEDIUM_SCHEDULER: Solicitando Servicio de Swapping para suspender PID = %d.", pid);
@@ -37,13 +36,19 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
     // Espero la respuesta
     t_package* package = recv_package(memory_socket);
     if(package == NULL){
-        LOG_ERROR("MEDIUM_SCHEDULER: Falló la conexión con Memoria.");
+        LOG_ERROR("MEDIUM_SCHEDULER: No se pudo conectar con Memoria para suspender PID = %d", pid);
         return;
     }
     if(read_confirmation_package(package) != 0) { // Success = 0
-        LOG_ERROR("MEDIUM_SCHEDULER: Falló el SWAP del PID [%d]", pid);
+        LOG_WARNING("MEDIUM_SCHEDULER: Falló el SWAP del PID [%d]", pid);
         LOG_DEBUG("Resultado del paquete enviado = %d", read_confirmation_package(package));
-        // TODO: si falla el SWAP, tengo que hacer SUSPEND_BLOCKED -> BLOCKED? o cómo trato esto?
+        // TODO: si falla el SWAP, por ahora hago esto SUSPEND_BLOCKED -> BLOCKED
+        lock_blocked_list();
+        add_pcb_to_blocked(pcb);
+        unlock_blocked_list();
+
+        disconnect_from_memory(memory_socket);
+        destroy_package(package);
         return;
     }
     LOG_INFO("MEDIUM_SCHEDULER: Swap Exitoso del PID [%d]", pid);
@@ -57,7 +62,7 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
     // Llamo al Planificador de Largo Plazo
     LOG_INFO("MEDIUM_SCHEDULER: Llamando a planificador de largo plazo para admitir nuevos procesos.");
     if (!run_long_scheduler()) {
-        LOG_INFO("MEDIUM_SCHEDULER: El planificador de largo plazo no puede admitir nuevos procesos.");
+        LOG_WARNING("MEDIUM_SCHEDULER: El planificador de largo plazo NO puede admitir nuevos procesos.");
         return;
     }        
     LOG_INFO("MEDIUM_SCHEDULER: El planificador de largo plazo admitió a un nuevo PID [%d].", pid);
