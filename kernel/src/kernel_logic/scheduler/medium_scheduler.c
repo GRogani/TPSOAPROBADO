@@ -17,7 +17,7 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
     lock_blocked_list();
     if(!find_pcb_in_blocked(pid)) {
         unlock_blocked_list();
-        LOG_INFO("MEDIUM_SCHEDULER: PID [%d] no está en BLOCKED.", pid);
+        LOG_ERROR("MEDIUM_SCHEDULER: PID [%d] no está en BLOCKED.", pid);
         return;
     }
     // BLOCKED -> BLOCKED_SUSPEND
