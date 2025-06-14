@@ -73,10 +73,7 @@ void start_memory_mock_server() {
 }
 
 t_pcb* create_test_pcb(uint32_t pid, uint32_t size, const char* filename) {
-    char* file_copy = malloc(strlen(filename) + 1);
-    strcpy(file_copy, filename);
-    
-    t_pcb* pcb = pcb_create(pid, 0, size, file_copy);
+    t_pcb* pcb = pcb_create(pid, 0, size, (char *) filename);
     pcb_change_state(pcb, BLOCKED);
     return pcb;
 }
