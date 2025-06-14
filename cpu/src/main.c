@@ -1,13 +1,17 @@
 #include "main.h"
 
-t_dictionary* TLB = dictionary_create();
-
 int main(int argc, char* argv[]) 
 {
     init_list_and_mutex();
 
     t_config* config_file = init_config("cpu.config");
     t_cpu_config config_cpu = init_cpu_config(config_file);
+
+    MMUConfig mmu_config = load_mmu_config();
+    TLBConfig tlb_config = load_tlb_config();
+    CacheConfig cache_config = load_cache_config();
+    mmu_init(&mmu_config, &tlb_config, &cache_config);
+    
     init_logger("cpu.log", "CPU", config_cpu.LOG_LEVEL);
 
     int memory_socket = -1;

@@ -88,7 +88,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
     {
         uint32_t logic_dir_write = instruction->operand_numeric1;
         char *valor_write = instruction->operand_string;
-        uint32_t physic_dir_write = MMU(logic_dir_write);
+        uint32_t physic_dir_write = mmu_translate_address(logic_dir_write);
         write_memory_request(socket_memory, physic_dir_write, valor_write);
         (*PC)++;
         break;
@@ -97,7 +97,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
     {
         uint32_t logic_dir_read = instruction->operand_numeric1;
         uint32_t size = instruction->operand_numeric2;
-        uint32_t physic_dir_read = MMU(logic_dir_read);
+        uint32_t physic_dir_read = mmu_translate_address(logic_dir_read);
         read_memory_request(socket_memory, physic_dir_read, size);
         char *data = read_memory_response(socket_memory);
         if (data != NULL)

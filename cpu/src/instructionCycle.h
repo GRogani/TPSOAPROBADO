@@ -13,7 +13,7 @@
 #include "utils/DTOs/cpu_interrupt.h"
 #include "utils/DTOs/memory_get_instruction.h"
 #include "lists_and_mutex.h"
-#include "tlb&cache.h"
+#include "mmu.h"
 
 typedef struct t_instruction
 {
@@ -36,7 +36,4 @@ void *interrupt_listener(void *socket);
 void *interrupt_handler(void *thread_args);
 
 int check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute);
-
-uint32_t MMU(uint32_t logic_dir);
-
 #endif

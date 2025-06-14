@@ -29,7 +29,8 @@ enum
     // opcodes CPU
     PID_PC_PACKAGE,
     CPU_INTERRUPT,
-
+    MMU_PAGE_READ_REQUEST,
+    MMU_PAGE_WRITE_REQUEST,
     // opcodes IO
     REQUEST_IO,
 };

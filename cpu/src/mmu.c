@@ -16,9 +16,6 @@ static uint64_t g_lru_timestamp_counter = 0;
 static int g_cache_clock_pointer = 0;
 
 
-//(Placeholders)//
-
-
 static uint32_t mmu_request_pagetable_entry_from_memory(uint32_t table_id, uint32_t entry_index) {
     LOG_DEBUG("[MEM-REQUEST] Asking Memory for entry %u from table %u", entry_index, table_id);
 
@@ -30,18 +27,18 @@ static uint32_t mmu_request_pagetable_entry_from_memory(uint32_t table_id, uint3
 }
 
 
-static void mmu_request_page_read_from_memory(uint32_t frame_number, void* buffer) {
+static void mmu_request_page_read_from_memory(int* memory_socket, uint32_t frame_number, void* buffer) {
     LOG_DEBUG("[MEM-REQUEST] Asking Memory to read page from frame %u", frame_number);
-    sprintf(buffer, "Original content from Main Memory for FRAME %d", frame_number);
+    send_mmu_page_read_request(memory_socket, frame_number);
+    //TODO: Manejar respuesta y guardar en buffer
 }
 
 
-static void mmu_request_page_write_to_memory(uint32_t frame_number, void* content) {
+static void mmu_request_page_write_to_memory(int* memory_socket, uint32_t frame_number, void* content) {
     LOG_INFO("[MEM-REQUEST] Telling Memory to write page to frame %u", frame_number);
-    LOG_INFO("  -> Content: '%.40s...'", (char*)content);
+    uint32_t content_size = g_mmu_config->page_size;
+    send_mmu_page_write_request(memory_socket, frame_number, content, content_size);
 }
-
-//(Placeholders)//
 
 
 
@@ -60,7 +57,8 @@ static TLBEntry* tlb_find_entry(uint32_t page_number) {
     if (g_tlb_config->entry_count == 0) return NULL;
 
     bool _is_page(void* element) {
-        return element->page == page_number;
+        TLBEntry* entry = (TLBEntry*)element;
+        return entry->page == page_number;
     }
 
     TLBEntry* entry = list_find(g_tlb, _is_page);
@@ -173,7 +171,7 @@ static int cache_find_victim_clock_m() {
     }
     for (int i = 0; i < g_cache_config->entry_count * 2; i++) {
         CacheEntry* entry = list_get(g_cache, g_cache_clock_pointer);
-        if (!entry->bit_uso && entry->bit_modificado) {
+        if (!entry->use_bit && entry->modified_bit) {
             int victim_index = g_cache_clock_pointer;
             g_cache_clock_pointer = (g_cache_clock_pointer + 1) % g_cache_config->entry_count;
             return victim_index;
@@ -184,7 +182,7 @@ static int cache_find_victim_clock_m() {
     return cache_find_victim_clock();
 }
 
-static CacheEntry* cache_load_page(uint32_t frame_number) {
+static CacheEntry* cache_load_page(uint32_t frame_number, int* memory_socket) {
     LOG_INFO("[Cache] MISS for frame %u. Finding a victim to replace...", frame_number);
     
     int victim_index;
@@ -197,11 +195,11 @@ static CacheEntry* cache_load_page(uint32_t frame_number) {
     CacheEntry* victim_entry = list_get(g_cache, victim_index);
     if (victim_entry->is_valid && victim_entry->modified_bit) {
         LOG_INFO("[Cache] Victim (frame %u) is dirty. Writing back to memory.", victim_entry->frame);
-        mmu_request_page_write_to_memory(victim_entry->frame, victim_entry->content);
+        mmu_request_page_write_to_memory(memory_socket,victim_entry->frame, victim_entry->content);
     }
     
     LOG_DEBUG("[Cache] Loading frame %u into cache slot %d.", frame_number, victim_index);
-    mmu_request_page_read_from_memory(frame_number, victim_entry->content);
+    mmu_request_page_read_from_memory(memory_socket,frame_number, victim_entry->content);
 
     victim_entry->is_valid = true;
     victim_entry->frame = frame_number;
@@ -210,41 +208,6 @@ static CacheEntry* cache_load_page(uint32_t frame_number) {
     
     return victim_entry;
 }
-
-static void mmu_access_memory(uint32_t logical_address, bool is_write) {
-    uint32_t physical_address = mmu_translate_address(logical_address);
-    uint32_t frame_number = floor(physical_address / g_mmu_config->page_size);
-
-    if (g_cache_config->entry_count == 0) {
-        LOG_INFO("[Cache] Disabled. Accessing Main Memory directly.");
-        // Simulate direct memory access
-        if (is_write) {
-            mmu_request_page_write_to_memory(frame_number, "Simulated direct write content");
-        } else {
-            char temp_buffer[g_mmu_config->page_size];
-            mmu_request_page_read_from_memory(frame_number, temp_buffer);
-        }
-        return;
-    }
-
-    CacheEntry* cache_entry = cache_find_entry(frame_number);
-    if (cache_entry) {
-        LOG_INFO("[Cache] HIT for frame %u.", frame_number);
-    } else {
-        cache_entry = cache_load_page(frame_number);
-    }
-
-    if (is_write) {
-        LOG_INFO("[Cache] Writing to frame %u. Marking as modified.", frame_number);
-        cache_entry->modified_bit = true;
-        sprintf(cache_entry->content, "MODIFIED content in cache for FRAME %d", frame_number);
-    } else {
-        LOG_INFO("[Cache] Reading from frame %u.", frame_number);
-        LOG_INFO("        Content: '%.40s...'", (char*)cache_entry->content);
-    }
-}
-
-
 
 void mmu_init(MMUConfig* mmu_config, TLBConfig* tlb_config, CacheConfig* cache_config) {
     g_mmu_config = mmu_config;
@@ -291,22 +254,15 @@ uint32_t mmu_translate_address(uint32_t logical_address) {
     return physical_address;
 }
 
-void mmu_read_byte(uint32_t logical_address) {
-    mmu_access_memory(logical_address, false);
-}
 
-void mmu_write_byte(uint32_t logical_address) {
-    mmu_access_memory(logical_address, true);
-}
-
-void mmu_process_cleanup() {
+void mmu_process_cleanup(int* memory_socket) {
     LOG_INFO("--- Cleaning up for process eviction ---");
     if (g_cache_config->entry_count > 0) {
         LOG_INFO("[Cache] Flushing dirty pages to memory...");
         void _writeback_if_dirty(void* element) {
             CacheEntry* entry = (CacheEntry*)element;
             if (entry->is_valid && entry->modified_bit) {
-                mmu_request_page_write_to_memory(entry->frame, entry->content);
+                mmu_request_page_write_to_memory(memory_socket,entry->frame, entry->content);
             }
             entry->is_valid = false; // Invalidate all entries
         }
