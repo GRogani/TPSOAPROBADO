@@ -20,7 +20,7 @@ void run_medium_scheduler(uint32_t  pid){
         LOG_ERROR("MEDIUM_SCHEDULER: PID [%d] no está en BLOCKED.", pid);
         return;
     }
-    // BLOCKED -> BLOCKED_SUSPEND
+    // BLOCKED -> SUSPEND_BLOCKED
     t_pcb* pcb = remove_pcb_from_blocked(pid);
     unlock_blocked_list();
     LOG_INFO("MEDIUM_SCHEDULER: Cambio de Estado BLOCKED->SUSPENDED_BLOCKED del PID = %d.", pid);
