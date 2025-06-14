@@ -1,9 +1,7 @@
 #include "../utils.h"
-#include "../src/handlers/scheduler/medium_scheduler.h"
+#include "../src/kernel_logic/scheduler/medium_scheduler.h"
+#include "globals.h"
 #include <assert.h>
-
-// Variable global del kernel
-t_kernel_config kernel_config;
 
 // Contador para verificar las operaciones
 static int memory_suspend_requests = 0;
@@ -13,14 +11,14 @@ void* memory_server_mock(void* arg) {
     int server_socket = create_server(kernel_config.memory_port);
     
     if (server_socket == -1) {
-        printf("[MEMORY MOCK] Error creando servidor en puerto %d\n", kernel_config.memory_port);
+        printf("[MEMORY MOCK] Error creando servidor en puerto %s\n", kernel_config.memory_port);
         return NULL;
     }
     
-    LOG_DEBUG("[MEMORY MOCK] Servidor iniciado en puerto %d\n", kernel_config.memory_port);
+    LOG_DEBUG("[MEMORY MOCK] Servidor iniciado en puerto %s\n", kernel_config.memory_port);
     
     // Esperar una sola conexión
-    int client_socket = accept_connection(server_socket);
+    int client_socket = accept_connection("MEMORY MOCK", server_socket);
     if (client_socket < 0) {
         printf("[MEMORY MOCK] Error aceptando conexión\n");
         close(server_socket);
@@ -37,10 +35,10 @@ void* memory_server_mock(void* arg) {
         printf("[MEMORY MOCK] Recibida solicitud de suspensión para PID %u\n", pid);
         
         // Enviar respuesta exitosa
-        send_memory_suspend_process_response(client_socket, 1);
+        send_confirmation_package(client_socket, 1);
         printf("[MEMORY MOCK] Respuesta enviada: ÉXITO\n");
         
-        package_destroy(request);
+        destroy_package(request);
     }
     
     // Esperar a que el cliente cierre la conexión (esto será cuando disconnect_from_memory() se ejecute)

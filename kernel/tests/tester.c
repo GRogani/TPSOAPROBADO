@@ -1,3 +1,4 @@
+/*
 #include "../utils.h"
 #include "globals.h"
 
@@ -17,3 +18,4 @@ int main()
 
     return 0;
 }
+*/

@@ -9,6 +9,7 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
    * 4. hacemos el swap con la memoria
    * 5. corremos el largo plazo (porque acabamos de liberar espacio en memoria del sistema)
    * 6. si no existe, loggeamos y no hacemos nada (probablemente ya se resolvió el proceso)
+   * 7. Mando a correr el corto plazo, ya que hay un nuevo proceso en READY potencialmente para ejecutar
    */
 
     LOG_INFO("MEDIUM_SCHEDULER: Tiempo de espera de [%d] para PID [%u]", timer, pid);
@@ -39,14 +40,15 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
         LOG_ERROR("MEDIUM_SCHEDULER: Falló la conexión con Memoria.");
         return;
     }
-    if(!read_memory_suspend_process_response(package)) {
-        LOG_INFO("MEDIUM_SCHEDULER: Falló el SWAP [%d]", pid);
+    if(read_confirmation_package(package) != 0) { // Success = 0
+        LOG_ERROR("MEDIUM_SCHEDULER: Falló el SWAP del PID [%d]", pid);
+        LOG_DEBUG("Resultado del paquete enviado = %d", read_confirmation_package(package));
         // TODO: si falla el SWAP, tengo que hacer SUSPEND_BLOCKED -> BLOCKED? o cómo trato esto?
         return;
     }
     LOG_INFO("MEDIUM_SCHEDULER: Swap Exitoso del PID [%d]", pid);
     disconnect_from_memory(memory_socket);
-    package_destroy(package);
+    destroy_package(package);
 
     lock_susp_blocked_list();
     add_pcb_to_susp_blocked(pcb);
@@ -59,4 +61,6 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
         return;
     }        
     LOG_INFO("MEDIUM_SCHEDULER: El planificador de largo plazo admitió a un nuevo PID [%d].", pid);
+    LOG_INFO("MEDIUM_SCHEDULER: Llamando al planificador de corto plazo.");
+    run_short_scheduler();
 }
