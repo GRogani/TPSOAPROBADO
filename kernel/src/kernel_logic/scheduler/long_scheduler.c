@@ -27,11 +27,6 @@ bool run_long_scheduler(void)
     // Obtener siguiente proceso de SUSP_READY usando algoritmo configurado
     t_pcb *pcb = get_next_process_to_initialize_from_susp_ready();
     unlock_susp_ready_list();
-    if (pcb == NULL)
-    {
-      LOG_INFO("long_scheduler: No hay más procesos en SUSP_READY");
-      break;
-    }
 
     // SWAP IN -> Intentar de-suspender proceso en memoria
     LOG_INFO("long_scheduler: Intentando des-suspender proceso PID=%d", pcb->pid);
@@ -45,6 +40,7 @@ bool run_long_scheduler(void)
       lock_susp_ready_list();
       add_pcb_to_susp_ready(pcb);
       unlock_susp_ready_list();
+      destroy_package(response);
       break;
     }
     // Éxito: mover de SUSP_READY a READY
@@ -53,9 +49,11 @@ bool run_long_scheduler(void)
     processes_initialized = true;
     LOG_INFO("long_scheduler: Proceso PID=%d movido a READY", pcb->pid);
     destroy_package(response);
+    
     lock_susp_ready_list();
   }
   unlock_susp_ready_list();
+  LOG_INFO("long_scheduler: No hay más procesos en SUSP_READY");
 
   // Fase 2: Procesar procesos nuevos (NEW)
   LOG_INFO("long_scheduler: Procesando lista NEW");
