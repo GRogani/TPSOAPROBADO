@@ -7,7 +7,7 @@
 #include "globals.h"
 
 // memory_requests: contador de requests
-void* memory_server_mock(int* memory_requests);
+void* memory_server_mock(void* memory_requests);
 void start_memory_mock_server();
 
 t_pcb* create_test_pcb(uint32_t pid, uint32_t size, const char* filename);

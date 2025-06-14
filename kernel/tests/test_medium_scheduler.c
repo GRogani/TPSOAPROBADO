@@ -1,5 +1,5 @@
-#include "test_schedulers.h"
 #include "kernel_logic/scheduler/medium_scheduler.h"
+#include "test_schedulers.h"
 
 // Contador para verificar las operaciones
 int memory_suspend_requests = 0;

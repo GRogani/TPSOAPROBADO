@@ -1,9 +1,8 @@
 #include "test_schedulers.h"
 
 // Servidor mock que simula el módulo de memoria
-void* memory_server_mock(int* arg) {
+void* memory_server_mock(void* arg) {
     int server_socket = create_server(kernel_config.memory_port);
-    int *counter = arg;
 
     if (server_socket == -1) {
         printf("[MEMORY MOCK] Error creando servidor en puerto %s\n", kernel_config.memory_port);
@@ -25,7 +24,8 @@ void* memory_server_mock(int* arg) {
     // Recibir el paquete de suspensión
     t_package* request = recv_package(client_socket);
     if (request != NULL) {
-        (*counter)++;
+        int *cont = (int *) arg;
+        (*cont)++;
         uint32_t pid = read_swap_package(request);
         printf("[MEMORY MOCK] Recibida solicitud de suspensión para PID %u\n", pid);
         
@@ -52,7 +52,7 @@ void* memory_server_mock(int* arg) {
 
 void start_memory_mock_server(int* arg) { 
     pthread_t memory_server_thread;
-    if (pthread_create(&memory_server_thread, NULL, memory_server_mock, &arg) != 0) {
+    if (pthread_create(&memory_server_thread, NULL, memory_server_mock, arg) != 0) {
         LOG_DEBUG("[MEMORY MOCK] Error creando hilo del servidor");
         return;
     }

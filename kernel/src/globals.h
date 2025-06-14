@@ -3,6 +3,6 @@
 
 #include "utils/config/t_configs.h"
 
-t_kernel_config kernel_config;  
+extern t_kernel_config kernel_config;  
 
 #endif
