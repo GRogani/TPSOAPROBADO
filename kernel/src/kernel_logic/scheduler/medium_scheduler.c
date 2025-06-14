@@ -32,7 +32,7 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
         return;
     }
     LOG_INFO("MEDIUM_SCHEDULER: Solicitando Servicio de Swapping para suspender PID = %d.", pid);
-    send_memory_suspend_process(memory_socket, pid);
+    send_swap_package(memory_socket, pid);
 
     // Espero la respuesta
     t_package* package = recv_package(memory_socket);

@@ -31,7 +31,7 @@ void* memory_server_mock(void* arg) {
     t_package* request = recv_package(client_socket);
     if (request != NULL) {
         memory_suspend_requests++;
-        uint32_t pid = read_memory_suspend_process(request);
+        uint32_t pid = read_swap_package(request);
         printf("[MEMORY MOCK] Recibida solicitud de suspensión para PID %u\n", pid);
         
         // Enviar respuesta exitosa
