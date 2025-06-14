@@ -94,7 +94,7 @@ void* get_first_available_cpu() {
     bool is_cpu_available(void* ptr) {
         t_cpu_connection* connection = (t_cpu_connection*)ptr;
         return connection->current_process_executing == -1;
-    }
+    };
     
     t_cpu_connection* available_cpu = list_find(connections_list, is_cpu_available);
     list_destroy(connections_list);

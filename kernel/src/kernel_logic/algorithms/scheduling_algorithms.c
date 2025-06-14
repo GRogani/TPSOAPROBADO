@@ -23,10 +23,14 @@ t_pcb* get_next_process_to_initialize_from_susp_ready(void)
 
 t_cpu_connection* get_cpu_by_algorithm(t_list *cpus)
 {
+    t_cpu_connection* cpu = NULL;
+    
     if (short_term_algorithm == SJF)
-        get_cpu_by_SJF (cpus);
-
-    return (t_cpu_connection*)list_get(cpus, 0);
+        cpu = get_cpu_by_SJF (cpus);
+    else
+        cpu = (t_cpu_connection*)list_get(cpus, 0); // FIFO
+    
+    return cpu;
 }
 
 t_pcb* get_next_process_to_dispatch(void) 

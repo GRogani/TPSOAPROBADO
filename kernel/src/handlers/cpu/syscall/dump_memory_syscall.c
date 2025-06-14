@@ -11,7 +11,7 @@ void dump_memory_syscall(uint32_t pid)
             unlock_exec_list();
             return;
         }
-        remove_pcb_from_exit(pid);
+        remove_pcb_from_exec(pid);
     unlock_exec_list();
 
     lock_blocked_list();

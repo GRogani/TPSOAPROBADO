@@ -16,36 +16,33 @@ bool compare_cpu_bursts(void *a, void *b)
     pcb_b->MT.last_estimated_cpu_busrt_ms = pcb_b->MT.last_estimated_cpu_busrt_ms * (1 - alpha) + pcb_b->MT.last_cpu_burst_ms * alpha;
 
     return pcb_a->MT.last_estimated_cpu_busrt_ms < pcb_b->MT.last_estimated_cpu_busrt_ms;
-
 }
 
 void sort_ready_list_by_SJF()
 {
-    //lock_ready_list();
-
     list_sort ( get_ready_list(), compare_cpu_bursts );
-    
-    //unlock_ready_list();
 }
 
 void sort_exec_list_by_SJF()
 {
-    //lock_exec_list();
-
     list_sort ( get_exec_list(), compare_cpu_bursts );
-
-    //unlock_exec_list();
 }
 
-t_cpu_connection *get_cpu_by_SJF(t_list *cpus)
+t_cpu_connection* get_cpu_by_SJF(t_list *cpus)
 {
-    //lock_exec_list();
-        sort_exec_list_by_SJF();
-        t_pcb* pcb = (t_pcb*) list_get(get_exec_list(), list_size(cpus) - 1);
-        t_cpu_connection *cpu = (t_cpu_connection*)get_cpu_connection_by_pid(pcb->pid);
-    //unlock_exec_list();
+    sort_exec_list_by_SJF();
+    int exec_list_size = list_size(get_exec_list());
 
-    return cpu;
+    if (exec_list_size == 0) 
+    {
+        LOG_DEBUG("No hay procesos en la lista de ejecución");
+        return list_get(cpus, 0);
+    }
+    else
+    {
+        t_pcb* pcb = (t_pcb*) list_get(get_exec_list(), exec_list_size - 1);
+        return (t_cpu_connection*)get_cpu_connection_by_pid(pcb->pid);
+    }
 }
 
 // SHORTEST SIZE FIRST (LONG PLANNING)
@@ -60,18 +57,10 @@ bool compare_process_size(void *a, void *b)
 
 void sort_new_list_by_SSF()
 {
-    //lock_new_list();
-
     list_sort(get_new_list(), compare_process_size);
-
-    //unlock_new_list();
 }
 
 void sort_susp_ready_list_by_SSF()
 {
-    //lock_susp_ready_list();
-
     list_sort(get_susp_ready_list(), compare_process_size);
-
-    //unlock_susp_ready_list();
 }

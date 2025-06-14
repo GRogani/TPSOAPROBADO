@@ -77,10 +77,9 @@ void sort_ready_list_by_SJF();
 void sort_exec_list_by_SJF();
 
 /**
- * @brief Obtiene el CPU con el proceso de menor estimacion de CPU
+ * @brief Obtiene el CPU con el proceso de mayor estimacion de CPU
  * @param cpus Lista de CPUs disponibles
  * @note Ordena la lista de Exec y selecciona el primer elemento, con el busca el cpu asociado.
- * @return Puntero al CPU seleccionado o NULL si no hay CPUs disponibles
  */
 t_cpu_connection *get_cpu_by_SJF(t_list *cpus);
 
