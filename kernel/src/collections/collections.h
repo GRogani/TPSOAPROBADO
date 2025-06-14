@@ -24,7 +24,7 @@ typedef struct t_cpu_connection
     unsigned int id;
     int interrupt_socket_id;
     int dispatch_socket_id;
-    int current_process_executing;
+    int32_t current_process_executing;
     sem_t cpu_exec_sem;
 } t_cpu_connection;
 
