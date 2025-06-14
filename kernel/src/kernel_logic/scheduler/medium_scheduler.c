@@ -28,6 +28,9 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
     int memory_socket = connect_to_memory(&kernel_config);
     if (memory_socket == -1){
         LOG_ERROR("MEDIUM_SCHEDULER: Falló la conexión con Memoria.");
+        lock_blocked_list();
+        add_pcb_to_blocked(pcb);
+        unlock_blocked_list();
         return;
     }
     LOG_INFO("MEDIUM_SCHEDULER: Solicitando Servicio de Swapping para suspender PID = %d.", pid);
@@ -37,6 +40,9 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
     t_package* package = recv_package(memory_socket);
     if(package == NULL){
         LOG_ERROR("MEDIUM_SCHEDULER: No se pudo conectar con Memoria para suspender PID = %d", pid);
+        lock_blocked_list();
+        add_pcb_to_blocked(pcb);
+        unlock_blocked_list();
         return;
     }
     if(read_confirmation_package(package) != 0) { // Success = 0
