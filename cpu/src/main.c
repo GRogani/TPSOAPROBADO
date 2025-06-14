@@ -1,11 +1,9 @@
 #include "main.h"
 
-
-int main(int argc, char* argv[]) 
+int main(int argc, char *argv[])
 {
     init_list_and_mutex();
-
-    t_config* config_file = init_config("cpu.config");
+    t_config *config_file = init_config("cpu.config");
     t_cpu_config config_cpu = init_cpu_config(config_file);
     init_logger("cpu.log", "CPU", config_cpu.LOG_LEVEL);
 
@@ -15,72 +13,76 @@ int main(int argc, char* argv[])
 
     create_connections(config_cpu, &memory_socket, &kernel_dispatch_socket, &kernel_interrupt_socket);
 
-    t_package* kernel_package = NULL;
+    t_package *kernel_package = NULL;
     uint32_t pid, pc;
-    t_instruction* instruction = NULL;
 
     interrupt_args_t thread_args = {kernel_interrupt_socket, &pid, &pc};
-    pthread_t interrupt_handler_thread;
+    
     pthread_t interrupt_listener_thread;
-    pthread_create(&interrupt_listener_thread, NULL, interrupt_listener, &kernel_interrupt_socket);
-    pthread_create(&interrupt_handler_thread, NULL, interrupt_handler, &thread_args);
+    pthread_create(&interrupt_listener_thread, NULL, interrupt_listener, &thread_args);
 
     while (1)
-    {   
-        lock_cpu_mutex();
-        if(interrupt_count() > 0)
+    {
+        kernel_package = recv_dispatch(kernel_dispatch_socket, &pid, &pc);
+        if (kernel_package == NULL)
         {
-            unlock_cpu_mutex();
+            LOG_INFO("Disconneted from Kernel Dispatch");
             break;
         }
-        unlock_cpu_mutex();
-        kernel_package = receive_PID_PC_Package(kernel_dispatch_socket, &pid, &pc);
-        if(kernel_package == NULL) break;
-        package_destroy(kernel_package);
 
-        int syscall = 0;
-        while (syscall != 1)
+        while (1)
         {
-            lock_cpu_mutex();
 
             t_package *instruction_package = fetch(memory_socket, pid, pc);
             if (instruction_package == NULL)
             {
+                LOG_INFO("Disconnected from Memory");
                 unlock_cpu_mutex();
                 break;
             }
 
-                t_instruction * instruction = decode(instruction_package);
-                
-                if (instruction == NULL)
-                {
-                    LOG_ERROR("Decoding error");
-                    unlock_cpu_mutex();
-                    break;
-                }
-                package_destroy(instruction_package);
+            t_instruction *instruction = decode(instruction_package);
 
-                syscall = execute(instruction, memory_socket, kernel_dispatch_socket, &pid, &pc);
-
+            if (instruction == NULL)
+            {
+                LOG_ERROR("Decoding error");
                 unlock_cpu_mutex();
+                break;
+            }
+            destroy_package(instruction_package);
+
+            bool should_preempt = execute(instruction, memory_socket, kernel_dispatch_socket, &pid, &pc);
+
+            cleanup_instruction(instruction);
+
+            bool should_interrupt = interrupt_handler(&thread_args);
+
+            if (should_preempt || should_interrupt)
+            {
+                LOG_INFO("Preemption or interruption detected, breaking the instruction cycle.");
+                // limpiamos PC y PID
+                pid = 93847593; // un valor que es imposible que sea un PID real, lo consideramos basura
+                pc = 0;
+                unlock_cpu_mutex();
+                break;
+            }
         };
-
-        if (syscall == -1) 
-            LOG_ERROR("Execution error");
-
-        
-        cleanup_instruction(instruction);
-        
     }
-    
+
     LOG_INFO("Closing connections...");
 
+    // Señalar al thread de interrupciones que debe terminar
+    signal_interrupt_thread_exit();
+    
+    // Cerrar el socket de interrupciones para forzar que recv_package retorne NULL
+    close(kernel_interrupt_socket);
+    
+    // Esperar a que el thread termine
     pthread_join(interrupt_listener_thread, NULL);
-    pthread_join(interrupt_handler_thread, NULL);
+    LOG_INFO("Interrupt listener thread joined successfully");
 
     close(memory_socket);
     close(kernel_dispatch_socket);
-    close(kernel_interrupt_socket);
 
     destroy_list_and_mutex();
     log_destroy(get_logger());
@@ -89,12 +91,13 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void cleanup_instruction(t_instruction* instruction) 
+void cleanup_instruction(t_instruction *instruction)
 {
-    if (instruction != NULL) {
-        if (instruction->operand_string_size > 0)
-            free(instruction->operand_string);
-        free(instruction);
-    }
-}
+    if (instruction == NULL)
+        return;
 
+    if (instruction->operand_string != NULL)
+        free(instruction->operand_string);
+
+    free(instruction);
+}

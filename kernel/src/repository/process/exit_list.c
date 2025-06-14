@@ -21,7 +21,7 @@ void unlock_exit_list() {
     sem_post(&sem_exit);
 }
 
-bool find_pcb_in_exit(uint32_t pid) {
+bool find_pcb_in_exit (uint32_t pid) {
     bool pid_matches(void* ptr) {
         t_pcb* pcb = (t_pcb*) ptr;
         return pcb->pid == pid;
@@ -31,9 +31,22 @@ bool find_pcb_in_exit(uint32_t pid) {
     return pcb_found != NULL;
 }
 
-void add_pcb_to_exit(t_pcb* pcb) {
+void add_pcb_to_exit (t_pcb* pcb) {
     if (pcb == NULL) return;
     
-    pcb_change_state(pcb, EXIT);
+    pcb_change_state(pcb, EXIT_L);
     list_add(get_exit_list(), pcb);
+}
+
+void remove_pcb_from_exit (uint32_t pid) 
+{
+    bool pid_matches(void* ptr) 
+    {
+        t_pcb* pcb = (t_pcb*) ptr;
+        return pcb->pid == pid;
+    };
+
+    t_pcb* removed_pcb = list_remove_by_condition( get_exit_list(), pid_matches);
+    pcb_destroy(removed_pcb);
+    
 }

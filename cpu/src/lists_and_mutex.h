@@ -27,4 +27,8 @@ void unlock_cpu_mutex();
 
 void destroy_list_and_mutex();
 
+bool should_interrupt_thread_exit();
+
+void signal_interrupt_thread_exit();
+
 #endif 

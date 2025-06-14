@@ -1,4 +1,5 @@
 
+#include <stdlib.h>
 #include <semaphore.h>
 #include "../utils.h"
 
@@ -8,7 +9,7 @@ int dummy_connection(int server_socket)
 
     do
     {
-        connection = accept_connection(server_socket);
+        connection = accept_connection("test server", server_socket);
         if (connection < 0)
             printf("Waiting for connection...\n");
 
@@ -24,8 +25,6 @@ int main(){
     init_logger("tester.log", "TESTER", LOG_LEVEL_INFO);
 
     t_package* response;
-    t_instruction* instruction = create_instruction(NOOP, 0, 0, 0, NULL);
-    t_instruction* syscall = create_instruction(EXIT, 0, 0, 0, NULL);
 
     int PID = 6,PC = 20;
 
@@ -33,7 +32,7 @@ int main(){
     // Creación de servidores
     // =========================
 
-    int memory_server = create_server("30002");
+    int memory_server = create_server("80011");
     int dispatch_server = create_server("30003");
     int interrupt_server = create_server("30004");
 
@@ -66,8 +65,8 @@ int main(){
     printf("\n\x1b[33mPress Enter to send PID & PC to CPU dispatch connection.\x1b[0m\n");
     getchar();
 
-    send_PID_PC(cpu_dispatch_connection, PID, PC);
-    LOG_INFO("Package sent with opcode PID_PC_PACKAGE to CPU dispatch connection.");
+    send_dispatch_package(cpu_dispatch_connection, PID, PC);
+    LOG_INFO("Package sent with opcode DISPATCH to CPU dispatch connection.");
 
     // =========================
     // Esperando respuesta de CPU memory
@@ -76,7 +75,7 @@ int main(){
     LOG_INFO("Waiting for response from CPU memory connection...");
     response = recv_package(cpu_memory_connection);
     LOG_INFO("Received package from CPU memory connection with opcode: %s", opcode_to_string(response->opcode));
-    package_destroy(response);
+    destroy_package(response);
 
     // =========================
     // Enviando instrucción
@@ -85,7 +84,7 @@ int main(){
     printf("\n\x1b[33mPress Enter to send NOOP to CPU memory connection.\x1b[0m\n");
     getchar();
 
-    send_instruction(cpu_memory_connection, instruction);
+    send_memory_instruction_package(cpu_memory_connection, "NOOP");
     LOG_INFO("NOOP sent to CPU memory connection.");
 
     // =========================
@@ -95,7 +94,7 @@ int main(){
     printf("\n\x1b[33mPress Enter to send instruction to CPU memory connection.\x1b[0m\n");
     getchar();
 
-    send_instruction(cpu_memory_connection, syscall);
+    send_memory_instruction_package(cpu_memory_connection, "EXIT");
     LOG_INFO("Syscall sent to CPU memory connection.");
 
     // ===================================
@@ -104,7 +103,7 @@ int main(){
 
     response = recv_package(cpu_dispatch_connection);
     LOG_INFO("Received package from CPU dispatch connection with opcode: %s", opcode_to_string(response->opcode));
-    package_destroy(response);
+    destroy_package(response);
 
 
     // ===================================
@@ -114,28 +113,28 @@ int main(){
     printf("\n\x1b[33mPress Enter to send same PID interruption\x1b[0m\n");
     getchar();
 
-    send_interrupt(cpu_interrupt_connection, PID);
+    send_interrupt_package(cpu_interrupt_connection, PID);
 
     printf("\n\x1b[33mPress Enter to send other PID interruption\x1b[0m\n");
     getchar();
 
-    send_interrupt(cpu_interrupt_connection, PID + 1);
+    send_interrupt_package(cpu_interrupt_connection, PID + 1);
 
     printf("\n\x1b[33mPress Enter to send PID/PC and interruption simultaneously\x1b[0m\n");
     getchar();
 
     LOG_INFO("Sending PID/PC");
-    send_PID_PC(cpu_dispatch_connection, PID, PC);
+    send_dispatch_package(cpu_dispatch_connection, PID, PC);
     LOG_INFO("Sending Interruption");
-    send_interrupt(cpu_interrupt_connection, PID);
+    send_interrupt_package(cpu_interrupt_connection, PID);
 
     LOG_INFO("Sending Instruction NOOP to CPU memory connection and interruption to CPU interrupt connection");
-    send_instruction(cpu_memory_connection, instruction);
-    send_interrupt(cpu_interrupt_connection, PID);
+    send_memory_instruction_package(cpu_memory_connection, "NOOP");
+    send_interrupt_package(cpu_interrupt_connection, PID);
     
     response = recv_package(cpu_memory_connection);
     LOG_INFO("Received package from CPU memory connection with opcode: %s", opcode_to_string(response->opcode));
-    package_destroy(response);
+    destroy_package(response);
 
     // =========================
     // Finalizando tester

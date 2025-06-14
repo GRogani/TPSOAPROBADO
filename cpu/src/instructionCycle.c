@@ -4,9 +4,9 @@ t_package *fetch(int socket, uint32_t PID, uint32_t PC)
 {
     t_package *package;
 
-    LOG_DEBUG("Fetching instruction for PID: %d, PC: %d", PID, PC);
+    LOG_INFO("Fetching instruction for PID: %d, PC: %d", PID, PC);
 
-    send_memory_get_instruction_request(socket, PID, PC);
+    send_fetch_package(socket, PID, PC);
 
     package = receive_instruction(socket);
 
@@ -15,9 +15,9 @@ t_package *fetch(int socket, uint32_t PID, uint32_t PC)
 
 t_instruction *decode(t_package *package)
 {
-    t_instruction *instruction = safe_malloc(sizeof(t_instruction));
+    t_instruction *instruction = safe_calloc(1, sizeof(t_instruction));
 
-    char *instruction_string = read_memory_get_instruction_response(package);
+    char *instruction_string = read_instruction_package(package); 
 
     parse_instruction(instruction_string, instruction);
 
@@ -28,60 +28,58 @@ t_instruction *decode(t_package *package)
 
 void parse_instruction(char *instruction_string, t_instruction *instruction)
 {
-    char *saveptr;
-    char *token = strdup(strtok_r(instruction_string, " ", &saveptr)); // hago que el token tenga su propia memoria liberable, asi puedo liberar el instruction_string antes
-    if (token == NULL)
+    char *already_parsed;
+    char *instruction_code = strtok_r(instruction_string, " ", &already_parsed); // con el instruction_code no hace falta
+    if (instruction_code == NULL)
     {
-        log_error(get_logger(), "Invalid instruction format");
+        LOG_ERROR("Invalid instruction format");
         return;
     }
 
-    instruction->instruction_code = string_to_instruction_code(token);
+    instruction->instruction_code = string_to_instruction_code(instruction_code);
 
     switch (instruction->instruction_code)
     {
+    case DUMP_PROCESS:
+    case EXIT:
     case NOOP:
         break;
     case WRITE:
-        instruction->operand_numeric1 = atoi(strtok_r(NULL, " ", &saveptr));
-        instruction->operand_string = strdup(strtok_r(NULL, " ", &saveptr));
+        instruction->operand_numeric1 = atoi(strtok_r(NULL, " ", &already_parsed));
+        instruction->operand_string = strdup(strtok_r(NULL, " ", &already_parsed));
         instruction->operand_string_size = strlen(instruction->operand_string);
         break;
     case READ:
-        instruction->operand_numeric1 = atoi(strtok_r(NULL, " ", &saveptr));
-        instruction->operand_numeric2 = atoi(strtok_r(NULL, " ", &saveptr));
+        instruction->operand_numeric1 = atoi(strtok_r(NULL, " ", &already_parsed));
+        instruction->operand_numeric2 = atoi(strtok_r(NULL, " ", &already_parsed));
         break;
     case GOTO:
-        instruction->operand_numeric1 = atoi(strtok_r(NULL, " ", &saveptr));
+        instruction->operand_numeric1 = atoi(strtok_r(NULL, " ", &already_parsed));
         break;
     case IO:
-        instruction->operand_string = strdup(strtok_r(NULL, " ", &saveptr)); // 1. device_name
+        instruction->operand_string = strdup(strtok_r(NULL, " ", &already_parsed)); // 1. device_name
         instruction->operand_string_size = strlen(instruction->operand_string);
-        instruction->operand_numeric1 = atoi(strtok_r(NULL, " ", &saveptr)); // 2. sleep time
+        instruction->operand_numeric1 = atoi(strtok_r(NULL, " ", &already_parsed)); // 2. sleep time
         break;
     case INIT_PROC:
-        instruction->operand_string = strdup(strtok_r(NULL, " ", &saveptr)); // 1. pseudocode file
+        instruction->operand_string = strdup(strtok_r(NULL, " ", &already_parsed)); // 1. pseudocode file
         instruction->operand_string_size = strlen(instruction->operand_string);
-        instruction->operand_numeric1 = atoi(strtok_r(NULL, " ", &saveptr)); // 2. memory space
+        instruction->operand_numeric1 = atoi(strtok_r(NULL, " ", &already_parsed)); // 2. memory space
         break;
-    case DUMP_PROCESS:
-    case EXIT:
-    {
-        break; // dump memory and exit syscalls has nothing to do with operands
-    }
     default:
-        log_error(get_logger(), "Unknown instruction code: %d", instruction->instruction_code);
+        LOG_ERROR("Unknown instruction code: %d", instruction->instruction_code);
         break;
     }
 }
+bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch, uint32_t *pid, uint32_t *PC)
 
-int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, uint32_t *pid, uint32_t *PC)
 {
     switch (instruction->instruction_code)
     {
     case NOOP:
     {
         // No operation
+        (*PC)++;
         break;
     }
     case WRITE:
@@ -108,7 +106,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         else
         {
             LOG_INFO("Failed to read data from memory");
-            return -1;
+            return true;
         }
         (*PC)++;
         break;
@@ -120,152 +118,155 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
     }
     case IO:
     {
-        LOG_DEBUG("Executing IO operation, sending syscall to kernel");
+        LOG_INFO("Executing IO operation, sending syscall to kernel");
         (*PC)++;
-        t_cpu_syscall *syscall_req = safe_malloc(sizeof(t_cpu_syscall));
+        syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_IO;
         syscall_req->pid = *pid;
         syscall_req->pc = *PC;
-        syscall_req->params.io.device_name = instruction->operand_string;
+        syscall_req->params.io.device_name = strdup(instruction->operand_string);
         syscall_req->params.io.sleep_time = instruction->operand_numeric1;
-        send_cpu_syscall_request(socket_dispatch, syscall_req);
-        destroy_cpu_syscall(syscall_req);
-        return 1;
+        send_syscall_package(socket_dispatch, syscall_req);
+        destroy_syscall_package(syscall_req);
+        return true;
     }
     case INIT_PROC:
     {
-        LOG_DEBUG("Executing INIT_PROC, sending syscall to kernel");
+        LOG_INFO("Executing INIT_PROC, sending syscall to kernel");
         (*PC)++;
-        t_cpu_syscall *syscall_req = safe_malloc(sizeof(t_cpu_syscall));
+        syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_INIT_PROC;
         syscall_req->pid = *pid;
         syscall_req->pc = *PC;
         syscall_req->params.init_proc.pseudocode_file = instruction->operand_string;
         syscall_req->params.init_proc.memory_space = instruction->operand_numeric1;
-        send_cpu_syscall_request(socket_dispatch, syscall_req);
-        destroy_cpu_syscall(syscall_req);
+        send_syscall_package(socket_dispatch, syscall_req);
+        destroy_syscall_package(syscall_req);
 
         // wait for response from kernel to continue execution
         t_package *package = recv_package(socket_dispatch);
-        int success = read_cpu_syscall_response(package);
+        if (package->opcode != CONFIRMATION)
+        {
+            LOG_ERROR("Failed to receive confirmation package from kernel for PID %d", *pid);
+            return true; // should preempt due an issue
+        }
+        int success = read_confirmation_package(package);
         if (!success)
         {
-            log_error(get_logger(), "Failed to initialize process for PID %d", pid);
-            package_destroy(package);
-            return -1;
+            LOG_ERROR("Failed to initialize process for PID %d", *pid);
+            destroy_package(package);
+            return true;
         }
         break;
     }
     case DUMP_PROCESS:
     {
-        LOG_DEBUG("Executing DUMP_PROCESS, sending syscall to kernel");
+        LOG_INFO("Executing DUMP_PROCESS, sending syscall to kernel");
         (*PC)++;
-        t_cpu_syscall *syscall_req = safe_malloc(sizeof(t_cpu_syscall));
+        syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_DUMP_PROCESS;
         syscall_req->pid = *pid;
         syscall_req->pc = *PC;
-        send_cpu_syscall_request(socket_dispatch, syscall_req);
-        destroy_cpu_syscall(syscall_req);
-        return 1;
+        send_syscall_package(socket_dispatch, syscall_req);
+        destroy_syscall_package(syscall_req);
+        return true;
     }
     case EXIT:
     {
-        LOG_DEBUG("Executing EXIT, sending syscall to kernel");
+        LOG_INFO("Executing EXIT, sending syscall to kernel");
         (*PC)++;
-        t_cpu_syscall *syscall_req = safe_malloc(sizeof(t_cpu_syscall));
+        syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_EXIT;
         syscall_req->pid = *pid;
         syscall_req->pc = *PC;
-        send_cpu_syscall_request(socket_dispatch, syscall_req);
-        destroy_cpu_syscall(syscall_req);
-        return 1;
+        send_syscall_package(socket_dispatch, syscall_req);
+        destroy_syscall_package(syscall_req);
+        return true;
     }
     default:
     {
         LOG_WARNING("Unknown instruction: %d", instruction->instruction_code);
-        return -1;
+        return true;
     }
     }
-    return 0;
+    return false;
 }
 
-int check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute)
+void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute)
 {
-
-    if (package == NULL)
+    if (package->opcode == INTERRUPT)
     {
-        LOG_INFO("Disconnecting interrupt...");
-        return -1;
-    }
+        int pid_received = read_interrupt_package(package);
 
-    if (package->opcode == CPU_INTERRUPT)
-    {
-        int pid_received = read_cpu_interrupt_request(package);
+        if (pid_received == *pid_on_execute)
+        {
 
-        if(pid_received == *pid_on_execute) {
+            send_cpu_context_package(socket_interrupt, pid_received, *pc_on_execute, 0);
 
-            t_buffer* buffer = buffer_create(2 * sizeof(uint32_t));
-            buffer_add_uint32(buffer, pid_received);
-            buffer_add_uint32(buffer, *pc_on_execute);
+            LOG_INFO("Interrupt for PID %d executed", pid_received);
 
-            t_package* package = package_create(CPU_INTERRUPT, buffer);
-            send_package(socket_interrupt, package);
-            package_destroy(package);
-
-            LOG_DEBUG("Interrupt for PID %d executed", pid_received);
-                
-            return 1;
-        } else {
-            LOG_DEBUG("Interrupt for PID %d received, but not executing", pid_received);
-            // TODO: responder al kernel como que se "atendio" la interrupcion
+            return;
         }
+        else
+        {
+            LOG_ERROR("Interrupt for PID %d received, but not executing", pid_received);
 
-        send_cpu_interrupt_response(socket_interrupt, pid_received, pc_on_execute);
+            send_cpu_context_package(socket_interrupt, pid_received, *pc_on_execute, 1); // si no fué interrumpido el mismo proceso, significa que no estaba ejecutando la CPU. el kernel necesita saber eso, para ver si debe mover el proceso a READY porque lo desalojó correctamente, o se autodesalojó por una syscall. (la syscall pasa automaticamente el proceso a su nuevo estado y guarda el PCB)
+        }
     }
     else
     {
-        LOG_WARNING("Received unexpected opcode on interrupt connection: %s", opcode_to_string(package->opcode) );
+        LOG_WARNING("Received unexpected opcode on interrupt connection: %s", opcode_to_string(package->opcode));
     }
 
-    return 0;
 }
 
-void *interrupt_listener(void *socket)
+void *interrupt_listener(void *args)
 {
-    while (1)
+    interrupt_args_t* thread_args = (interrupt_args_t *)args;
+
+    while (!should_interrupt_thread_exit())
     {
-        t_package *package = recv_package(*(int *)socket);
+        t_package *package = recv_package(thread_args->socket_interrupt);
         if (package == NULL)
         {
-            LOG_INFO("Disconnecting interrupt listener...");
-            return NULL;
+            LOG_INFO("Disconnected from Kernel Interrupt - interrupt_listener exiting");
+            break;
         }
+        
         lock_interrupt_list();
-        LOG_DEBUG("Received interrupt package with opcode: %s", opcode_to_string(package->opcode));
+        LOG_INFO("Received interrupt package with opcode: %s", opcode_to_string(package->opcode));
         add_interrupt(package);
         unlock_interrupt_list();
-        signal_interrupt();
+
+        lock_cpu_mutex();
+        interrupt_handler(args);
+        unlock_cpu_mutex();
     }
+    
+    LOG_INFO("Interrupt listener thread exiting cleanly");
+    pthread_exit(NULL);
 }
 
-void *interrupt_handler(void *thread_args)
+bool interrupt_handler(void *thread_args)
 {
+    LOG_INFO("Interrupt handler working...");
     interrupt_args_t *args = (interrupt_args_t *)thread_args;
-    while (1)
-    {
-        wait_interrupt();
-        lock_interrupt_list();
-            while(interrupt_count() > 0)
-            {
-                t_package* package = get_last_interrupt(interrupt_count());
-                lock_cpu_mutex();
-                check_interrupt(args->socket_interrupt, package, args->pid, args->pc);
-                unlock_cpu_mutex();
-            }
-        unlock_interrupt_list();
-    }
+    bool interrupted = false;
 
-    return NULL;
+    lock_interrupt_list();
+    while (interrupt_count() > 0)
+    {
+        interrupted = true;
+        t_package *package = get_last_interrupt(interrupt_count());
+        check_interrupt(args->socket_interrupt, package, args->pid, args->pc);
+        destroy_package(package);
+    }
+    unlock_interrupt_list();
+
+    LOG_INFO("Interrupt found: %s", interrupted ? "yes" : "no");
+
+    return interrupted;
 }
 
 uint32_t MMU(uint32_t logic_dir)
@@ -286,5 +287,10 @@ uint32_t MMU(uint32_t logic_dir)
         physic_dir = physic_dir * entrys_by_table + entry;
     }
 
-    return (uint32_t)(physic_dir * size_pag + offset);
+    uint32_t result = (uint32_t)(physic_dir * size_pag + offset);
+    
+    // Liberar la configuración para evitar memory leak
+    config_destroy(config_memoria);
+    
+    return result;
 }

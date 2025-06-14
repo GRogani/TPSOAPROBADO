@@ -1,8 +1,7 @@
 #include "new_list.h"
-#include "../pcb.h"
+#include "repository/pcb/pcb.h"
 #include <commons/collections/list.h>
 #include <stdlib.h>
-// #include "macros/log_error.h"
 
 static sem_t sem_new;
 
@@ -43,19 +42,6 @@ void add_pcb_to_new(t_pcb* pcb) {
     
     // El PCB ya debe estar en estado NEW al ser creado
     list_add(get_new_list(), pcb);
-}
-
-t_pcb* remove_pcb_from_new(uint32_t pid) {
-    t_list* list = get_new_list();
-    
-    for (int i = 0; i < list_size(list); i++) {
-        t_pcb* pcb = (t_pcb*) list_get(list, i);
-        if (pcb && pcb->pid == pid) {
-            return (t_pcb*) list_remove(list, i);
-        }
-    }
-    
-    return NULL;
 }
 
 t_pcb* get_next_pcb_from_new() {

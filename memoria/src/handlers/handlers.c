@@ -18,7 +18,7 @@ void* client_listener(void* arg) {
     LOG_INFO("Memoria server listening on port: %s", memoria_config.PUERTO_ESCUCHA);
 
     while (1) {
-        int client_fd = accept_connection(server_fd);
+        int client_fd = accept_connection("MEMORY SERVER", server_fd);
         if (client_fd < 0) continue;
 
 
@@ -46,7 +46,7 @@ void* client_handler(void* client_fd_ptr) {
 
         switch (package->opcode) 
         {   
-            case GET_INSTRUCTION:
+            case FETCH:
                 get_instruction(client_fd, package);
                 break;
                 
@@ -58,7 +58,7 @@ void* client_handler(void* client_fd_ptr) {
                 get_free_space(client_fd);
                 break;
 
-            case CREATE_PROCESS:
+            case INIT_PROCESS:
                 create_process(client_fd, package);
                 break;
 
@@ -70,11 +70,19 @@ void* client_handler(void* client_fd_ptr) {
                 // TODO: suspend process and move to another space (free some memory)
                 break;
 
+            case KILL_PROCESS:
+                // TODO: exit process, free memory
+                send_confirmation_package(client_fd, 0);
+                LOG_INFO("KILL_PROCESS received, but not implemented yet.");
+                break;
+
             default:
                 LOG_WARNING("Unknown Opcode");
                 close(client_fd);
                 break;
         }
+        
+        destroy_package(package);
     }
     return NULL;
 }

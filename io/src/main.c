@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     int kernel_socket;
     kernel_socket = create_kernel_connection(io_config.PUERTO_KERNEL, io_config.IP_KERNEL);
 
-    send_new_device(kernel_socket, argv[1]);
+    send_new_io_package(kernel_socket, argv[1]);
 
     waiting_requests(kernel_socket, argv[1]);
 
@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
 void waiting_requests(int kernel_socket, char* id_IO)
 {
     t_package* package;
-    t_request_io* request;
+    io_operation_package_data* request;
     while(1)
     {
         package = recv_package(kernel_socket);
@@ -36,8 +36,8 @@ void waiting_requests(int kernel_socket, char* id_IO)
         }
         // if (io_busy) 
         // {
-        //     log_debug(get_logger(), "OJO, estoy ocupado procesando una operación de I/O.");
-        //     package_destroy(package);
+        //     LOG_INFO(get_logger(), "OJO, estoy ocupado procesando una operación de I/O.");
+        //     destroy_package(package);
         //     continue;
         // } else 
         // {
@@ -46,7 +46,7 @@ void waiting_requests(int kernel_socket, char* id_IO)
         //     pthread_mutex_unlock(&busy_mutex);
         // }
 
-        request = read_io_operation_request(package);
+        request = read_io_operation_package(package);
 
         request->kernel_socket = kernel_socket;
         request->device_name = id_IO;
@@ -55,23 +55,23 @@ void waiting_requests(int kernel_socket, char* id_IO)
         //Chau hilos, por intentar debuguear el kernel
         //se generan condiciones de carrera
 
-        package_destroy(package);
+        destroy_package(package);
         free(request);
     }
 }
 
-void processing_operation(t_request_io* io) 
+void processing_operation(io_operation_package_data* io) 
 {
     LOG_INFO("## PID: %d - Inicio de IO - Tiempo: %d", io->pid, io->sleep_time);
     
-    usleep(io->sleep_time);
+    usleep(io->sleep_time * 1000000); // Convert seconds to microseconds
     
     LOG_INFO("## PID: %d - Fin de IO", io->pid);
     
-    LOG_DEBUG("Estoy libre [%s]", io->device_name);
+    LOG_INFO("Estoy libre [%s]", io->device_name);
     
     // RESPONSE
-    send_io_operation_completed(io->kernel_socket, io->device_name);
+    send_io_completion_package(io->kernel_socket, io->device_name);
     
     //Desestimado
     // pthread_mutex_lock(&busy_mutex);

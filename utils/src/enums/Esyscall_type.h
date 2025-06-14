@@ -1,0 +1,17 @@
+#ifndef ENUM_SYSCALL_TYPE_H
+#define ENUM_SYSCALL_TYPE_H
+
+
+
+typedef uint32_t SYSCALL_TYPE;
+enum 
+{
+    SYSCALL_INIT_PROC,
+    SYSCALL_IO,
+    SYSCALL_DUMP_PROCESS,
+    SYSCALL_EXIT
+};
+
+
+
+#endif

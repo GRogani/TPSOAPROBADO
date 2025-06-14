@@ -3,25 +3,25 @@
 char* opcode_to_string(OPCODE opcode) 
 {
     switch (opcode) {
-        // memoria
-        case GET_INSTRUCTION: return "GET_INSTRUCTION";
+ 
+        case FETCH: return "FETCH";
         case LIST_INSTRUCTIONS: return "LIST_INSTRUCTIONS";
         case GET_FREE_SPACE: return "GET_FREE_SPACE";
-        case CREATE_PROCESS: return "CREATE_PROCESS";
+        case INIT_PROCESS: return "INIT_PROCESS";
         case WRITE_MEMORY: return "WRITE_MEMORY";
         case READ_MEMORY: return "READ_MEMORY";
+        case DUMP_MEMORY: return "DUMP_MEMORY";
 
-        // kernel
-        case IO_NEW_DEVICE: return "IO_NEW_DEVICE";
+
+        case NEW_IO: return "NEW_IO";
         case IO_COMPLETION: return "IO_COMPLETION";
-        case CPU_SYSCALL: return "CPU_SYSCALL";
+        case SYSCALL: return "SYSCALL";
 
-        // CPU
-        case PID_PC_PACKAGE: return "PID_PC_PACKAGE";
-        case CPU_INTERRUPT: return "CPU_INTERRUPT";
 
-        // IO
-        case REQUEST_IO: return "REQUEST_IO";
+        case DISPATCH: return "DISPATCH";
+        case INTERRUPT: return "INTERRUPT";
+
+        case IO_OPERATION: return "REQUEST_IO";
 
         default: return "UNKNOWN_OPCODE";
     }

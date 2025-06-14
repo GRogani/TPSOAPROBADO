@@ -1,0 +1,21 @@
+#ifndef DTP_IO_OPERATION_H
+#define DTP_IO_OPERATION_H
+
+#include "utils/serialization/package.h"
+#include "utils/serialization/buffer.h"
+#include "enums/Eopcodes.h"
+
+typedef struct io_operation_package_data {
+    int kernel_socket;
+    char* device_name;
+    uint32_t pid;
+    uint32_t sleep_time;
+} io_operation_package_data;
+
+t_package* create_io_operation_package (uint32_t pid, uint32_t time);
+
+int send_io_operation_package (int socket, uint32_t pid, uint32_t time);
+
+io_operation_package_data* read_io_operation_package (t_package* package);
+
+#endif
