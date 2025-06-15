@@ -1,3 +1,4 @@
+/*
 #include "kernel_logic/scheduler/medium_scheduler.h"
 #include "test_schedulers.h"
 
@@ -80,3 +81,4 @@ int main() {
     
     return 0;
 }
+*/

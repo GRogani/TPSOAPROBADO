@@ -65,8 +65,7 @@ void start_memory_mock_server(int* arg) {
     LOG_DEBUG("[MEMORY MOCK] Servidor mock iniciado correctamente");
 }
 
-t_pcb* create_test_pcb(uint32_t pid, uint32_t size, const char* filename) {
+t_pcb* create_test_pcb(uint32_t pid, uint32_t size, const char* filename){
     t_pcb* pcb = pcb_create(pid, 0, size, (char *) filename);
-    pcb_change_state(pcb, BLOCKED);
     return pcb;
 }
