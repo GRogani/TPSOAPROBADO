@@ -28,6 +28,21 @@ void* get_cpu_connection_by_id(char *id) {
   return cpu_connection;
 }
 
+void* get_cpu_connection_by_pid(uint32_t pid) 
+{
+  t_list* cpus = get_all_cpu_connections();
+
+  bool get_cpu_by_pid(void* ptr) {
+    t_cpu_connection* cpu_connection = (t_cpu_connection*)ptr;
+    return cpu_connection->current_process_executing == pid;
+  };
+
+  t_cpu_connection* cpu_connection = list_find(cpus, get_cpu_by_pid);
+  list_destroy(cpus);
+
+  return cpu_connection;
+}
+
 char * create_cpu_connection(int socket_interrupt, int socket_dispatch)
 {
   t_cpu_connection* cpu_connection = safe_malloc(sizeof(t_cpu_connection));
@@ -68,7 +83,7 @@ void unlock_cpu_connections()
   sem_post(&sem_cpu_connections);
 }
 
-void* get_all_cpu_connections() {
+t_list *get_all_cpu_connections() {
     return dictionary_elements(get_cpu_connections_dict());
 }
 
@@ -79,7 +94,7 @@ void* get_first_available_cpu() {
     bool is_cpu_available(void* ptr) {
         t_cpu_connection* connection = (t_cpu_connection*)ptr;
         return connection->current_process_executing == -1;
-    }
+    };
     
     t_cpu_connection* available_cpu = list_find(connections_list, is_cpu_available);
     list_destroy(connections_list);

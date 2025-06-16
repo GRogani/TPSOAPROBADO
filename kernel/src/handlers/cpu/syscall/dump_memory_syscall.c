@@ -1,7 +1,5 @@
 #include "dump_memory_syscall.h"
 
-extern t_kernel_config kernel_config;
-
 void dump_memory_syscall(uint32_t pid) 
 {
     LOG_INFO("Dump memory syscall called for PID %d", pid);
@@ -13,7 +11,7 @@ void dump_memory_syscall(uint32_t pid)
             unlock_exec_list();
             return;
         }
-        remove_pcb_from_exit(pid);
+        remove_pcb_from_exec(pid);
     unlock_exec_list();
 
     lock_blocked_list();

@@ -1,9 +1,9 @@
 #include "long_scheduler.h"
 
-extern t_kernel_config kernel_config;
-
 bool run_long_scheduler(void)
 {
+  extern t_kernel_config kernel_config;
+
   LOG_INFO("long_scheduler: Iniciando planificador de largo plazo");
 
   // Establecer conexión con memoria

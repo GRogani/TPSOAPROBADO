@@ -8,6 +8,8 @@ int main(int argc, char* argv[]) {
 
     kernel_config = init_kernel_config(config);
 
+    configure_scheduling_algorithms();
+    
     initialize_global_lists(); 
 
     initialize_global_semaphores();

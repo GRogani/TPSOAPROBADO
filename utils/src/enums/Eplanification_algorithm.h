@@ -1,32 +1,21 @@
 #ifndef ENUM_PLANIFICATION_ALGORITHM
 #define ENUM_PLANIFICATION_ALGORITHM
 
-#define PLANIFICATION_ENUM_SIZE 4
-
 #include <stddef.h>
 #include <strings.h>
 
 typedef enum {
     FIFO,
-    SJF,
-    SRT,
+    SJF, // con o sin desalojo
     PMCP,
-    PLANIFICATION_INVALID = -1
 } PLANIFICATION_ALGORITHM;
 
 
 /**
  * @brief Convierte un string en su correspondiente algoritmo de planificación.
- * @param planification_algorithm Cadena de texto con el nombre del algoritmo.
- * @return Valor del enum PLANIFICATION_ALGORITHM acotado correspondiente, o PLANIFICATION_INVALID si no coincide.
+ * @param algorithm_str Cadena de texto con el nombre del algoritmo.
+ * @return `PLANIFICATION_ALGORITHM` , `FIFO` en caso de error.
  */
-PLANIFICATION_ALGORITHM short_planification_from_string(char*);
-
-/**
- * @brief Convierte un string en su correspondiente algoritmo de planificación.
- * @param planification_algorithm Cadena de texto con el nombre del algoritmo.
- * @return Valor del enum PLANIFICATION_ALGORITHM acotado correspondiente, o PLANIFICATION_INVALID si no coincide.
- */
-PLANIFICATION_ALGORITHM ready_planification_from_string(char*);
+PLANIFICATION_ALGORITHM planification_algorithm_from_string(const char *algorithm_str);
 
 #endif
