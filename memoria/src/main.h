@@ -8,6 +8,6 @@
 #include "semaphores.h"
 #include "memoria_logic/memoria.h"
 #include "client/handlers.h"
-#include "collections/collections.h"
+#include "structures/page_table.h"
 
 #endif

@@ -20,9 +20,6 @@ int main(){
     initialize_memory_semaphores();
     LOG_INFO("Memory semaphores initialized");
 
-    /* ---------------- SEMÁFOROS ---------------- */
-    init_collections(memoria_config);
-
     /* ---------------- MEMORIA GLOBAL ---------------- */
     global_memory.processes = list_create();
     LOG_INFO("Global memory initialized");
