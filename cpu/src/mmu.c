@@ -4,16 +4,15 @@
 #include <string.h>
 
 
-static MMUConfig* g_mmu_config;
 static TLBConfig* g_tlb_config;
 static CacheConfig* g_cache_config;
 
 static t_list* g_tlb;
-static t_list* g_cache;
+
 
 static int g_tlb_fifo_pointer = 0;
 static uint64_t g_lru_timestamp_counter = 0;
-static int g_cache_clock_pointer = 0;
+
 
 
 static uint32_t mmu_request_pagetable_entry_from_memory(uint32_t table_id, uint32_t entry_index) {
@@ -87,7 +86,7 @@ static void tlb_add_entry(uint32_t page_number, uint32_t frame_number) {
 }
 
 
-static uint32_t mmu_perform_page_walk(uint32_t page_number) {
+static uint32_t mmu_perform_page_walk(uint32_t page_number) { 
     LOG_INFO("[MMU] Page Walk starting for page %u...", page_number);
 
     uint32_t temp_page_num = page_number;
@@ -109,6 +108,29 @@ static uint32_t mmu_perform_page_walk(uint32_t page_number) {
     return frame_number;
 }
 
+<<<<<<< HEAD
+=======
+void mmu_init(MMUConfig* mmu_config, TLBConfig* tlb_config, CacheConfig* cache_config) {
+    g_mmu_config = mmu_config;
+    g_tlb_config = tlb_config;
+    g_cache_config = cache_config;
+
+    if (g_tlb_config->entry_count > 0) {
+        g_tlb = list_create();
+    }
+    if (g_cache_config->entry_count > 0) {
+        g_cache = list_create();
+        for (int i = 0; i < g_cache_config->entry_count; i++) {
+            CacheEntry* entry = malloc(sizeof(CacheEntry));
+            entry->is_valid = false;
+            entry->content = malloc(g_mmu_config->page_size);
+            list_add(g_cache, entry);
+        }
+    }
+    LOG_INFO("MMU, TLB, and Cache initialized.");
+}
+
+>>>>>>> 9c48be3abf2571487f0a1e41b2f819c050e3e4b2
 uint32_t mmu_translate_address(uint32_t logical_address) {
     uint32_t page_number = floor(logical_address / g_mmu_config->page_size);
     uint32_t offset = logical_address % g_mmu_config->page_size;
@@ -134,6 +156,7 @@ uint32_t mmu_translate_address(uint32_t logical_address) {
     return physical_address;
 }
 
+<<<<<<< HEAD
 /*MMU Administrativos*/
 void mmu_init(MMUConfig* mmu_config, TLBConfig* tlb_config, CacheConfig* cache_config) {
     g_mmu_config = mmu_config;
@@ -155,6 +178,8 @@ void mmu_init(MMUConfig* mmu_config, TLBConfig* tlb_config, CacheConfig* cache_c
     LOG_INFO("MMU, TLB, and Cache initialized.");
 }
 
+=======
+>>>>>>> 9c48be3abf2571487f0a1e41b2f819c050e3e4b2
 
 void mmu_process_cleanup(int* memory_socket) {
     LOG_INFO("--- Cleaning up for process eviction ---");
@@ -184,6 +209,7 @@ void mmu_destroy() {
     if (g_cache) {
         list_destroy_and_destroy_elements(g_cache, _cache_entry_destroy);
     }
+<<<<<<< HEAD
 }
 /*MMU Administrativos*/
 
@@ -288,3 +314,6 @@ static CacheEntry* cache_load_page(uint32_t frame_number, int* memory_socket) {
     return victim_entry;
 }
 /*CACHE*/
+=======
+}
+>>>>>>> 9c48be3abf2571487f0a1e41b2f819c050e3e4b2
