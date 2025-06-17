@@ -9,5 +9,6 @@
 #include "memoria_logic/memoria.h"
 #include "client/handlers.h"
 #include "structures/page_table.h"
+#include "memoria_logic/manager.h"
 
 #endif

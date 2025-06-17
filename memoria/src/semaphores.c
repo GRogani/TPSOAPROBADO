@@ -12,6 +12,7 @@ void initialize_memory_semaphores() {
         sem_destroy(&sem_global_processes);
         exit(EXIT_FAILURE);
     }
+    LOG_INFO("Memory semaphores initialized");
 }
 
 void destroy_memory_semaphores() {

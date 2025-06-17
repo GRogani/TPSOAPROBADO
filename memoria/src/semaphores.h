@@ -15,8 +15,8 @@
 extern t_memoria_config memoria_config;
 
 // Semáforos para proteger acceso concurrente
-extern sem_t sem_global_processes;      // Protege global_memory.processes
-extern sem_t sem_process_instructions;  // Protege proc_memory->instructions
+static sem_t sem_global_processes;
+static sem_t sem_process_instructions;
 
 // Funciones de inicialización y destrucción de semáforos
 void initialize_memory_semaphores();
