@@ -27,21 +27,6 @@ static uint32_t mmu_request_pagetable_entry_from_memory(uint32_t table_id, uint3
 }
 
 
-static void mmu_request_page_read_from_memory(int* memory_socket, uint32_t frame_number, void* buffer) {
-    LOG_DEBUG("[MEM-REQUEST] Asking Memory to read page from frame %u", frame_number);
-    send_mmu_page_read_request(memory_socket, frame_number);
-    //TODO: Manejar respuesta y guardar en buffer
-}
-
-
-static void mmu_request_page_write_to_memory(int* memory_socket, uint32_t frame_number, void* content) {
-    LOG_INFO("[MEM-REQUEST] Telling Memory to write page to frame %u", frame_number);
-    uint32_t content_size = g_mmu_config->page_size;
-    send_mmu_page_write_request(memory_socket, frame_number, content, content_size);
-}
-
-
-
 static void _tlb_entry_destroy(void* element) {
     free(element);
 }
@@ -124,6 +109,100 @@ static uint32_t mmu_perform_page_walk(uint32_t page_number) {
     return frame_number;
 }
 
+uint32_t mmu_translate_address(uint32_t logical_address) {
+    uint32_t page_number = floor(logical_address / g_mmu_config->page_size);
+    uint32_t offset = logical_address % g_mmu_config->page_size;
+    
+    LOG_INFO("--- Translating Logical Address %u ---", logical_address);
+    LOG_DEBUG("  -> Page Number: %u, Offset: %u", page_number, offset);
+
+    uint32_t frame_number;
+    TLBEntry* tlb_entry = tlb_find_entry(page_number);
+
+    if (tlb_entry) {
+        LOG_INFO("[TLB] HIT! Page %u -> Frame %u.", page_number, tlb_entry->frame);
+        frame_number = tlb_entry->frame;
+    } else {
+        LOG_INFO("[TLB] MISS for page %u. Consulting page tables...", page_number);
+        frame_number = mmu_perform_page_walk(page_number);
+        tlb_add_entry(page_number, frame_number);
+    }
+
+    uint32_t physical_address = (frame_number * g_mmu_config->page_size) + offset;
+    LOG_DEBUG("  -> Resulting Physical Address: %u", physical_address);
+    
+    return physical_address;
+}
+
+/*MMU Administrativos*/
+void mmu_init(MMUConfig* mmu_config, TLBConfig* tlb_config, CacheConfig* cache_config) {
+    g_mmu_config = mmu_config;
+    g_tlb_config = tlb_config;
+    g_cache_config = cache_config;
+
+    if (g_tlb_config->entry_count > 0) {
+        g_tlb = list_create();
+    }
+    if (g_cache_config->entry_count > 0) {
+        g_cache = list_create();
+        for (int i = 0; i < g_cache_config->entry_count; i++) {
+            CacheEntry* entry = malloc(sizeof(CacheEntry));
+            entry->is_valid = false;
+            entry->content = malloc(g_mmu_config->page_size);
+            list_add(g_cache, entry);
+        }
+    }
+    LOG_INFO("MMU, TLB, and Cache initialized.");
+}
+
+
+void mmu_process_cleanup(int* memory_socket) {
+    LOG_INFO("--- Cleaning up for process eviction ---");
+    if (g_cache_config->entry_count > 0) {
+        LOG_INFO("[Cache] Flushing dirty pages to memory...");
+        void _writeback_if_dirty(void* element) {
+            CacheEntry* entry = (CacheEntry*)element;
+            if (entry->is_valid && entry->modified_bit) {
+                mmu_request_page_write_to_memory(memory_socket,entry->frame, entry->content);
+            }
+            entry->is_valid = false; // Invalidate all entries
+        }
+        list_iterate(g_cache, _writeback_if_dirty);
+        LOG_INFO("[Cache] All cache entries invalidated.");
+    }
+    if (g_tlb_config->entry_count > 0) {
+        list_clean_and_destroy_elements(g_tlb, _tlb_entry_destroy);
+        LOG_INFO("[TLB] All TLB entries flushed.");
+    }
+}
+
+void mmu_destroy() {
+    LOG_INFO("Destroying MMU resources...");
+    if (g_tlb) {
+        list_destroy_and_destroy_elements(g_tlb, _tlb_entry_destroy);
+    }
+    if (g_cache) {
+        list_destroy_and_destroy_elements(g_cache, _cache_entry_destroy);
+    }
+}
+/*MMU Administrativos*/
+
+
+
+/*CACHE*/
+
+static void mmu_request_page_read_from_memory(int* memory_socket, uint32_t frame_number, void* buffer) {
+    LOG_DEBUG("[MEM-REQUEST] Asking Memory to read page from frame %u", frame_number);
+    send_mmu_page_read_request(memory_socket, frame_number);
+    //TODO: Manejar respuesta y guardar en buffer
+}
+
+
+static void mmu_request_page_write_to_memory(int* memory_socket, uint32_t frame_number, void* content) {
+    LOG_INFO("[MEM-REQUEST] Telling Memory to write page to frame %u", frame_number);
+    uint32_t content_size = g_mmu_config->page_size;
+    send_mmu_page_write_request(memory_socket, frame_number, content, content_size);
+}
 
 static CacheEntry* cache_find_entry(uint32_t frame_number) {
     if (g_cache_config->entry_count == 0) return NULL;
@@ -208,79 +287,4 @@ static CacheEntry* cache_load_page(uint32_t frame_number, int* memory_socket) {
     
     return victim_entry;
 }
-
-void mmu_init(MMUConfig* mmu_config, TLBConfig* tlb_config, CacheConfig* cache_config) {
-    g_mmu_config = mmu_config;
-    g_tlb_config = tlb_config;
-    g_cache_config = cache_config;
-
-    if (g_tlb_config->entry_count > 0) {
-        g_tlb = list_create();
-    }
-    if (g_cache_config->entry_count > 0) {
-        g_cache = list_create();
-        for (int i = 0; i < g_cache_config->entry_count; i++) {
-            CacheEntry* entry = malloc(sizeof(CacheEntry));
-            entry->is_valid = false;
-            entry->content = malloc(g_mmu_config->page_size);
-            list_add(g_cache, entry);
-        }
-    }
-    LOG_INFO("MMU, TLB, and Cache initialized.");
-}
-
-uint32_t mmu_translate_address(uint32_t logical_address) {
-    uint32_t page_number = floor(logical_address / g_mmu_config->page_size);
-    uint32_t offset = logical_address % g_mmu_config->page_size;
-    
-    LOG_INFO("--- Translating Logical Address %u ---", logical_address);
-    LOG_DEBUG("  -> Page Number: %u, Offset: %u", page_number, offset);
-
-    uint32_t frame_number;
-    TLBEntry* tlb_entry = tlb_find_entry(page_number);
-
-    if (tlb_entry) {
-        LOG_INFO("[TLB] HIT! Page %u -> Frame %u.", page_number, tlb_entry->frame);
-        frame_number = tlb_entry->frame;
-    } else {
-        LOG_INFO("[TLB] MISS for page %u. Consulting page tables...", page_number);
-        frame_number = mmu_perform_page_walk(page_number);
-        tlb_add_entry(page_number, frame_number);
-    }
-
-    uint32_t physical_address = (frame_number * g_mmu_config->page_size) + offset;
-    LOG_DEBUG("  -> Resulting Physical Address: %u", physical_address);
-    
-    return physical_address;
-}
-
-
-void mmu_process_cleanup(int* memory_socket) {
-    LOG_INFO("--- Cleaning up for process eviction ---");
-    if (g_cache_config->entry_count > 0) {
-        LOG_INFO("[Cache] Flushing dirty pages to memory...");
-        void _writeback_if_dirty(void* element) {
-            CacheEntry* entry = (CacheEntry*)element;
-            if (entry->is_valid && entry->modified_bit) {
-                mmu_request_page_write_to_memory(memory_socket,entry->frame, entry->content);
-            }
-            entry->is_valid = false; // Invalidate all entries
-        }
-        list_iterate(g_cache, _writeback_if_dirty);
-        LOG_INFO("[Cache] All cache entries invalidated.");
-    }
-    if (g_tlb_config->entry_count > 0) {
-        list_clean_and_destroy_elements(g_tlb, _tlb_entry_destroy);
-        LOG_INFO("[TLB] All TLB entries flushed.");
-    }
-}
-
-void mmu_destroy() {
-    LOG_INFO("Destroying MMU resources...");
-    if (g_tlb) {
-        list_destroy_and_destroy_elements(g_tlb, _tlb_entry_destroy);
-    }
-    if (g_cache) {
-        list_destroy_and_destroy_elements(g_cache, _cache_entry_destroy);
-    }
-}
+/*CACHE*/
