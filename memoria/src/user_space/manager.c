@@ -4,7 +4,7 @@ void* user_memory_space = NULL;
 size_t MEMORY_SIZE = 0;
 int PAGE_SIZE = 0;
 
-bool memory_manager_init(const t_memoria_config* config) {
+bool init_user_memory(const t_memoria_config* config) {
     if (config == NULL) {
         LOG_ERROR("Configuración de memoria es NULL.");
         return false;
@@ -13,7 +13,7 @@ bool memory_manager_init(const t_memoria_config* config) {
     MEMORY_SIZE = config->TAM_MEMORIA;
     PAGE_SIZE = config->TAM_PAGINA;
 
-    user_memory_space = malloc(MEMORY_SIZE);
+    user_memory_space = safe_malloc(MEMORY_SIZE);
     if (user_memory_space == NULL) {
         LOG_ERROR("Error al asignar memoria de usuario de tamaño %zu.", MEMORY_SIZE);
         return false;

@@ -1,36 +1,9 @@
-#include "memoria.h" 
+#include "process.h"
 
-global_memory_state global_memory;
-
-void init_global_memory_state(t_memoria_config* config) {
-    global_memory.config = config;
-    global_memory.processes = list_create();
-    pthread_mutex_init(&global_memory.processes_mutex, NULL);
-    global_memory.main_logger = log_create("memoria.log", "MEMORIA_MODULE", true, config->LOG_LEVEL);
-
-    LOG_INFO(global_memory.main_logger, "Inicializando módulo Memoria.");
-
-    if (!memory_manager_init(config)) {
-        LOG_ERROR(global_memory.main_logger, "Error crítico al inicializar espacio de memoria de usuario. Terminando.");
-    }
-    // TODO: Initialize SWAP manager here
-    LOG_INFO(global_memory.main_logger, "Módulo Memoria inicializado.");
-}
-
-void destroy_global_memory_state() {
-    LOG_INFO(global_memory.main_logger, "Destruyendo módulo Memoria.");
-    list_destroy_and_destroy_elements(global_memory.processes, destroy_proc_memory);
-    pthread_mutex_destroy(&global_memory.processes_mutex);
-    memory_manager_destroy(); // Free user memory space
-    // TODO: Destroy SWAP resources
-    log_destroy(global_memory.main_logger);
-}
-
-// --- Process Management Functions ---
-proc_memory* find_process_by_pid(uint32_t pid) {
+process_info* find_process_by_pid(uint32_t pid) {
     // This function assumes 'global_memory.processes_mutex' is already locked by the caller
     for (int i = 0; i < list_size(global_memory.processes); i++) {
-        proc_memory* proc = list_get(global_memory.processes, i);
+        process_info* proc = list_get(global_memory.processes, i);
         if (proc->pid == pid) {
             return proc;
         }
@@ -40,7 +13,7 @@ proc_memory* find_process_by_pid(uint32_t pid) {
 
 t_list* load_script_lines(char* path) {
     char full_path[512];
-    // This assumes `src/program/` relative to where your executable runs. Adjust as needed.
+    // This assumes `src/program/` relative the executable runs.
     snprintf(full_path, sizeof(full_path), "src/program/%s", path);
 
     LOG_INFO(global_memory.main_logger, "Intentando abrir archivo: %s", full_path);
@@ -76,9 +49,9 @@ t_list* load_script_lines(char* path) {
 }
 
 int create_process(uint32_t pid, uint32_t size, char* script_path) {
-    proc_memory* proc = malloc(sizeof(proc_memory));
+    process_info* proc = malloc(sizeof(process_info));
     if (proc == NULL) {
-        LOG_ERROR(global_memory.main_logger, "## PID: %u - Error: No se pudo asignar memoria para proc_memory.", pid);
+        LOG_ERROR(global_memory.main_logger, "## PID: %u - Error: No se pudo asignar memoria para process_info.", pid);
         return -1;
     }
 
@@ -129,7 +102,7 @@ int create_process(uint32_t pid, uint32_t size, char* script_path) {
 }
 
 void destroy_proc_memory(void* proc_void_ptr) {
-    proc_memory* proc = (proc_memory*) proc_void_ptr;
+    process_info* proc = (process_info*) proc_void_ptr;
     if (proc == NULL) {
         return;
     }
@@ -190,7 +163,7 @@ void get_instruction(int socket, t_package* package) {
     uint32_t pc = request.pc;
 
     lock_global_processes();
-    proc_memory* proc = find_process_by_pid(pid);
+    process_info* proc = find_process_by_pid(pid);
 
     if (proc != NULL) {
         proc->metrics->instruction_requests_count++; // Increment instruction request metric
@@ -225,7 +198,7 @@ void delete_process(int socket, t_package *package) {
     lock_global_processes();
     int found_index = -1;
     for (int i = 0; i < list_size(global_memory.processes); i++) {
-        proc_memory* proc = list_get(global_memory.processes, i);
+        process_info* proc = list_get(global_memory.processes, i);
         if (proc->pid == pid_to_delete) {
             found_index = i;
             break;

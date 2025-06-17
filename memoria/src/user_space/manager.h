@@ -14,7 +14,7 @@ extern int PAGE_SIZE; // From config, useful for memory operations
  * @param config A pointer to the t_memoria_config structure.
  * @return True if initialization is successful, false otherwise.
  */
-bool memory_manager_init(const t_memoria_config* config);
+bool init_user_memory(const t_memoria_config* config);
 
 /**
  * @brief Reads a specified number of bytes from the user memory space at a given physical address.
