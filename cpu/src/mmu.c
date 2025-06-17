@@ -6,13 +6,14 @@
 
 static TLBConfig* g_tlb_config;
 static CacheConfig* g_cache_config;
+static MMUConfig* g_mmu_config;
 
 static t_list* g_tlb;
-
+static t_list* g_cache;
 
 static int g_tlb_fifo_pointer = 0;
 static uint64_t g_lru_timestamp_counter = 0;
-
+static int g_cache_clock_pointer = 0;
 
 
 static uint32_t mmu_request_pagetable_entry_from_memory(uint32_t table_id, uint32_t entry_index) {
@@ -23,6 +24,20 @@ static uint32_t mmu_request_pagetable_entry_from_memory(uint32_t table_id, uint3
     } else {
         return table_id + entry_index;
     }
+}
+
+
+static void mmu_request_page_read_from_memory(int* memory_socket, uint32_t frame_number, void* buffer) {
+    LOG_DEBUG("[MEM-REQUEST] Asking Memory to read page from frame %u", frame_number);
+    send_mmu_page_read_request(memory_socket, frame_number);
+    //TODO: Manejar respuesta y guardar en buffer
+}
+
+
+static void mmu_request_page_write_to_memory(int* memory_socket, uint32_t frame_number, void* content) {
+    LOG_INFO("[MEM-REQUEST] Telling Memory to write page to frame %u", frame_number);
+    uint32_t content_size = g_mmu_config->page_size;
+    send_mmu_page_write_request(memory_socket, frame_number, content, content_size);
 }
 
 
@@ -108,29 +123,6 @@ static uint32_t mmu_perform_page_walk(uint32_t page_number) {
     return frame_number;
 }
 
-<<<<<<< HEAD
-=======
-void mmu_init(MMUConfig* mmu_config, TLBConfig* tlb_config, CacheConfig* cache_config) {
-    g_mmu_config = mmu_config;
-    g_tlb_config = tlb_config;
-    g_cache_config = cache_config;
-
-    if (g_tlb_config->entry_count > 0) {
-        g_tlb = list_create();
-    }
-    if (g_cache_config->entry_count > 0) {
-        g_cache = list_create();
-        for (int i = 0; i < g_cache_config->entry_count; i++) {
-            CacheEntry* entry = malloc(sizeof(CacheEntry));
-            entry->is_valid = false;
-            entry->content = malloc(g_mmu_config->page_size);
-            list_add(g_cache, entry);
-        }
-    }
-    LOG_INFO("MMU, TLB, and Cache initialized.");
-}
-
->>>>>>> 9c48be3abf2571487f0a1e41b2f819c050e3e4b2
 uint32_t mmu_translate_address(uint32_t logical_address) {
     uint32_t page_number = floor(logical_address / g_mmu_config->page_size);
     uint32_t offset = logical_address % g_mmu_config->page_size;
@@ -156,7 +148,6 @@ uint32_t mmu_translate_address(uint32_t logical_address) {
     return physical_address;
 }
 
-<<<<<<< HEAD
 /*MMU Administrativos*/
 void mmu_init(MMUConfig* mmu_config, TLBConfig* tlb_config, CacheConfig* cache_config) {
     g_mmu_config = mmu_config;
@@ -178,8 +169,6 @@ void mmu_init(MMUConfig* mmu_config, TLBConfig* tlb_config, CacheConfig* cache_c
     LOG_INFO("MMU, TLB, and Cache initialized.");
 }
 
-=======
->>>>>>> 9c48be3abf2571487f0a1e41b2f819c050e3e4b2
 
 void mmu_process_cleanup(int* memory_socket) {
     LOG_INFO("--- Cleaning up for process eviction ---");
@@ -209,7 +198,6 @@ void mmu_destroy() {
     if (g_cache) {
         list_destroy_and_destroy_elements(g_cache, _cache_entry_destroy);
     }
-<<<<<<< HEAD
 }
 /*MMU Administrativos*/
 
@@ -217,18 +205,6 @@ void mmu_destroy() {
 
 /*CACHE*/
 
-static void mmu_request_page_read_from_memory(int* memory_socket, uint32_t frame_number, void* buffer) {
-    LOG_DEBUG("[MEM-REQUEST] Asking Memory to read page from frame %u", frame_number);
-    send_mmu_page_read_request(memory_socket, frame_number);
-    //TODO: Manejar respuesta y guardar en buffer
-}
-
-
-static void mmu_request_page_write_to_memory(int* memory_socket, uint32_t frame_number, void* content) {
-    LOG_INFO("[MEM-REQUEST] Telling Memory to write page to frame %u", frame_number);
-    uint32_t content_size = g_mmu_config->page_size;
-    send_mmu_page_write_request(memory_socket, frame_number, content, content_size);
-}
 
 static CacheEntry* cache_find_entry(uint32_t frame_number) {
     if (g_cache_config->entry_count == 0) return NULL;
@@ -314,6 +290,3 @@ static CacheEntry* cache_load_page(uint32_t frame_number, int* memory_socket) {
     return victim_entry;
 }
 /*CACHE*/
-=======
-}
->>>>>>> 9c48be3abf2571487f0a1e41b2f819c050e3e4b2

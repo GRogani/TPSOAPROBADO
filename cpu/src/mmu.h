@@ -8,13 +8,20 @@
 #include <config_loader.h>
 #include "utils/DTOs/mmu_request_page_write_to_memory.h"
 #include "utils/DTOs/mmu_request_page_read_from_memory.h"
-#include "cache.h"
 
 typedef struct {
     uint32_t page;
     uint32_t frame;
     uint64_t lru_timestamp; 
 } TLBEntry;
+
+typedef struct {
+    bool is_valid;
+    uint32_t frame;
+    void* content;
+    bool use_bit;
+    bool modified_bit;
+ } CacheEntry;
 
 void mmu_init(MMUConfig* mmu_config, TLBConfig* tlb_config, CacheConfig* cache_config);
 
