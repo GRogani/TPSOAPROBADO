@@ -1,5 +1,5 @@
-#ifndef MEMORIA_H
-#define MEMORIA_H
+#ifndef MEMORIA_SEMAPHORES_H
+#define MEMORIA_SEMAPHORES_H
 
 #include <string.h>
 #include <stdio.h>

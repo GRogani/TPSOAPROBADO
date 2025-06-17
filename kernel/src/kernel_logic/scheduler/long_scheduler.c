@@ -79,7 +79,7 @@ bool run_long_scheduler(void)
     LOG_INFO("long_scheduler: Intentando inicializar proceso PID=%d", pcb->pid);
 
     // Intentar crear proceso en memoria (para inicialización usamos tamaño mock)
-    bool memory_ok = create_process_in_memory(memory_socket, pcb->pid, pcb->size, pcb->pseudocode_file);
+    bool memory_ok = create_process(memory_socket, pcb->pid, pcb->size, pcb->pseudocode_file);
 
     if (memory_ok)
     {

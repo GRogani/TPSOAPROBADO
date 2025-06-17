@@ -19,7 +19,6 @@ t_list* load_script_lines(char* path) {
     size_t len = 0;
 
     while (getline(&line, &len, file) != -1) {
-        // Remove trailing whitespace and newline manually (safe way)
         size_t line_len = strlen(line);
         while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r' || 
                line[line_len - 1] == ' ' || line[line_len - 1] == '\t')) {
@@ -36,11 +35,16 @@ t_list* load_script_lines(char* path) {
     return list;
 }
 
-void create_process(int socket, t_package* package) {
-    init_process_package_data* create_process_args = read_init_process_package(package);
-    LOG_INFO("## PID: %d - Create Process Request Received", create_process_args->pid);
-    create_process_in_memory(create_process_args->pid, create_process_args->size, create_process_args->pseudocode_path);
-    destroy_init_process_package(create_process_args);
+void init_process(int socket, t_package* package) 
+{
+    init_process_package_data* init_process_args = read_init_process_package(package);
+
+    LOG_INFO("## PID: %d - Create Process Request Received", init_process_args->pid);
+
+    create_process(init_process_args->pid, init_process_args->size, init_process_args->pseudocode_path);
+
+    destroy_init_process_package(init_process_args);
+
     send_confirmation_package(socket, 0); // 0 indicates success
 }
 
@@ -58,7 +62,7 @@ proc_memory* find_process_by_pid(int pid) {
     return proc;
 }
 
-int create_process_in_memory(uint32_t pid, uint32_t size, char* script_path) {
+int create_process(uint32_t pid, uint32_t size, char* script_path) {
    
     proc_memory* proc = malloc(sizeof(proc_memory));
     proc->pid = pid;
@@ -120,4 +124,13 @@ void get_free_space(int socket) {
     t_package* package = create_package(GET_FREE_SPACE, buffer);
     send_package(socket, package);
     destroy_package(package);
+}
+
+void delete_process(int socket, t_package *package)
+{
+
+
+
+
+
 }

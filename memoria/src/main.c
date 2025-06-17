@@ -8,19 +8,20 @@ sem_t sem_global_processes;
 sem_t sem_process_instructions;
 
 int main(){
-
     /* ---------------- CONFIG ---------------- */
 
-   t_config *config_file = init_config("memoria.config");
-   memoria_config = init_memoria_config(config_file);
-
+    t_config *config_file = init_config("memoria.config");
+    memoria_config = init_memoria_config(config_file);
 
     /* ---------------- LOGGER ---------------- */
     init_logger("memoria.log", "Memoria", memoria_config.LOG_LEVEL);
- 
+
     /* ---------------- SEMÁFOROS ---------------- */
     initialize_memory_semaphores();
     LOG_INFO("Memory semaphores initialized");
+
+    /* ---------------- SEMÁFOROS ---------------- */
+    init_collections(memoria_config);
 
     /* ---------------- MEMORIA GLOBAL ---------------- */
     global_memory.processes = list_create();
@@ -32,11 +33,11 @@ int main(){
 
     pthread_join(server_thread, NULL);
     LOG_INFO("Server thread finished.");
-    
+
     /* ---------------- CLEANUP ---------------- */
     destroy_memory_semaphores();
     LOG_INFO("Memory semaphores destroyed");
-    
+
     shutdown_memoria(memoria_config, config_file);
 
     return 0;

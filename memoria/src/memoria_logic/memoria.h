@@ -19,9 +19,15 @@ typedef struct {
 extern glb_memory global_memory;
 
 proc_memory* find_process_by_pid(int pid);
-void create_process(int socket, t_package* package);
-int create_process_in_memory(uint32_t pid, uint32_t size, char* path_to_script);
+
+void init_process(int socket, t_package* package);
+
+int create_process(uint32_t pid, uint32_t size, char* path_to_script);
+
 void get_instruction(int socket, t_package *package);
+
 void get_free_space(int socket);
+
+void delete_process(int socket, t_package *package);
 
 #endif
