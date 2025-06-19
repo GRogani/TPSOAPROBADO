@@ -31,7 +31,27 @@ uint32_t mmu_request_pagetable_entry_from_memory(uint32_t table_id, uint32_t ent
 void mmu_request_page_read_from_memory(int* memory_socket, uint32_t frame_number, void* buffer) {
     LOG_DEBUG("[MEM-REQUEST] Asking Memory to read page from frame %u", frame_number);
     send_mmu_page_read_request(*memory_socket, frame_number);
-    //TODO: Manejar respuesta y guardar en buffer
+    
+    // Wait for response from memory
+    t_package* response_package = recv_package(*memory_socket);
+    if (response_package == NULL || response_package->opcode != READ_MEMORY) {
+        LOG_ERROR("[MEM-REQUEST] Failed to receive valid response for page read from frame %u", frame_number);
+        if (response_package) package_destroy(response_package);
+        return;
+    }
+    
+    // Parse the response and copy data to buffer
+    t_mmu_page_read_response* response = read_mmu_page_read_response(response_package);
+    package_destroy(response_package);
+    
+    if (response && response->page_data) {
+        memcpy(buffer, response->page_data, response->page_size);
+        LOG_DEBUG("[MEM-REQUEST] Successfully read %u bytes from frame %u", response->page_size, frame_number);
+    } else {
+        LOG_ERROR("[MEM-REQUEST] Invalid response data for page read from frame %u", frame_number);
+    }
+    
+    destroy_mmu_page_read_response(response);
 }
 
 

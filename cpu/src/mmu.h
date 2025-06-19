@@ -8,6 +8,7 @@
 #include <config_loader.h>
 #include "utils/DTOs/mmu_request_page_write_to_memory.h"
 #include "utils/DTOs/mmu_request_page_read_from_memory.h"
+#include "utils/DTOs/mmu_request_page_read_response.h"
 
 // Global variables declarations
 extern TLBConfig* g_tlb_config;

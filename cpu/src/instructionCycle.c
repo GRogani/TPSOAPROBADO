@@ -111,7 +111,9 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         else if(g_tlb_config->entry_count > 0)
         {
         uint32_t physic_dir_write = mmu_translate_address(logic_dir_write);
-        write_memory_request(socket_memory, physic_dir_write, valor_write);
+        t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
+        send_memory_write_request(socket_memory, write_req);
+        destroy_memory_write_request(write_req);
         (*PC)++;
         break;
         }
@@ -119,7 +121,9 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         uint32_t offset = logic_dir_write % g_mmu_config->page_size;
         uint32_t frame_number = mmu_perform_page_walk(page_number);
         uint32_t physic_dir_write = (frame_number * g_mmu_config->page_size) + offset;
-        write_memory_request(socket_memory, physic_dir_write, valor_write);
+        t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
+        send_memory_write_request(socket_memory, write_req);
+        destroy_memory_write_request(write_req);
         (*PC)++;
         break;
     }
@@ -147,16 +151,30 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         else if(g_tlb_config->entry_count > 0)
         {
             uint32_t physic_dir_read = mmu_translate_address(logic_dir_read);
-            read_memory_request(socket_memory, physic_dir_read, size);
-            char *data = read_memory_response(socket_memory);
-            if (data != NULL)
+            t_memory_read_request* request = create_memory_read_request(physic_dir_read, size);
+            send_memory_read_request(socket_memory, request);
+            destroy_memory_read_request(request);
+
+            t_package* package = recv_package(socket_memory);
+            if (package == NULL || package->opcode != READ_MEMORY)
             {
-                LOG_INFO("Data read from memory: %s", data);
-                free(data);
+                LOG_INFO("Failed to read data from memory");
+                if(package) package_destroy(package);
+                return -1;
+            }
+
+            t_memory_read_response* response = read_memory_read_response(package);
+            package_destroy(package);
+
+            if (response->data != NULL)
+            {
+                LOG_INFO("Data read from memory: %s", response->data);
+                destroy_memory_read_response(response);
             }
             else
             {
                 LOG_INFO("Failed to read data from memory");
+                destroy_memory_read_response(response);
                 return -1;
             }
             (*PC)++;
@@ -166,16 +184,30 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         uint32_t offset = logic_dir_read % g_mmu_config->page_size;
         uint32_t frame_number = mmu_perform_page_walk(page_number);
         uint32_t physic_dir_read  = (frame_number * g_mmu_config->page_size) + offset;
-        read_memory_request(socket_memory, physic_dir_read, size);
-        char *data = read_memory_response(socket_memory);
-        if (data != NULL)
+        t_memory_read_request* request = create_memory_read_request(physic_dir_read, size);
+        send_memory_read_request(socket_memory, request);
+        destroy_memory_read_request(request);
+        
+        t_package* package = recv_package(socket_memory);
+        if (package == NULL || package->opcode != READ_MEMORY)
         {
-            LOG_INFO("Data read from memory: %s", data);
-            free(data);
+            LOG_INFO("Failed to read data from memory");
+            if(package) package_destroy(package);
+            return -1;
+        }
+
+        t_memory_read_response* response = read_memory_read_response(package);
+        package_destroy(package);
+
+        if (response->data != NULL)
+        {
+            LOG_INFO("Data read from memory: %s", response->data);
+            destroy_memory_read_response(response);
         }
         else
         {
             LOG_INFO("Failed to read data from memory");
+            destroy_memory_read_response(response);
             return -1;
         }
         (*PC)++;
@@ -215,10 +247,10 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
 
         // wait for response from kernel to continue execution
         t_package *package = recv_package(socket_dispatch);
-        int success = read_cpu_syscall_response(package);
+        bool success = read_cpu_syscall_response(package);
         if (!success)
         {
-            log_error(get_logger(), "Failed to initialize process for PID %d", pid);
+            log_error(get_logger(), "Failed to initialize process for PID %u", *pid);
             package_destroy(package);
             return -1;
         }
@@ -288,7 +320,7 @@ int check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_e
             // TODO: responder al kernel como que se "atendio" la interrupcion
         }
 
-        send_cpu_interrupt_response(socket_interrupt, pid_received, pc_on_execute);
+        send_cpu_interrupt_response(socket_interrupt, pid_received, *pc_on_execute);
     }
     else
     {

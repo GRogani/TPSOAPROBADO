@@ -39,7 +39,7 @@ t_package *create_cpu_syscall_request(t_cpu_syscall *syscall);
 int send_cpu_syscall_request(int socket, t_cpu_syscall *syscall);
 void destroy_cpu_syscall(t_cpu_syscall *syscall);
 
-bool *read_cpu_syscall_response(t_package *package);
+bool read_cpu_syscall_response(t_package *package);
 t_package *create_cpu_syscall_response(int success);
 int send_cpu_syscall_response(int socket, uint32_t success);
 
