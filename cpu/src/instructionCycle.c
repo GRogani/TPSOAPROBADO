@@ -359,7 +359,7 @@ void *interrupt_handler(void *thread_args)
             {
                 t_package* package = get_last_interrupt(interrupt_count());
                 lock_cpu_mutex();
-                check_interrupt(args->socket_interrupt, package, args->pid, args->pc args->socket_memory);
+                check_interrupt(args->socket_interrupt, package, args->pid, args->pc, args->socket_memory);
                 unlock_cpu_mutex();
             }
         unlock_interrupt_list();

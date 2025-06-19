@@ -198,6 +198,7 @@ void mmu_process_cleanup(int* memory_socket) {
         void _writeback_if_dirty(void* element) {
             CacheEntry* entry = (CacheEntry*)element;
             if (entry->is_valid && entry->modified_bit) {
+                
                 mmu_request_page_write_to_memory(memory_socket,entry->frame, entry->content);
             }
             entry->is_valid = false; // Invalidate all entries
