@@ -33,8 +33,7 @@ TLBConfig load_tlb_config() {
     return tlb_config;
 }
 
-CacheConfig load_cache_config() {
-    t_config* config = init_config("cpu.config"); 
+CacheConfig load_cache_config(t_config* config) {
     CacheConfig cache_config;
     cache_config.entry_count = config_get_int_value(config, "ENTRADAS_CACHE");
 
@@ -48,7 +47,6 @@ CacheConfig load_cache_config() {
         exit(EXIT_FAILURE);
     }
 
-    config_destroy(config);
     free(algo_str);
     return cache_config;
 }

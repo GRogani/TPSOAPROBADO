@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include "utils/safe_alloc.h"
 
 
 static TLBConfig* g_tlb_config;
@@ -16,7 +17,7 @@ static uint64_t g_lru_timestamp_counter = 0;
 static int g_cache_clock_pointer = 0;
 
 
-static uint32_t mmu_request_pagetable_entry_from_memory(uint32_t table_id, uint32_t entry_index) {
+uint32_t mmu_request_pagetable_entry_from_memory(uint32_t table_id, uint32_t entry_index) {
     LOG_DEBUG("[MEM-REQUEST] Asking Memory for entry %u from table %u", entry_index, table_id);
 
     if (table_id == 0) { 
@@ -27,32 +28,32 @@ static uint32_t mmu_request_pagetable_entry_from_memory(uint32_t table_id, uint3
 }
 
 
-static void mmu_request_page_read_from_memory(int* memory_socket, uint32_t frame_number, void* buffer) {
+void mmu_request_page_read_from_memory(int* memory_socket, uint32_t frame_number, void* buffer) {
     LOG_DEBUG("[MEM-REQUEST] Asking Memory to read page from frame %u", frame_number);
-    send_mmu_page_read_request(memory_socket, frame_number);
+    send_mmu_page_read_request(*memory_socket, frame_number);
     //TODO: Manejar respuesta y guardar en buffer
 }
 
 
-static void mmu_request_page_write_to_memory(int* memory_socket, uint32_t frame_number, void* content) {
+void mmu_request_page_write_to_memory(int* memory_socket, uint32_t frame_number, void* content) {
     LOG_INFO("[MEM-REQUEST] Telling Memory to write page to frame %u", frame_number);
     uint32_t content_size = g_mmu_config->page_size;
-    send_mmu_page_write_request(memory_socket, frame_number, content, content_size);
+    send_mmu_page_write_request(*memory_socket, frame_number, content, content_size);
 }
 
 
-static void _tlb_entry_destroy(void* element) {
+void tlb_entry_destroy(void* element) {
     free(element);
 }
 
-static void _cache_entry_destroy(void* element) {
+void cache_entry_destroy(void* element) {
     CacheEntry* entry = (CacheEntry*)element;
     free(entry->content);
     free(entry);
 }
 
 
-static TLBEntry* tlb_find_entry(uint32_t page_number) {
+TLBEntry* tlb_find_entry(uint32_t page_number) {
     if (g_tlb_config->entry_count == 0) return NULL;
 
     bool _is_page(void* element) {
@@ -68,7 +69,7 @@ static TLBEntry* tlb_find_entry(uint32_t page_number) {
     return entry;
 }
 
-static void tlb_add_entry(uint32_t page_number, uint32_t frame_number) {
+void tlb_add_entry(uint32_t page_number, uint32_t frame_number) {
     if (g_tlb_config->entry_count == 0) return;
 
     TLBEntry* new_entry = malloc(sizeof(TLBEntry));
@@ -96,12 +97,12 @@ static void tlb_add_entry(uint32_t page_number, uint32_t frame_number) {
         }
         TLBEntry* victim = list_get(g_tlb, victim_index);
         LOG_DEBUG("[TLB] Replacing victim (page %u) at index %d with new entry (page %u).", victim->page, victim_index, page_number);
-        list_replace_and_destroy_element(g_tlb, victim_index, new_entry, _tlb_entry_destroy);
+        list_replace_and_destroy_element(g_tlb, victim_index, new_entry, tlb_entry_destroy);
     }
 }
 
 
-static uint32_t mmu_perform_page_walk(uint32_t page_number) { 
+uint32_t mmu_perform_page_walk(uint32_t page_number) { 
     LOG_INFO("[MMU] Page Walk starting for page %u...", page_number);
 
     uint32_t temp_page_num = page_number;
@@ -113,7 +114,7 @@ static uint32_t mmu_perform_page_walk(uint32_t page_number) {
         uint32_t entry_index = floor(temp_page_num / divisor);
         temp_page_num %= divisor;
 
-        LOG_DEBUG("  - Level %d: Page num chunk %u -> table entry %u", level, floor(temp_page_num / divisor), entry_index);
+        LOG_DEBUG("  - Level %d: Page num chunk %u -> table entry %u", level, (uint32_t)floor(temp_page_num / divisor), entry_index);
         
         next_table_id = mmu_request_pagetable_entry_from_memory(next_table_id, entry_index);
     }
@@ -185,7 +186,7 @@ void mmu_process_cleanup(int* memory_socket) {
         LOG_INFO("[Cache] All cache entries invalidated.");
     }
     if (g_tlb_config->entry_count > 0) {
-        list_clean_and_destroy_elements(g_tlb, _tlb_entry_destroy);
+        list_clean_and_destroy_elements(g_tlb, tlb_entry_destroy);
         LOG_INFO("[TLB] All TLB entries flushed.");
     }
 }
@@ -193,10 +194,10 @@ void mmu_process_cleanup(int* memory_socket) {
 void mmu_destroy() {
     LOG_INFO("Destroying MMU resources...");
     if (g_tlb) {
-        list_destroy_and_destroy_elements(g_tlb, _tlb_entry_destroy);
+        list_destroy_and_destroy_elements(g_tlb, tlb_entry_destroy);
     }
     if (g_cache) {
-        list_destroy_and_destroy_elements(g_cache, _cache_entry_destroy);
+        list_destroy_and_destroy_elements(g_cache, cache_entry_destroy);
     }
 }
 /*MMU Administrativos*/
@@ -206,7 +207,7 @@ void mmu_destroy() {
 /*CACHE*/
 
 
-static CacheEntry* cache_find_entry(uint32_t frame_number) {
+CacheEntry* cache_find_entry(uint32_t frame_number) {
     if (g_cache_config->entry_count == 0) return NULL;
 
     bool _is_frame(void* element) {
@@ -221,7 +222,7 @@ static CacheEntry* cache_find_entry(uint32_t frame_number) {
     return entry;
 }
 
-static int cache_find_victim_clock() {
+int cache_find_victim_clock() {
     while (true) {
         CacheEntry* entry = list_get(g_cache, g_cache_clock_pointer);
         if (!entry->is_valid) {
@@ -239,7 +240,7 @@ static int cache_find_victim_clock() {
     }
 }
 
-static int cache_find_victim_clock_m() {
+int cache_find_victim_clock_m() {
     for (int i = 0; i < g_cache_config->entry_count * 2; i++) {
         CacheEntry* entry = list_get(g_cache, g_cache_clock_pointer);
         if (!entry->is_valid) return g_cache_clock_pointer;
@@ -263,7 +264,7 @@ static int cache_find_victim_clock_m() {
     return cache_find_victim_clock();
 }
 
-static CacheEntry* cache_load_page(uint32_t frame_number, int* memory_socket) {
+CacheEntry* cache_load_page(uint32_t frame_number, int* memory_socket) {
     LOG_INFO("[Cache] MISS for frame %u. Finding a victim to replace...", frame_number);
     
     int victim_index;

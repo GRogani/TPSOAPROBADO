@@ -85,10 +85,36 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         break;
     }
     case WRITE:
-    {
+    { 
         uint32_t logic_dir_write = instruction->operand_numeric1;
         char *valor_write = instruction->operand_string;
+        if (g_cache_config->entry_count > 0)
+        {
+            // If cache is enabled, we need to write to cache first
+            CacheEntry *cache_entry = cache_find_entry(logic_dir_write);
+            if (cache_entry == NULL)
+            {
+                // Cache miss, load the page into cache
+                cache_entry = cache_load_page(logic_dir_write, &socket_memory);
+   
+            }
+            // Write to cache
+            memcpy(cache_entry->content, valor_write, instruction->operand_string_size);
+            cache_entry->modified_bit = true;
+            (*PC)++;
+            break;
+        }
+        else if(g_tlb_config->entry_count > 0)
+        {
         uint32_t physic_dir_write = mmu_translate_address(logic_dir_write);
+        write_memory_request(socket_memory, physic_dir_write, valor_write);
+        (*PC)++;
+        break;
+        }
+        uint32_t page_number = floor(logical_address / g_mmu_config->page_size);
+        uint32_t offset = logic_dir_write % g_mmu_config->page_size;
+        uint32_t frame_number = mmu_perform_page_walk(page_number);
+        uint32_t physic_dir_write = (frame_number * g_mmu_config->page_size) + offset;
         write_memory_request(socket_memory, physic_dir_write, valor_write);
         (*PC)++;
         break;
@@ -97,7 +123,45 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
     {
         uint32_t logic_dir_read = instruction->operand_numeric1;
         uint32_t size = instruction->operand_numeric2;
-        uint32_t physic_dir_read = mmu_translate_address(logic_dir_read);
+        if (g_cache_config->entry_count > 0)
+        {
+            // If cache is enabled, we need to read from cache first
+            CacheEntry *cache_entry = cache_find_entry(logic_dir_read);
+            if (cache_entry == NULL)
+            {
+                // Cache miss, load the page into cache
+                cache_entry = cache_load_page(logic_dir_read, &socket_memory);
+            }
+            // Read from cache
+            char *data = malloc(size);
+            memcpy(data, cache_entry->content, size);
+            LOG_INFO("Data read from cache: %s", data);
+            free(data);
+            (*PC)++;
+            break;
+        }
+        else if(g_tlb_config->entry_count > 0)
+        {
+            uint32_t physic_dir_read = mmu_translate_address(logic_dir_read);
+            read_memory_request(socket_memory, physic_dir_read, size);
+            char *data = read_memory_response(socket_memory);
+            if (data != NULL)
+            {
+                LOG_INFO("Data read from memory: %s", data);
+                free(data);
+            }
+            else
+            {
+                LOG_INFO("Failed to read data from memory");
+                return -1;
+            }
+            (*PC)++;
+            break;
+        }
+        uint32_t page_number = floor(logical_address / g_mmu_config->page_size);
+        uint32_t offset = logic_dir_write % g_mmu_config->page_size;
+        uint32_t frame_number = mmu_perform_page_walk(page_number);
+        uint32_t physic_dir_read  = (frame_number * g_mmu_config->page_size) + offset;
         read_memory_request(socket_memory, physic_dir_read, size);
         char *data = read_memory_response(socket_memory);
         if (data != NULL)

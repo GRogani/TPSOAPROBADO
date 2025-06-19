@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 
     MMUConfig mmu_config = load_mmu_config();
     TLBConfig tlb_config = load_tlb_config();
-    CacheConfig cache_config = load_cache_config();
+    CacheConfig cache_config = load_cache_config(config_file);
     mmu_init(&mmu_config, &tlb_config, &cache_config);
     
     init_logger("cpu.log", "CPU", config_cpu.LOG_LEVEL);
