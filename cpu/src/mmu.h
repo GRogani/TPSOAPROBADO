@@ -9,6 +9,11 @@
 #include "utils/DTOs/mmu_request_page_write_to_memory.h"
 #include "utils/DTOs/mmu_request_page_read_from_memory.h"
 
+// Global variables declarations
+extern TLBConfig* g_tlb_config;
+extern CacheConfig* g_cache_config;
+extern MMUConfig* g_mmu_config;
+
 typedef struct {
     uint32_t page;
     uint32_t frame;
@@ -51,4 +56,4 @@ CacheEntry* cache_load_page(uint32_t frame_number, int* memory_socket);
 void tlb_entry_destroy(void* element);
 void cache_entry_destroy(void* element);
 
-#endif 
+#endif

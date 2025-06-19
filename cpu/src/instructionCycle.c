@@ -1,5 +1,9 @@
 #include "instructionCycle.h"
 
+extern CacheConfig *g_cache_config;
+extern TLBConfig *g_tlb_config;
+extern MMUConfig *g_mmu_config;
+
 t_package *fetch(int socket, uint32_t PID, uint32_t PC)
 {
     t_package *package;
@@ -111,7 +115,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         (*PC)++;
         break;
         }
-        uint32_t page_number = floor(logical_address / g_mmu_config->page_size);
+        uint32_t page_number = floor(logic_dir_write / g_mmu_config->page_size);
         uint32_t offset = logic_dir_write % g_mmu_config->page_size;
         uint32_t frame_number = mmu_perform_page_walk(page_number);
         uint32_t physic_dir_write = (frame_number * g_mmu_config->page_size) + offset;
@@ -158,8 +162,8 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             (*PC)++;
             break;
         }
-        uint32_t page_number = floor(logical_address / g_mmu_config->page_size);
-        uint32_t offset = logic_dir_write % g_mmu_config->page_size;
+        uint32_t page_number = floor(logic_dir_read / g_mmu_config->page_size);
+        uint32_t offset = logic_dir_read % g_mmu_config->page_size;
         uint32_t frame_number = mmu_perform_page_walk(page_number);
         uint32_t physic_dir_read  = (frame_number * g_mmu_config->page_size) + offset;
         read_memory_request(socket_memory, physic_dir_read, size);

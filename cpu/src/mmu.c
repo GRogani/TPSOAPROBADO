@@ -5,9 +5,9 @@
 #include "utils/safe_alloc.h"
 
 
-static TLBConfig* g_tlb_config;
-static CacheConfig* g_cache_config;
-static MMUConfig* g_mmu_config;
+TLBConfig* g_tlb_config;
+CacheConfig* g_cache_config;
+MMUConfig* g_mmu_config;
 
 static t_list* g_tlb;
 static t_list* g_cache;
