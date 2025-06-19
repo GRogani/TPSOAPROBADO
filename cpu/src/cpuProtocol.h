@@ -14,6 +14,7 @@ typedef struct {
     int socket_interrupt;
     uint32_t* pid;
     uint32_t* pc;
+    int socket_memory;
 } interrupt_args_t;
 
 void request_instruction(int socket,uint32_t PID, uint32_t PC);

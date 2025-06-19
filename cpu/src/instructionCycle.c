@@ -289,7 +289,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
     return 0;
 }
 
-int check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute)
+int check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute, int socket_memory)
 {
 
     if (package == NULL)
@@ -311,7 +311,7 @@ int check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_e
             t_package* package = package_create(CPU_INTERRUPT, buffer);
             send_package(socket_interrupt, package);
             package_destroy(package);
-
+            mmu_process_cleanup(socket_memory);
             LOG_DEBUG("Interrupt for PID %d executed", pid_received);
                 
             return 1;
@@ -359,7 +359,7 @@ void *interrupt_handler(void *thread_args)
             {
                 t_package* package = get_last_interrupt(interrupt_count());
                 lock_cpu_mutex();
-                check_interrupt(args->socket_interrupt, package, args->pid, args->pc);
+                check_interrupt(args->socket_interrupt, package, args->pid, args->pc args->socket_memory);
                 unlock_cpu_mutex();
             }
         unlock_interrupt_list();

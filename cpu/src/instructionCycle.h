@@ -35,5 +35,5 @@ void *interrupt_listener(void *socket);
 
 void *interrupt_handler(void *thread_args);
 
-int check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute);
+int check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute, int socket_memory);
 #endif

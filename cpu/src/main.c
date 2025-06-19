@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     uint32_t pid, pc;
     t_instruction* instruction = NULL;
 
-    interrupt_args_t thread_args = {kernel_interrupt_socket, &pid, &pc};
+    interrupt_args_t thread_args = {kernel_interrupt_socket, &pid, &pc, memory_socket};
     pthread_t interrupt_handler_thread;
     pthread_t interrupt_listener_thread;
     pthread_create(&interrupt_listener_thread, NULL, interrupt_listener, &kernel_interrupt_socket);
