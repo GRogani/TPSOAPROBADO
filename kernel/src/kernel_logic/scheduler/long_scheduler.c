@@ -26,7 +26,6 @@ bool run_long_scheduler(void)
   {
     // Obtener siguiente proceso de SUSP_READY usando algoritmo configurado
     t_pcb *pcb = get_next_process_to_initialize_from_susp_ready();
-    unlock_susp_ready_list();
 
     // SWAP IN -> Intentar de-suspender proceso en memoria
     LOG_INFO("long_scheduler: Intentando des-suspender proceso PID=%d", pcb->pid);
@@ -37,13 +36,13 @@ bool run_long_scheduler(void)
       // Error: devolver proceso a SUSP_READY y terminar
       LOG_WARNING("long_scheduler: No se pudo des-suspender proceso PID = %d", pcb->pid);
       LOG_WARNING("long_scheduler: Fallo de SWAP o Memoria sin Espacio Suficiente");
-      lock_susp_ready_list();
       add_pcb_to_susp_ready(pcb);
       unlock_susp_ready_list();
       destroy_package(response);
       break;
     }
     // Éxito: mover de SUSP_READY a READY
+    unlock_susp_ready_list();
     LOG_INFO("long_scheduler: Proceso PID=%d des-suspendido exitosamente", pcb->pid);
     add_pcb_to_ready(pcb);
     processes_initialized = true;
