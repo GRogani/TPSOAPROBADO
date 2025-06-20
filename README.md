@@ -1,71 +1,106 @@
-### Status
 [![Tests](https://github.com/sisoputnfrba/tp-2025-1c-Mi-Grupo-1234/actions/workflows/compilation.yml/badge.svg)](https://github.com/sisoputnfrba/tp-2025-1c-Mi-Grupo-1234/actions/workflows/test.yml)
 
-# tp-scaffold
+# Documentacion de los modulos
 
-Esta es una plantilla de proyecto diseñada para generar un TP de Sistemas
-Operativos de la UTN FRBA.
+## Kernel
+- [Planificador de corto plazo](https://github.com/sisoputnfrba/tp-2025-1c-Mi-Grupo-1234/blob/79fc7db0f0418016d7463b508021c89747611c3f/kernel/info/shortScheduler.md)
 
-## Dependencias
+## CPU
+- 
+## Memoria
+- 
+## IO
+- 
 
-Para poder compilar y ejecutar el proyecto, es necesario tener instalada la
-biblioteca [so-commons-library] de la cátedra:
+---
+# Protocolo de comunicacion entre modulos
+### Estructura
+La comunicacion entre modulos esta dada por una estructura de `paquetes` definida de la siguiente forma:
+```c
+struct {
+    OPCODE opcode;       
+    t_buffer* buffer;    
+}t_package
+```
+siendo `OPCODE` un enum de los siguientess:
+```c
+enum
+{
+    FETCH,              // cpu -> memoria
+    INSTRUCTION,        // memoria -> cpu
+    LIST_INSTRUCTIONS,
+    GET_FREE_SPACE,
+    INIT_PROCESS,       // kernel -> memoria
+    UNSUSPEND_PROCESS,
+    KILL_PROCESS,       // kernel -> memoria
+    SWAP,
+    WRITE_MEMORY,
+    READ_MEMORY,
+    DUMP_MEMORY,        // kernel -> memoria
 
-```bash
-git clone https://github.com/sisoputnfrba/so-commons-library
-cd so-commons-library
-make debug
-make install
+    CONFIRMATION,       // server -> client
+
+    NEW_IO,             // io -> kernel
+    IO_COMPLETION,      // io -> kernel
+    SYSCALL,            // cpu -> kernel
+
+    DISPATCH,           // cpu -> kernel
+    INTERRUPT,          // kernel -> cpu
+    CPU_CONTEXT,        // cpu -> kernel
+
+    IO_OPERATION,       // cpu -> kernel
+};
+```
+y siendo el `buffer` la siguiente estructura:
+```c
+struct {
+    uint32_t stream_size;   // Tamaño total del buffer en bytes
+    void* stream;           // Puntero al stream de datos serializados
+    uint32_t offset;        // Offset actual para operaciones de lectura/escritura
+} t_buffer;
 ```
 
-## Compilación y ejecución
+### Operaciones
+Para estandarizar las operaciones de comunicacion entre modulos con paquetes definimos el siguiente concepto: Data Transfer Packages (DTP).
 
-Cada módulo del proyecto se compila de forma independiente a través de un
-archivo `makefile`. Para compilar un módulo, es necesario ejecutar el comando
-`make` desde la carpeta correspondiente.
+Los cuales siguien el siguiente formato:
 
-El ejecutable resultante de la compilación se guardará en la carpeta `bin` del
-módulo. Ejemplo:
+Nombre de archivo: `{OPCODE}_package.c/h`
+```c 
+t_package *create_{OPCODE}_package (uint32_t success);
 
-```sh
-cd kernel
-make
-./bin/kernel
-```
+int send_{OPCODE}_package (int socket, uint32_t success);
 
-## Importar desde Visual Studio Code
-
-Para importar el workspace, debemos abrir el archivo `tp.code-workspace` desde
-la interfaz o ejecutando el siguiente comando desde la carpeta raíz del
-repositorio:
-
-```bash
-code tp.code-workspace
-```
-
-## Checkpoint
-
-Para cada checkpoint de control obligatorio, se debe crear un tag en el
-repositorio con el siguiente formato:
+{OPCODE}_package_data read_{OPCODE}_package (t_package *package);
 
 ```
-checkpoint-{número}
+siendo `{OPCODE}_package_data` una estructura con los atributos necesarios para la lectura del paquete. Directamente relacionado con los tipos de datos que se envian en el buffer.
+
+
+> [!NOTE]
+> Si es un solo tipo de dato el enviado, no se utiliza una estructura, si no el tipo de dato en si mismo.
+> 
+> *Ejemplo*: Se envia solo un `uint32` en el buffer del paquete, entonces la funcion read devuelve `uint32`.
+
+
+A su vez, tambien se utilizan operaciones mas genericas, tanto adentro de las anteriores como por fuera, como las siguientes:
+```c
+t_package* create_package(OPCODE opcode, t_buffer* buffer);
+
+void destroy_package (t_package* package);
+
+void* serialize_package(t_package* package, uint32_t* total_size);
+
+int send_package(int socket, t_package* package);
+
+t_package* recv_package(int socket);
 ```
 
-Donde `{número}` es el número del checkpoint, ejemplo: `checkpoint-1`.
 
-Para crear un tag y subirlo al repositorio, podemos utilizar los siguientes
-comandos:
+> [!TIP]
+> Por cada OPCODE existe un solo archivo DTP asociado.
 
-```bash
-git tag -a checkpoint-{número} -m "Checkpoint {número}"
-git push origin checkpoint-{número}
-```
-
-> [!WARNING]
-> Asegúrense de que el código compila y cumple con los requisitos del checkpoint
-> antes de subir el tag.
-
+---
 ## Entrega
 
 Para desplegar el proyecto en una máquina Ubuntu Server, podemos utilizar el

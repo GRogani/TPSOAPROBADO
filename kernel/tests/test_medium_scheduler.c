@@ -26,7 +26,7 @@ void test_successful_medium_scheduling() {
     
     // Ejecutar el planificador de mediano plazo
     LOG_INFO("Ejecutando planificador de mediano plazo...\n");
-    run_medium_scheduler(100, 1);
+    run_medium_scheduler(100);
     
     // IMPORTANTE: Dar tiempo para que todas las conexiones se cierren
     usleep(200000); // 200ms

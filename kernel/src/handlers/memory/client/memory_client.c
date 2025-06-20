@@ -19,7 +19,7 @@ int connect_to_memory(t_kernel_config* config) {
     return memory_socket;
 }
 
-bool create_process_in_memory(int memory_socket, uint32_t pid, uint32_t size, char* pseudocode_path) {
+bool create_process(int memory_socket, uint32_t pid, uint32_t size, char* pseudocode_path) {
     if (memory_socket < 0) {
         LOG_ERROR("memory_client: Socket inválido");
         return false;

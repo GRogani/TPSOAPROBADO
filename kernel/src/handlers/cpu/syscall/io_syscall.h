@@ -11,4 +11,6 @@
 
 void handle_io_process_syscall(uint32_t pid, uint32_t pc, uint32_t sleep_time, char *device_name); void handle_io_connection_not_found(uint32_t pid, uint32_t sleep_time, char *device_name);
 
+void* medium_scheduler_thread(void* arg); // wrapper
+
 #endif

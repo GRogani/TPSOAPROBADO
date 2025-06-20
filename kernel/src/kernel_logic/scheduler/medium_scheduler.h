@@ -7,6 +7,6 @@
 
 extern t_kernel_config kernel_config;
 
-void run_medium_scheduler(uint32_t  pid, uint32_t timer);
+void run_medium_scheduler(uint32_t  pid);
 
 #endif

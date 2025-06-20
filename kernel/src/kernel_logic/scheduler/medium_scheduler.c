@@ -1,6 +1,6 @@
 #include "medium_scheduler.h"
 
-void run_medium_scheduler(uint32_t  pid, uint32_t timer){
+void run_medium_scheduler(uint32_t  pid){
     /**
    * Aca va la implementacion del algoritmo de MEDIANO plazo
    * 1. recibe un pid y un tiempo, hace sleep de ese tiempo
@@ -12,15 +12,15 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
    * 7. Mando a correr el corto plazo, ya que hay un nuevo proceso en READY potencialmente para ejecutar
    */
 
-    LOG_INFO("MEDIUM_SCHEDULER: Tiempo de espera de [%d] para PID [%u]", timer, pid);
-    sleep(timer);
+    LOG_INFO("MEDIUM_SCHEDULER: Tiempo de espera de [%d] milisegundos para PID [%u]", kernel_config.sleep_time, pid);
+    usleep(kernel_config.sleep_time * 1000); // Conversión milisegundos -> macrosegundos de la función usleep
     lock_blocked_list();
     if(!find_pcb_in_blocked(pid)) {
         unlock_blocked_list();
-        LOG_INFO("MEDIUM_SCHEDULER: PID [%d] no está en BLOCKED.", pid);
+        LOG_ERROR("MEDIUM_SCHEDULER: PID [%d] no está en BLOCKED.", pid);
         return;
     }
-    // BLOCKED -> BLOCKED_SUSPEND
+    // BLOCKED -> SUSPEND_BLOCKED
     t_pcb* pcb = remove_pcb_from_blocked(pid);
     unlock_blocked_list();
     LOG_INFO("MEDIUM_SCHEDULER: Cambio de Estado BLOCKED->SUSPENDED_BLOCKED del PID = %d.", pid);
@@ -28,6 +28,9 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
     int memory_socket = connect_to_memory(&kernel_config);
     if (memory_socket == -1){
         LOG_ERROR("MEDIUM_SCHEDULER: Falló la conexión con Memoria.");
+        lock_blocked_list();
+        add_pcb_to_blocked(pcb);
+        unlock_blocked_list();
         return;
     }
     LOG_INFO("MEDIUM_SCHEDULER: Solicitando Servicio de Swapping para suspender PID = %d.", pid);
@@ -37,6 +40,9 @@ void run_medium_scheduler(uint32_t  pid, uint32_t timer){
     t_package* package = recv_package(memory_socket);
     if(package == NULL){
         LOG_ERROR("MEDIUM_SCHEDULER: No se pudo conectar con Memoria para suspender PID = %d", pid);
+        lock_blocked_list();
+        add_pcb_to_blocked(pcb);
+        unlock_blocked_list();
         return;
     }
     if(read_confirmation_package(package) != 0) { // Success = 0

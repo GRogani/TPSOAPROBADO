@@ -59,7 +59,7 @@ void* client_handler(void* client_fd_ptr) {
                 break;
 
             case INIT_PROCESS:
-                create_process(client_fd, package);
+                init_process(client_fd, package);
                 break;
 
             case UNSUSPEND_PROCESS:
@@ -72,7 +72,8 @@ void* client_handler(void* client_fd_ptr) {
 
             case KILL_PROCESS:
                 // TODO: exit process, free memory
-                send_confirmation_package(client_fd, 0);
+                delete_process(client_fd, package);
+                //send_confirmation_package(client_fd, 0);
                 LOG_INFO("KILL_PROCESS received, but not implemented yet.");
                 break;
 

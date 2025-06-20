@@ -14,11 +14,20 @@
  */
 void run_short_scheduler(void);
 
+
+/**
+ * @brief Obtiene el contexto necesario para el planificador de corto plazo
+ * @param cpu_out Puntero a CPU connection disponible
+ * @param pcb_ready_out Puntero al PCB en READY
+ * @param pcb_exec_out Puntero al PCB en EXEC
+ */
+void get_short_scheduler_context(t_cpu_connection** cpu_out, t_pcb** pcb_ready_out, t_pcb** pcb_exec_out);
+
 /**
  * @brief Obtiene una CPU libre del pool de conexiones
  * @return Puntero a CPU connection disponible o NULL si no hay disponibles
  */
-t_cpu_connection *get_free_cpu(void);
+t_cpu_connection *get_cpu_to_dispatch(void);
 
 /**
  * @brief Envía interrupción a CPU y espera confirmación

@@ -8,7 +8,8 @@ typedef struct t_kernel_config{
     char* memory_ip;
     char* memory_port;
     PLANIFICATION_ALGORITHM short_planification_algorithm;
-    PLANIFICATION_ALGORITHM ready_planification_algorithm;
+    PLANIFICATION_ALGORITHM long_planification_algorithm;
+    bool preemption_enabled;
     int sleep_time;
     double alpha;
     t_log_level log_level;

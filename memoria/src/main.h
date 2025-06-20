@@ -5,7 +5,10 @@
 #include <commons/config.h>
 #include <commons/log.h>
 #include "../utils.h"
-#include "memoria.h"
-#include "handlers/handlers.h"
+#include "semaphores.h"
+#include "memoria_logic/memoria.h"
+#include "client/handlers.h"
+#include "structures/page_table.h"
+#include "memoria_logic/manager.h"
 
 #endif
