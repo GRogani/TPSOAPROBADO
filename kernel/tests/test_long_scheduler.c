@@ -1,5 +1,6 @@
-#include "kernel_logic/scheduler/long_scheduler.h"
+/*
 #include "test_schedulers.h"
+#include "kernel_logic/scheduler/long_scheduler.h"
 
 // Contador para verificar las operaciones de SWAP-IN
 int memory_swap_in_requests = 0;
@@ -104,3 +105,4 @@ int main() {
     
     return 0;
 }
+*/

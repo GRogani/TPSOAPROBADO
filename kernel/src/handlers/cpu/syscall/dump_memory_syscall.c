@@ -23,7 +23,7 @@ void dump_memory_syscall(uint32_t pid)
     if (confirmation == 0)
     {
         lock_blocked_list(pcb);
-            remove_pcb_from_blocked(pcb);
+            remove_pcb_from_blocked(pcb->pid);
         unlock_blocked_list(pcb);
 
         lock_ready_list();
@@ -37,7 +37,7 @@ void dump_memory_syscall(uint32_t pid)
         LOG_ERROR("Failed to dump memory for PID %d", pid);
 
         lock_blocked_list(pcb);
-            remove_pcb_from_blocked(pcb);
+            remove_pcb_from_blocked(pcb->pid);
         unlock_blocked_list(pcb);
 
         exit_routine(pcb);
