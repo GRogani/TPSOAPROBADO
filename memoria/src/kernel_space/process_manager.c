@@ -93,7 +93,7 @@ void process_manager_destroy() {
 
 t_list* process_manager_load_script_lines(char* path) {
     char full_path[512];
-    snprintf(full_path, sizeof(full_path), "src/program_files/%s", path);
+    snprintf(full_path, sizeof(full_path), "program/%s", path);
 
     LOG_INFO("Intentando abrir archivo de pseudocodigo: %s", full_path);
 
@@ -136,6 +136,7 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char* script_pat
 
     proc->pid = pid;
     proc->process_size = size;
+    proc->is_suspended = false;
     lock_process_instructions(); // Lock if instructions can be concurrently accessed
     proc->instructions = process_manager_load_script_lines(script_path);
     unlock_process_instructions(); // Unlock
@@ -163,11 +164,7 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char* script_pat
         free(proc);
         return -1;
     }
-    LOG_INFO("## PID: %u - %zu frames asignados: [", pid, pages_needed);
-    for (int i = 0; i < list_size(proc->allocated_frames); i++) {
-        LOG_INFO("%u%s", *((uint32_t*)list_get(proc->allocated_frames, i)), (i == list_size(proc->allocated_frames) - 1 ? "" : ", "));
-    }
-    LOG_INFO("]");
+    // No logging of frames asignados as per instructions.
 
     proc->page_table = init_page_table(&memoria_config);
     if (proc->page_table == NULL) {

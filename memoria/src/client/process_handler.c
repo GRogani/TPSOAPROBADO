@@ -2,7 +2,6 @@
 
 extern t_memoria_config memoria_config;
 
-// Helper to get the page table entry for a given virtual page number (VPN) at a specific level
 static t_page_table_entry* get_pte_at_level(t_page_table* current_table, uint32_t virtual_address, int current_level, int total_levels, t_process_metrics* metrics) {
     uint32_t offset_bits_per_level = (uint32_t)log2(memoria_config.ENTRADAS_POR_TABLA);
     uint32_t page_offset_bits = (uint32_t)log2(memoria_config.TAM_PAGINA);

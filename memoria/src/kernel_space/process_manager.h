@@ -17,6 +17,7 @@ typedef struct process_metrics {
 typedef struct process_info {
     uint32_t pid;
     uint32_t process_size;
+    bool is_suspended;
     t_list* instructions;
     t_page_table* page_table;
     t_process_metrics* metrics;

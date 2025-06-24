@@ -9,5 +9,6 @@
 #include "client/handlers.h"
 #include "kernel_space/page_table.h"
 #include "user_space/frame_manager.h"
+#include "swap_space/swap_manager.h"
 
 #endif
