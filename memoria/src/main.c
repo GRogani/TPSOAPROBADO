@@ -1,6 +1,8 @@
 #include "main.h"
 
+//Globals
 t_memoria_config memoria_config;
+t_list* process_list;
 
 int main(){
 
@@ -8,8 +10,6 @@ int main(){
     memoria_config = init_memoria_config(config_file);
     init_logger("memoria.log", "Memoria", memoria_config.LOG_LEVEL);
     initialize_memory_semaphores();
-
-    init_global_memory_state(&memoria_config); // Call the global state initializer
 
     pthread_t server_thread;
     create_server_thread(&server_thread);

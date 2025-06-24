@@ -3,7 +3,7 @@
 
 #include <pthread.h>
 #include "../utils.h"
-#include "memoria_logic/memoria.h"
+#include "process_handler.h"
 
 /// @brief Crea el hilo principal del servidor que escucha conexiones entrantes.
 /// @param listener_thread Puntero al identificador del hilo creado.

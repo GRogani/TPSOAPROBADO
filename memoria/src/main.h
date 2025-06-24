@@ -6,9 +6,8 @@
 #include <commons/log.h>
 #include "../utils.h"
 #include "semaphores.h"
-#include "memoria_logic/memoria.h"
 #include "client/handlers.h"
-#include "structures/page_table.h"
-#include "memoria_logic/manager.h"
+#include "kernel_space/page_table.h"
+#include "user_space/frame_manager.h"
 
 #endif

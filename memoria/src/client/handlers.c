@@ -35,8 +35,7 @@ void* client_handler(void* client_fd_ptr) {
 
     t_package* package;
     
-    while(1)
-    {
+    while (1) {
         package = recv_package(client_fd);
         if (package == NULL) {
             LOG_INFO("Client disconnected: %d", client_fd);
@@ -44,45 +43,42 @@ void* client_handler(void* client_fd_ptr) {
             return NULL;
         }
 
-        switch (package->opcode) 
-        {   
+        switch (package->opcode) {
             case FETCH:
-                get_instruction(client_fd, package);
+                get_instruction_request_handler(client_fd, package);
                 break;
-                
+
             case LIST_INSTRUCTIONS:
-                get_instruction(client_fd, package);
+                get_instruction_request_handler(client_fd, package); // cambiar
                 break;
 
             case GET_FREE_SPACE:
-                get_free_space(client_fd);
+                get_free_space_request_handler(client_fd);
                 break;
 
             case INIT_PROCESS:
-                init_process(client_fd, package);
+                init_process_request_handler(client_fd, package);
                 break;
 
             case UNSUSPEND_PROCESS:
-                // TODO:check if memory has available space for re-initializing the process
+                LOG_INFO("UNSUSPEND_PROCESS received, functionality to be implemented.");
                 break;
 
             case SWAP:
-                // TODO: suspend process and move to another space (free some memory)
+                LOG_INFO("SWAP received, functionality to be implemented.");
                 break;
 
             case KILL_PROCESS:
-                // TODO: exit process, free memory
-                delete_process(client_fd, package);
-                //send_confirmation_package(client_fd, 0);
-                LOG_INFO("KILL_PROCESS received, but not implemented yet.");
+                delete_process_request_handler(client_fd, package);
                 break;
 
             default:
-                LOG_WARNING("Unknown Opcode");
+                LOG_WARNING("Unknown Opcode received: %d from client %d", package->opcode, client_fd);
                 close(client_fd);
-                break;
+                destroy_package(package);
+                return NULL;
         }
-        
+
         destroy_package(package);
     }
     return NULL;
