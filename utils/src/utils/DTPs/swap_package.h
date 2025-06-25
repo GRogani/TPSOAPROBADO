@@ -5,15 +5,12 @@
 #include "utils/serialization/package.h"
 #include "utils/serialization/buffer.h"
 
-// Firma de la función genérica que maneja SWAP-OUT / SWAP-IN
-int send_swap_operation_package(int socket, uint32_t pid, OPCODE operation);
-
 // Wrappers
 int send_swap_package(int socket, uint32_t pid);
 int send_swap_in_package(int socket, uint32_t pid);
 
 /**
- * @brief Envía a Memoria la petición de una operación de SWAP genérica
+ * @brief Envía a Memoria la petición de una operación de SWAP genérica (SWAP-OUT / SWAP-IN).
  * Request: [ OPERATION_CODE, PID ]
  * @param socket socket de conexión con memoria
  * @param pid proceso a ser swapeado/deswapeado

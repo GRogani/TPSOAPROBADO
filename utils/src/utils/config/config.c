@@ -25,7 +25,7 @@ t_kernel_config init_kernel_config(t_config* config) {
 
     conf.preemption_enabled = config_get_int_value(config, "PREEMPTION");
 
-    const char* log_level_str = config_get_string_value(config, "LOG_LEVEL");
+    char* log_level_str = config_get_string_value(config, "LOG_LEVEL");
     conf.log_level = log_level_from_string(log_level_str);
 
     if (conf.log_level == LOG_LEVEL_INVALID) {
