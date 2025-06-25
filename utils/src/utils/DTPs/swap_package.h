@@ -35,6 +35,6 @@ t_package *create_swap_operation_package(uint32_t pid, OPCODE operation);
  * @param package paquete a leer
  * @return PID del proceso
  */
-uint32_t read_swap_operation_package(t_package* package);
+uint32_t read_swap_package(t_package* package);
 
 #endif

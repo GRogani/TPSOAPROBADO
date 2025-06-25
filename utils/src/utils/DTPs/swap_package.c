@@ -22,7 +22,7 @@ t_package *create_swap_operation_package(uint32_t pid, OPCODE operation) {
     return create_package(operation, buffer);
 }
 
-uint32_t read_swap_operation_package(t_package* package) {
+uint32_t read_swap_package(t_package* package) {
     package->buffer->offset = 0;
     uint32_t pid = buffer_read_uint32(package->buffer);
     return pid;
