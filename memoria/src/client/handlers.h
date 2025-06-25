@@ -3,7 +3,9 @@
 
 #include <pthread.h>
 #include "../utils.h"
-#include "memoria_logic/memoria.h"
+#include "process_handler.h"
+#include "kernel_space/process_manager.h"
+#include "swap_space/swap_manager.h"
 
 /// @brief Crea el hilo principal del servidor que escucha conexiones entrantes.
 /// @param listener_thread Puntero al identificador del hilo creado.
@@ -22,5 +24,7 @@ void* client_listener(void* arg);
 /// @return Siempre NULL.
 void* client_handler(void* client_fd_ptr);
 
+void unsuspend_process_request_handler(int client_fd, t_package* package);
+void swap_request_handler(int client_fd, t_package* package);
 
 #endif
