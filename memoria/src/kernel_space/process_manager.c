@@ -137,9 +137,9 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char* script_pat
     proc->pid = pid;
     proc->process_size = size;
     proc->is_suspended = false;
-    lock_process_instructions(); // Lock if instructions can be concurrently accessed
+    lock_process_instructions();
     proc->instructions = process_manager_load_script_lines(script_path);
-    unlock_process_instructions(); // Unlock
+    unlock_process_instructions();
 
     if (script_path && strcmp(script_path, "") != 0 && proc->instructions == NULL) {
         LOG_ERROR("## PID: %u - Error al cargar pseudocodigo desde: %s", pid, script_path);
@@ -147,11 +147,11 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char* script_pat
         return -1;
     }
 
-    size_t pages_needed = (size_t)ceil((double)size / memoria_config.TAM_PAGINA);
-    LOG_INFO("## PID: %u - Proceso requiere %zu paginas (tamano: %u bytes, pagina: %d bytes).", pid, pages_needed, size, memoria_config.TAM_PAGINA);
+    uint32_t pages_needed = (uint32_t)ceil((double)size / memoria_config.TAM_PAGINA);
+    LOG_INFO("## PID: %u - Proceso requiere %d paginas (tamano: %d bytes, pagina: %d bytes).", pid, pages_needed, size, memoria_config.TAM_PAGINA);
 
     if (frame_get_free_count() < pages_needed) {
-        LOG_ERROR("## PID: %u - No hay suficientes frames disponibles para crear el proceso. (Necesita %zu, Libre %zu)", pid, pages_needed, frame_get_free_count());
+        LOG_ERROR("## PID: %u - No hay suficientes frames disponibles para crear el proceso. (Necesita %d, Libre %d)", pid, pages_needed, frame_get_free_count());
         if (proc->instructions) list_destroy_and_destroy_elements(proc->instructions, free);
         free(proc);
         return -1;
@@ -164,7 +164,6 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char* script_pat
         free(proc);
         return -1;
     }
-    // No logging of frames asignados as per instructions.
 
     proc->page_table = init_page_table(&memoria_config);
     if (proc->page_table == NULL) {

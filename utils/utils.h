@@ -52,5 +52,6 @@
 #include "src/utils/DTPs/new_io_package.h"
 #include "src/utils/DTPs/syscall_package.h"
 #include "src/utils/DTPs/kill_process_package.h"
+#include "src/utils/DTPs/swap_package.h"
 
 #endif 
