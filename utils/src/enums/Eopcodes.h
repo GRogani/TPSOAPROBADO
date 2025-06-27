@@ -9,13 +9,13 @@ enum
     FETCH,              // cpu -> memoria
     INSTRUCTION,        // memoria -> cpu
     LIST_INSTRUCTIONS,
-    GET_FREE_SPACE,
+    GET_FREE_SPACE,     
     INIT_PROCESS,       // kernel -> memoria
-    UNSUSPEND_PROCESS,
+    UNSUSPEND_PROCESS,  // kernel -> memoria
     KILL_PROCESS,       // kernel -> memoria
-    SWAP,
-    WRITE_MEMORY,
-    READ_MEMORY,
+    SWAP,               // kernel -> memoria
+    WRITE_MEMORY,       // kernel -> memoria
+    READ_MEMORY,        // kernel -> memoria
     DUMP_MEMORY,        // kernel -> memoria
 
     CONFIRMATION,       // server -> client

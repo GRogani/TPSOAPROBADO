@@ -3,7 +3,7 @@
 
 #include <pthread.h>
 #include "../utils.h"
-#include "process_handler.h"
+#include "syscall_handler.h"
 #include "kernel_space/process_manager.h"
 #include "swap_space/swap_manager.h"
 
@@ -24,7 +24,5 @@ void* client_listener(void* arg);
 /// @return Siempre NULL.
 void* client_handler(void* client_fd_ptr);
 
-void unsuspend_process_request_handler(int client_fd, t_package* package);
-void swap_request_handler(int client_fd, t_package* package);
 
 #endif

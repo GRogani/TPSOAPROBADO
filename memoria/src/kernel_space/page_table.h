@@ -72,5 +72,14 @@ void destroy_page_table(t_page_table* page_table);
  */
 t_page_table* init_page_table(const t_memoria_config* config);
 
+/**
+ * @brief Resets all frame numbers in a multi-level page table to invalid values (-1).
+ * This is used before reassigning frames during swap in.
+ * @param current_table The page table to reset.
+ * @param total_levels Total number of levels in the page table hierarchy.
+ * @param current_level Current level being processed (should start with 1).
+ * @return true if successful, false otherwise.
+ */
+bool reset_page_table_frames(t_page_table* current_table, int total_levels, int current_level);
 
 #endif
