@@ -48,4 +48,37 @@ void swap_manager_free_page_from_swap(void* element);
  */
 size_t swap_manager_get_free_pages_count(void);
 
+/**
+ * @brief Asigna páginas en el archivo de swap para un proceso
+ * @param pid ID del proceso
+ * @param num_pages_to_swap Número de páginas a asignar
+ * @return Lista con información de páginas asignadas o NULL si error
+ */
+t_list* swap_allocate_pages(uint32_t pid, size_t num_pages_to_swap);
+
+/**
+ * @brief Escribe una página en el archivo de swap
+ * @param swap_offset Offset en el archivo de swap
+ * @param page_content Contenido de la página
+ * @param page_size Tamaño de la página
+ * @return true si éxito, false si error
+ */
+bool swap_write_page(uint32_t swap_offset, const void* page_content, size_t page_size);
+
+/**
+ * @brief Lee una página desde el archivo de swap
+ * @param swap_offset Offset en el archivo de swap
+ * @param buffer Buffer donde almacenar la página
+ * @param page_size Tamaño de la página
+ * @return true si éxito, false si error
+ */
+bool swap_read_page(uint32_t swap_offset, void* buffer, size_t page_size);
+
+/**
+ * @brief Libera páginas en el archivo de swap
+ * @param swap_page_info_list Lista con información de páginas a liberar
+ * @param page_size Tamaño de cada página
+ */
+void swap_free_pages(t_list* swap_page_info_list, size_t page_size);
+
 #endif // SWAP_SPACE_SWAP_MANAGER_H

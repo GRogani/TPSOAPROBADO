@@ -1,4 +1,8 @@
 #include "swap_manager.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
 
 static FILE* swap_file_ptr = NULL;
 static char* swap_file_path = NULL;
@@ -7,30 +11,45 @@ static int PAGE_SIZE_SWAP = 0;
 static t_list* swap_free_blocks = NULL;
 static size_t swap_current_free_pages = 0; // Este contador se actualiza al asignar/liberar
 
-// Helper function to free t_swap_page_info* elements
-static void free_swap_page_info_element(void* element) {
-    free(element);
+/**
+ * @brief Libera un elemento t_swap_page_info
+ * @param element Puntero al elemento a liberar
+ */
+void free_swap_page_info_element(void* element) {
+    t_swap_page_info* info = (t_swap_page_info*)element;
+    free(info);
 }
 
-// Helper for t_swap_free_block
-static void free_swap_free_block(void* element) {
-    free(element);
+/**
+ * @brief Libera un bloque libre de swap
+ * @param element Puntero al bloque a liberar
+ */
+void free_swap_free_block(void* element) {
+    t_swap_free_block* block = (t_swap_free_block*)element;
+    free(block);
 }
 
-// Comparison function for sorting t_swap_free_block by start_offset
-static bool compare_swap_free_blocks(void* a, void* b) {
+/**
+ * @brief Compara dos bloques libres por offset de inicio
+ * @param a Primer bloque
+ * @param b Segundo bloque
+ * @return true si a < b, false en caso contrario
+ */
+bool compare_swap_free_blocks(void* a, void* b) {
     t_swap_free_block* block_a = (t_swap_free_block*)a;
     t_swap_free_block* block_b = (t_swap_free_block*)b;
     return block_a->start_offset < block_b->start_offset;
 }
 
-// Helper to merge adjacent free blocks (simple coalescing)
-static void merge_free_blocks() {
+/**
+ * @brief Fusiona bloques libres adyacentes
+ */
+void merge_free_blocks() {
     if (swap_free_blocks == NULL || list_size(swap_free_blocks) < 2) {
         return;
     }
 
-    list_sort(swap_free_blocks, (void*) &compare_swap_free_blocks); // Ensure sorted by start_offset
+    list_sort(swap_free_blocks, (void*) &compare_swap_free_blocks);
 
     int i = 0;
     while (i < list_size(swap_free_blocks) - 1) {
@@ -38,12 +57,10 @@ static void merge_free_blocks() {
         t_swap_free_block* next = list_get(swap_free_blocks, i + 1);
 
         if (current->start_offset + current->size == next->start_offset) {
-            // Adjacent blocks, merge them
             current->size += next->size;
             list_remove_and_destroy_element(swap_free_blocks, i + 1, free_swap_free_block);
-            // No increment of i, as the new 'next' block is now at index i+1
         } else {
-            i++; // Move to the next block
+            i++;
         }
     }
 }
@@ -80,17 +97,30 @@ bool swap_manager_init(const t_memoria_config* config) {
     // No hay ftruncate inicial o tamaño predefinido. El archivo crecerá según sea necesario.
 
     // Inicializar la lista de bloques libres
-    swap_free_blocks = list_create();
     if (swap_free_blocks == NULL) {
-        LOG_ERROR("Swap Manager: Error al crear la lista de bloques libres de SWAP.");
-        fclose(swap_file_ptr);
-        free(swap_file_path);
+        swap_free_blocks = list_create();
+        if (swap_free_blocks == NULL) {
+            LOG_ERROR("Error: No se pudo crear lista de bloques libres de swap");
+            return false;
+        }
+    }
+
+    t_swap_free_block* initial_block = malloc(sizeof(t_swap_free_block));
+    if (initial_block == NULL) {
+        LOG_ERROR("Error: No se pudo asignar memoria para bloque inicial de swap");
         return false;
     }
-    swap_current_free_pages = 0; // Inicialmente, no hay páginas libres en la lista (el archivo comienza vacío o con datos previos)
 
-    LOG_INFO("Swap Manager: Archivo SWAP abierto/creado en %s con tamano de pagina %d bytes.",
-             swap_file_path, PAGE_SIZE_SWAP);
+    fseek(swap_file_ptr, 0, SEEK_END);
+    long file_size = ftell(swap_file_ptr);
+    fseek(swap_file_ptr, 0, SEEK_SET);
+
+    initial_block->start_offset = 0;
+    initial_block->size = file_size;
+    list_add(swap_free_blocks, initial_block);
+    swap_current_free_pages = file_size / PAGE_SIZE_SWAP;
+
+    LOG_INFO("Swap Manager: Inicializado con %zu páginas libres", swap_current_free_pages);
     return true;
 }
 

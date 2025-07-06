@@ -22,6 +22,7 @@ typedef struct process_info {
     t_page_table* page_table;
     t_process_metrics* metrics;
     t_list* allocated_frames;
+    t_list* swap_pages_info;  // Estructura para rastrear páginas en swap
 } process_info;
 
 // Helper to destroy a process_info structure, called by process_manager
@@ -47,5 +48,12 @@ process_info* process_manager_find_process(uint32_t pid);
 // Removes a process by PID from the global list and frees its resources.
 // Returns 0 on success, -1 if process not found.
 int process_manager_delete_process(uint32_t pid);
+
+// Updates the page table of a process with new frame assignments
+// This is used during swap in to reassign frames to the page table
+bool update_process_page_table(process_info* proc, t_list* new_frames);
+
+// Checks if a process with the given PID exists
+bool process_manager_process_exists(uint32_t pid);
 
 #endif

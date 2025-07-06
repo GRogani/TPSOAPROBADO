@@ -2,7 +2,7 @@
 #define ENUM_PLANIFICATION_ALGORITHM
 
 #include <stddef.h>
-#include <strings.h>
+#include <string.h>
 
 typedef enum {
     FIFO,

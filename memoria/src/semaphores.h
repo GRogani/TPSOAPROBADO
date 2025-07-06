@@ -20,4 +20,10 @@ void unlock_process_instructions();
 void lock_swap_file();
 void unlock_swap_file();
 
+void lock_page_table();
+void unlock_page_table();
+
+void lock_process_metrics();
+void unlock_process_metrics();
+
 #endif
