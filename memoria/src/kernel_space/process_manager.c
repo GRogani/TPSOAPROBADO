@@ -1,6 +1,4 @@
 #include "process_manager.h"
-#include <libgen.h>    // Para dirname
-#include <unistd.h>    // Para readlink y getcwd
 
 static t_list* global_process_list = NULL;
 
@@ -120,22 +118,7 @@ void process_manager_destroy() {
  */
 t_list* process_manager_load_script_lines(char* path) {
     char full_path[512];
-    // Construir una ruta absoluta al directorio program/ usando el directorio del ejecutable
-    char exec_path[256];
-    char* base_dir = NULL;
-    
-    // Intentar obtener el directorio base del ejecutable
-    if (readlink("/proc/self/exe", exec_path, sizeof(exec_path) - 1) != -1) {
-        // Encontrar el último '/' para obtener el directorio del ejecutable
-        base_dir = dirname(exec_path);
-    } else {
-        // Si falla, usar el directorio actual como respaldo
-        getcwd(exec_path, sizeof(exec_path));
-        base_dir = exec_path;
-    }
-    
-    // Construir la ruta completa
-    snprintf(full_path, sizeof(full_path), "%s/../src/program/%s", base_dir, path);
+    snprintf(full_path, sizeof(full_path), "program/%s", path);
 
     LOG_INFO("Intentando abrir archivo de pseudocodigo: %s", full_path);
 
