@@ -117,7 +117,7 @@ void process_manager_destroy() {
  */
 t_list* process_manager_load_script_lines(char* path) {
     char full_path[512];
-    snprintf(full_path, sizeof(full_path), "program/%s", path);
+    snprintf(full_path, sizeof(full_path), "%s%s", memoria_config.PATH_INSTRUCCIONES, path);
 
     LOG_INFO("Intentando abrir archivo de pseudocodigo: %s", full_path);
 
@@ -239,13 +239,13 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char* script_pat
 process_info* process_manager_find_process(uint32_t pid) {
     process_info* found_proc = NULL;
     lock_process_list();
-    for (int i = 0; i < list_size(global_process_list); i++) {
-        process_info* proc = list_get(global_process_list, i);
-        if (proc->pid == pid) {
-            found_proc = proc;
-            break;
+        for (int i = 0; i < list_size(global_process_list); i++) {
+            process_info* proc = list_get(global_process_list, i);
+            if (proc->pid == pid) {
+                found_proc = proc;
+                break;
+            }
         }
-    }
     unlock_process_list();
     return found_proc;
 }

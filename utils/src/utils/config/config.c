@@ -60,6 +60,7 @@ t_memoria_config init_memoria_config(t_config* config) {
     conf.PATH_SWAPFILE = config_get_string_value(config, "PATH_SWAPFILE");
     conf.LOG_LEVEL = log_level_from_string(config_get_string_value(config, "LOG_LEVEL"));
     conf.DUMP_PATH = config_get_string_value(config, "DUMP_PATH");
+    conf.PATH_INSTRUCCIONES = config_get_string_value(config, "PATH_INSTRUCCIONES");
 
     return conf;
 }
