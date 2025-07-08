@@ -1,6 +1,10 @@
 #include "main.h"
                                 
 int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        fprintf(stderr, "Uso: %s <script_path> <program_size>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
 
     extern t_kernel_config kernel_config;  // en globals.h
 
