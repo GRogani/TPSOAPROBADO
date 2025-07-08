@@ -113,14 +113,14 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         else 
         {
         if(g_tlb_config->entry_count > 0){
-        uint32_t physic_dir_write = mmu_translate_address(logic_dir_write);
+        uint32_t physic_dir_write = mmu_translate_address(&socket_memory, logic_dir_write);
         t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
         send_memory_write_request(socket_memory, write_req);
         destroy_memory_write_request(write_req);
         (*PC)++;
         break;}
         else{
-        uint32_t frame_number = mmu_perform_page_walk(page_number);
+        uint32_t frame_number = mmu_perform_page_walk(&socket_memory,page_number);
         uint32_t physic_dir_write = (frame_number * g_mmu_config->page_size) + offset;
         t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
         send_memory_write_request(socket_memory, write_req);
@@ -153,7 +153,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         else {
             LOG_INFO("Cache is disabled, reading directly from memory");
             if(g_tlb_config->entry_count > 0){
-            uint32_t physic_dir_read = mmu_translate_address(logic_dir_read);
+            uint32_t physic_dir_read = mmu_translate_address(&socket_memory, logic_dir_read);
             t_memory_read_request* request = create_memory_read_request(physic_dir_read, size);
             send_memory_read_request(socket_memory, request);
             destroy_memory_read_request(request);
@@ -184,7 +184,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             break;
         }
         else{
-        uint32_t frame_number = mmu_perform_page_walk(page_number);
+        uint32_t frame_number = mmu_perform_page_walk(&socket_memory, page_number);
         uint32_t physic_dir_read  = (frame_number * g_mmu_config->page_size) + offset;
         t_memory_read_request* request = create_memory_read_request(physic_dir_read, size);
         send_memory_read_request(socket_memory, request);

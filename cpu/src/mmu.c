@@ -17,15 +17,25 @@ static uint64_t g_lru_timestamp_counter = 0;
 static int g_cache_clock_pointer = 0;
 
 
-uint32_t mmu_request_pagetable_entry_from_memory(uint32_t table_id, uint32_t entry_index) { 
-    //TODO: Pegarle a la memoria pasando el entry_index y el table_id, el table_id debe ser un decimal, esta funcion pega en memoria y devuelve un table_id o un frame_number
-    LOG_DEBUG("[MEM-REQUEST] Asking Memory for entry %u from table %u", entry_index, table_id);
+uint32_t mmu_request_pagetable_entry_from_memory(int* memory_socket, uint32_t table_id, uint32_t entry_index) {
+    LOG_DEBUG("[MEM-REQUEST] Asking Memory for page table entry from table %u, entry %u", table_id, entry_index);
 
-    if (table_id == 0) { 
-        return entry_index * g_mmu_config->entries_per_table;
-    } else {
-        return table_id + entry_index;
+    send_page_entry_request_package(memory_socket, table_id, entry_index);
+
+    // Wait for response from memory
+    t_package* response_package = recv_package(memory_socket);
+    if (response_package == NULL || response_package->opcode != GET_PAGE_ENTRY) {
+        LOG_ERROR("[MEM-REQUEST] Failed to receive valid response for page table entry request");
+        if (response_package) package_destroy(response_package);
+        return -1; // Error
     }
+
+    // Parse the response
+    page_entry_response_data response = read_page_entry_response_package(response_package);
+    package_destroy(response_package);
+
+    LOG_DEBUG("[MEM-REQUEST] Received value %u from memory", response.value);
+    return response.value;
 }
 
 
@@ -123,7 +133,7 @@ void tlb_add_entry(uint32_t page_number, uint32_t frame_number) {
 }
 
 
-uint32_t mmu_perform_page_walk(uint32_t page_number) { 
+uint32_t mmu_perform_page_walk(int* memory_socket, uint32_t page_number) { 
     LOG_INFO("[MMU] Page Walk starting for page number %u...", page_number);
 
     uint32_t next_table_id = 0; // Level 1 table ID is 0 by convention
@@ -147,7 +157,7 @@ uint32_t mmu_perform_page_walk(uint32_t page_number) {
     return frame_number;
 }
 
-uint32_t mmu_translate_address(uint32_t logical_address) {
+uint32_t mmu_translate_address(int* memory_socket, uint32_t logical_address) {
     
     uint32_t page_number = logical_address / g_mmu_config->page_size;  // floor() is implicit with integer division
     uint32_t offset = logical_address % g_mmu_config->page_size;
@@ -163,7 +173,7 @@ uint32_t mmu_translate_address(uint32_t logical_address) {
         frame_number = tlb_entry->frame;
     } else {
         LOG_INFO("[TLB] MISS for page number %u. Consulting page tables...", page_number);
-        frame_number = mmu_perform_page_walk(page_number);
+        frame_number = mmu_perform_page_walk(memory_socket, page_number);
         tlb_add_entry(page_number, frame_number);
     }
 
@@ -309,12 +319,12 @@ CacheEntry* cache_load_page(uint32_t logic_dir, int* memory_socket) {
     uint32_t page_number = floor(logic_dir / g_mmu_config->page_size);
     uint32_t offset = logic_dir % g_mmu_config->page_size;
     if(g_tlb_config->entry_count > 0){
-        uint32_t physic_dir = mmu_translate_address(logic_dir);
+        uint32_t physic_dir = mmu_translate_address(memory_socket, logic_dir);
         frame_number = (physic_dir - offset)/g_mmu_config->page_size;
 
     }
     else{
-        frame_number = mmu_perform_page_walk(page_number);
+        frame_number = mmu_perform_page_walk(memory_socket, page_number);
         uint32_t physic_dir = (frame_number * g_mmu_config->page_size) + offset;
 
     }
