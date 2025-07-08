@@ -4,7 +4,7 @@ int main(int argc, char* argv[]) {
 
     extern t_kernel_config kernel_config;  // en globals.h
 
-    t_config* config = init_config("kernel.config");
+    t_config *config = init_config(argv[3]);
 
     kernel_config = init_kernel_config(config);
 

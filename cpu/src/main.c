@@ -3,7 +3,7 @@
 int main(int argc, char *argv[])
 {
     init_list_and_mutex();
-    t_config *config_file = init_config("cpu.config");
+    t_config *config_file = init_config(argv[1]);
     t_cpu_config config_cpu = init_cpu_config(config_file);
     init_logger("cpu.log", "CPU", config_cpu.LOG_LEVEL);
 
