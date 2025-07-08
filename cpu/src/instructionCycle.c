@@ -101,7 +101,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             if (cache_entry == NULL)
             {
                 // Cache miss, load the page into cache
-                cache_entry = cache_load_page(page_number, &socket_memory);
+                cache_entry = cache_load_page(logic_dir_write, &socket_memory);
    
             }
             // Write to cache
@@ -143,7 +143,7 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             if (cache_entry == NULL)
             {
                 // Cache miss, load the page into cache
-                cache_entry = cache_load_page(page_number, &socket_memory);
+                cache_entry = cache_load_page(logic_dir_read, &socket_memory);
             }
             // Read from cache
             LOG_INFO("Data read from cache: %s", cache_entry->content);

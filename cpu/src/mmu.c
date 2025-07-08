@@ -169,7 +169,7 @@ uint32_t mmu_translate_address(uint32_t logical_address) {
 
     uint32_t physical_address = (frame_number * g_mmu_config->page_size) + offset;
     LOG_DEBUG("  -> Resulting Physical Address: %u", physical_address);
-    
+
     return physical_address;
 }
 
@@ -289,9 +289,8 @@ int cache_find_victim_clock_m() {
     return cache_find_victim_clock();
 }
 
-CacheEntry* cache_load_page(uint32_t page_number, int* memory_socket) {
-    LOG_INFO("[Cache] MISS for frame %u. Finding a victim to replace...", page_number);
-    
+CacheEntry* cache_load_page(uint32_t logic_dir, int* memory_socket) {
+    LOG_INFO("[Cache] Loading page for logical address %u", logic_dir);    
     int victim_index;
     if (g_cache_config->replacement_algo == CACHE_ALGO_CLOCK) {
         victim_index = cache_find_victim_clock();
@@ -305,13 +304,25 @@ CacheEntry* cache_load_page(uint32_t page_number, int* memory_socket) {
         mmu_request_page_write_to_memory(memory_socket,victim_entry->frame, victim_entry->content);
     }
     
-    LOG_DEBUG("[Cache] Loading frame %u into cache slot %d.", page_number, victim_index);
+    LOG_DEBUG("[Cache] Replacing victim entry at index %d (frame %u) with new page.", victim_index, victim_entry->frame);
+    uint32_t frame_number;
+    uint32_t page_number = floor(logic_dir / g_mmu_config->page_size);
+    uint32_t offset = logic_dir % g_mmu_config->page_size;
+    if(g_tlb_config->entry_count > 0){
+        uint32_t physic_dir = mmu_translate_address(logic_dir);
+        frame_number = (physic_dir - offset)/g_mmu_config->page_size;
 
-    //TODO: Pasar por tlb previamente
-    mmu_request_page_read_from_memory(memory_socket, page_number, victim_entry->content);
+    }
+    else{
+        frame_number = mmu_perform_page_walk(page_number);
+        uint32_t physic_dir = (frame_number * g_mmu_config->page_size) + offset;
+
+    }
+
+    mmu_request_page_read_from_memory(memory_socket, frame_number, victim_entry->content);
 
     victim_entry->is_valid = true;
-    victim_entry->frame = page_number;
+    victim_entry->frame = frame_number;
     victim_entry->use_bit = true;
     victim_entry->modified_bit = false;
     
