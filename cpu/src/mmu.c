@@ -17,7 +17,8 @@ static uint64_t g_lru_timestamp_counter = 0;
 static int g_cache_clock_pointer = 0;
 
 
-uint32_t mmu_request_pagetable_entry_from_memory(uint32_t table_id, uint32_t entry_index) {
+uint32_t mmu_request_pagetable_entry_from_memory(uint32_t table_id, uint32_t entry_index) { 
+    //TODO: Pegarle a la memoria pasando el entry_index y el table_id, el table_id debe ser un decimal, esta funcion pega en memoria y devuelve un table_id o un frame_number
     LOG_DEBUG("[MEM-REQUEST] Asking Memory for entry %u from table %u", entry_index, table_id);
 
     if (table_id == 0) { 
@@ -123,29 +124,32 @@ void tlb_add_entry(uint32_t page_number, uint32_t frame_number) {
 
 
 uint32_t mmu_perform_page_walk(uint32_t page_number) { 
-    LOG_INFO("[MMU] Page Walk starting for page %u...", page_number);
+    LOG_INFO("[MMU] Page Walk starting for page number %u...", page_number);
 
-    uint32_t temp_page_num = page_number;
     uint32_t next_table_id = 0; // Level 1 table ID is 0 by convention
 
     for (int level = 1; level <= g_mmu_config->page_table_levels; level++) {
+
         int power = g_mmu_config->page_table_levels - level;
         uint32_t divisor = (uint32_t)pow(g_mmu_config->entries_per_table, power);
-        uint32_t entry_index = floor(temp_page_num / divisor);
-        temp_page_num %= divisor;
-
-        LOG_DEBUG("  - Level %d: Page num chunk %u -> table entry %u", level, (uint32_t)floor(temp_page_num / divisor), entry_index);
+        uint32_t entry_index = (page_number / divisor) % g_mmu_config->entries_per_table;
+        
+        LOG_DEBUG("  - Level %d: Power %d, Divisor %u -> table entry %u", 
+                  level, power, divisor, entry_index);
         
         next_table_id = mmu_request_pagetable_entry_from_memory(next_table_id, entry_index);
+        
+        LOG_DEBUG("    Next table/frame ID: %u", next_table_id);
     }
     
     uint32_t frame_number = next_table_id;
-    LOG_INFO("[MMU] Page Walk complete. Page %u maps to Frame %u.", page_number, frame_number);
+    LOG_INFO("[MMU] Page Walk complete. Page number %u maps to Frame %u.", page_number, frame_number);
     return frame_number;
 }
 
 uint32_t mmu_translate_address(uint32_t logical_address) {
-    uint32_t page_number = floor(logical_address / g_mmu_config->page_size);
+    
+    uint32_t page_number = logical_address / g_mmu_config->page_size;  // floor() is implicit with integer division
     uint32_t offset = logical_address % g_mmu_config->page_size;
     
     LOG_INFO("--- Translating Logical Address %u ---", logical_address);
@@ -155,10 +159,10 @@ uint32_t mmu_translate_address(uint32_t logical_address) {
     TLBEntry* tlb_entry = tlb_find_entry(page_number);
 
     if (tlb_entry) {
-        LOG_INFO("[TLB] HIT! Page %u -> Frame %u.", page_number, tlb_entry->frame);
+        LOG_INFO("[TLB] HIT! Page number %u -> Frame %u.", page_number, tlb_entry->frame);
         frame_number = tlb_entry->frame;
     } else {
-        LOG_INFO("[TLB] MISS for page %u. Consulting page tables...", page_number);
+        LOG_INFO("[TLB] MISS for page number %u. Consulting page tables...", page_number);
         frame_number = mmu_perform_page_walk(page_number);
         tlb_add_entry(page_number, frame_number);
     }
@@ -302,6 +306,8 @@ CacheEntry* cache_load_page(uint32_t frame_number, int* memory_socket) {
     }
     
     LOG_DEBUG("[Cache] Loading frame %u into cache slot %d.", frame_number, victim_index);
+
+    //TODO: Pasar por tlb previamente
     mmu_request_page_read_from_memory(memory_socket,frame_number, victim_entry->content);
 
     victim_entry->is_valid = true;
