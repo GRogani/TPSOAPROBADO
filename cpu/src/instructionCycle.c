@@ -92,14 +92,16 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
     { 
         uint32_t logic_dir_write = instruction->operand_numeric1;
         char *valor_write = instruction->operand_string;
+        uint32_t page_number = floor(logic_dir_write / g_mmu_config->page_size);
+        uint32_t offset = logic_dir_write % g_mmu_config->page_size;
         if (g_cache_config->entry_count > 0)
         {
             // If cache is enabled, we need to write to cache first
-            CacheEntry *cache_entry = cache_find_entry(logic_dir_write);
+            CacheEntry *cache_entry = cache_find_entry(page_number);
             if (cache_entry == NULL)
             {
                 // Cache miss, load the page into cache
-                cache_entry = cache_load_page(logic_dir_write, &socket_memory);
+                cache_entry = cache_load_page(page_number, &socket_memory);
    
             }
             // Write to cache
@@ -117,8 +119,6 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
         (*PC)++;
         break;
         }
-        uint32_t page_number = floor(logic_dir_write / g_mmu_config->page_size);
-        uint32_t offset = logic_dir_write % g_mmu_config->page_size;
         uint32_t frame_number = mmu_perform_page_walk(page_number);
         uint32_t physic_dir_write = (frame_number * g_mmu_config->page_size) + offset;
         t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
@@ -131,20 +131,19 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
     {
         uint32_t logic_dir_read = instruction->operand_numeric1;
         uint32_t size = instruction->operand_numeric2;
+        uint32_t page_number = floor(logic_dir_read / g_mmu_config->page_size);
+        uint32_t offset = logic_dir_read % g_mmu_config->page_size;
         if (g_cache_config->entry_count > 0)
         {
             // If cache is enabled, we need to read from cache first
-            CacheEntry *cache_entry = cache_find_entry(logic_dir_read);
+            CacheEntry *cache_entry = cache_find_entry(page_number);
             if (cache_entry == NULL)
             {
                 // Cache miss, load the page into cache
-                cache_entry = cache_load_page(logic_dir_read, &socket_memory);
+                cache_entry = cache_load_page(page_number, &socket_memory);
             }
             // Read from cache
-            char *data = malloc(size);
-            memcpy(data, cache_entry->content, size);
-            LOG_INFO("Data read from cache: %s", data);
-            free(data);
+            LOG_INFO("Data read from cache: %s", cache_entry->content);
             (*PC)++;
             break;
         }
@@ -180,8 +179,6 @@ int execute(t_instruction *instruction, int socket_memory, int socket_dispatch, 
             (*PC)++;
             break;
         }
-        uint32_t page_number = floor(logic_dir_read / g_mmu_config->page_size);
-        uint32_t offset = logic_dir_read % g_mmu_config->page_size;
         uint32_t frame_number = mmu_perform_page_walk(page_number);
         uint32_t physic_dir_read  = (frame_number * g_mmu_config->page_size) + offset;
         t_memory_read_request* request = create_memory_read_request(physic_dir_read, size);
