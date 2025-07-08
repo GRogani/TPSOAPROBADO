@@ -48,10 +48,10 @@ void tlb_add_entry(uint32_t page_number, uint32_t frame_number);
 uint32_t mmu_perform_page_walk(uint32_t page_number);
 
 // Cache Functions
-CacheEntry* cache_find_entry(uint32_t frame_number);
+CacheEntry* cache_find_entry(uint32_t page_number);
 int cache_find_victim_clock(void);
 int cache_find_victim_clock_m(void);
-CacheEntry* cache_load_page(uint32_t frame_number, int* memory_socket);
+CacheEntry* cache_load_page(uint32_t page_number, int* memory_socket);
 
 // Utility Functions
 void tlb_entry_destroy(void* element);

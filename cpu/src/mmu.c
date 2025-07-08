@@ -232,12 +232,12 @@ void mmu_destroy() {
 /*CACHE*/
 
 
-CacheEntry* cache_find_entry(uint32_t frame_number) {
+CacheEntry* cache_find_entry(uint32_t page_number) {
     if (g_cache_config->entry_count == 0) return NULL;
 
     bool _is_frame(void* element) {
         CacheEntry* entry = (CacheEntry*)element;
-        return entry->is_valid && entry->frame == frame_number;
+        return entry->is_valid && entry->frame == page_number;
     }
 
     CacheEntry* entry = list_find(g_cache, _is_frame);
@@ -289,8 +289,8 @@ int cache_find_victim_clock_m() {
     return cache_find_victim_clock();
 }
 
-CacheEntry* cache_load_page(uint32_t frame_number, int* memory_socket) {
-    LOG_INFO("[Cache] MISS for frame %u. Finding a victim to replace...", frame_number);
+CacheEntry* cache_load_page(uint32_t page_number, int* memory_socket) {
+    LOG_INFO("[Cache] MISS for frame %u. Finding a victim to replace...", page_number);
     
     int victim_index;
     if (g_cache_config->replacement_algo == CACHE_ALGO_CLOCK) {
@@ -305,13 +305,13 @@ CacheEntry* cache_load_page(uint32_t frame_number, int* memory_socket) {
         mmu_request_page_write_to_memory(memory_socket,victim_entry->frame, victim_entry->content);
     }
     
-    LOG_DEBUG("[Cache] Loading frame %u into cache slot %d.", frame_number, victim_index);
+    LOG_DEBUG("[Cache] Loading frame %u into cache slot %d.", page_number, victim_index);
 
     //TODO: Pasar por tlb previamente
-    mmu_request_page_read_from_memory(memory_socket,frame_number, victim_entry->content);
+    mmu_request_page_read_from_memory(memory_socket, page_number, victim_entry->content);
 
     victim_entry->is_valid = true;
-    victim_entry->frame = frame_number;
+    victim_entry->frame = page_number;
     victim_entry->use_bit = true;
     victim_entry->modified_bit = false;
     
