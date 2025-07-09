@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    t_config* config = init_config("kernel.config");
+    t_config *config = init_config(argv[3]);
 
     kernel_config = init_kernel_config(config);
 
