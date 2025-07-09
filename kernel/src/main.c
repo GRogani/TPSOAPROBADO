@@ -3,6 +3,10 @@
 t_kernel_config kernel_config;  
                                 
 int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        fprintf(stderr, "Uso: %s <script_path> <program_size>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
 
     t_config* config = init_config("kernel.config");
 
