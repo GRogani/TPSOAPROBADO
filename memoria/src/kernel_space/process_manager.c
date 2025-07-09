@@ -11,10 +11,9 @@ extern t_memoria_config memoria_config;
  * @param current_frame_index Índice del frame actual
  * @param total_levels Total de niveles en la jerarquía
  * @param current_level Nivel actual siendo procesado
- * @param pages_needed Cantidad de páginas necesarias para el proceso
  * @return true si éxito, false si error
  */
-bool assign_frames_to_page_table(t_page_table* current_table, t_list* allocated_frames_for_process, int* current_frame_index, int total_levels, int current_level, int pages_needed) {
+bool assign_frames_to_page_table(t_page_table* current_table, t_list* allocated_frames_for_process, int* current_frame_index, int total_levels, int current_level) {
     if (current_table == NULL || allocated_frames_for_process == NULL) {
         LOG_ERROR("Error: Tabla actual o lista de frames es NULL en assign_frames_to_page_table.");
         return false;
@@ -23,8 +22,6 @@ bool assign_frames_to_page_table(t_page_table* current_table, t_list* allocated_
     bool is_last_level_of_hierarchy = (current_level == total_levels);
 
     for (int i = 0; i < current_table->num_entries; i++) {
-        if (*current_frame_index >= pages_needed) break; // Solo asignar las páginas necesarias
-
         t_page_table_entry* entry = get_page_table_entry(current_table, i);
         if (entry == NULL) {
             LOG_ERROR("Error: Entrada de tabla de paginas NULL en indice %d de nivel %d.", i, current_level);
@@ -44,7 +41,7 @@ bool assign_frames_to_page_table(t_page_table* current_table, t_list* allocated_
             next_level_table_mock.entries = entry->next_level;
             next_level_table_mock.num_entries = list_size(entry->next_level);
 
-            if (!assign_frames_to_page_table(&next_level_table_mock, allocated_frames_for_process, current_frame_index, total_levels, current_level + 1, pages_needed)) {
+            if (!assign_frames_to_page_table(&next_level_table_mock, allocated_frames_for_process, current_frame_index, total_levels, current_level + 1)) {
                 return false;
             }
         }
@@ -120,7 +117,7 @@ void process_manager_destroy() {
  */
 t_list* process_manager_load_script_lines(char* path) {
     char full_path[512];
-    snprintf(full_path, sizeof(full_path), "%s%s", memoria_config.PATH_INSTRUCCIONES, path);
+    snprintf(full_path, sizeof(full_path), "program/%s", path);
 
     LOG_INFO("Intentando abrir archivo de pseudocodigo: %s", full_path);
 
@@ -203,7 +200,7 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char* script_pat
     }
 
     int current_frame_idx = 0;
-    if (!assign_frames_to_page_table(proc->page_table, proc->allocated_frames, &current_frame_idx, memoria_config.CANTIDAD_NIVELES, 1, pages_needed)) {
+    if (!assign_frames_to_page_table(proc->page_table, proc->allocated_frames, &current_frame_idx, memoria_config.CANTIDAD_NIVELES, 1)) {
         LOG_ERROR("## PID: %u - Error al asignar frames a las entradas de la tabla de paginas.", pid);
         if (proc->instructions) list_destroy_and_destroy_elements(proc->instructions, free);
         destroy_page_table(proc->page_table);
@@ -242,13 +239,13 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char* script_pat
 process_info* process_manager_find_process(uint32_t pid) {
     process_info* found_proc = NULL;
     lock_process_list();
-        for (int i = 0; i < list_size(global_process_list); i++) {
-            process_info* proc = list_get(global_process_list, i);
-            if (proc->pid == pid) {
-                found_proc = proc;
-                break;
-            }
+    for (int i = 0; i < list_size(global_process_list); i++) {
+        process_info* proc = list_get(global_process_list, i);
+        if (proc->pid == pid) {
+            found_proc = proc;
+            break;
         }
+    }
     unlock_process_list();
     return found_proc;
 }
@@ -275,7 +272,7 @@ bool update_process_page_table(process_info* proc, t_list* new_frames) {
     }
 
     int current_frame_idx = 0;
-    bool assign_success = assign_frames_to_page_table(proc->page_table, new_frames, &current_frame_idx, memoria_config.CANTIDAD_NIVELES, 1, list_size(new_frames));
+    bool assign_success = assign_frames_to_page_table(proc->page_table, new_frames, &current_frame_idx, memoria_config.CANTIDAD_NIVELES, 1);
     
     unlock_page_table();
     

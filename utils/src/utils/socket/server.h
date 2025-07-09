@@ -22,6 +22,6 @@ int create_server(char* port);
 * @param socket_server connection of the socket server
 * @return connection connection of the client
 */
-int accept_connection(int socket_server);
+int accept_connection(char* prefix, int socket_server);
 
 #endif

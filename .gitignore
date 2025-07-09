@@ -1,9 +1,3 @@
-#
-*.sh
-.gitignore
-#Test Folder
-revenge-of-the-cth-pruebas/
-
 # Eclipse files
 .metadata/
 

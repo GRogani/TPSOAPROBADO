@@ -1,5 +1,6 @@
 #include "main.h"
 
+//Globals
 t_memoria_config memoria_config;
 
 int main(int argc, char *argv[])
@@ -13,22 +14,17 @@ int main(int argc, char *argv[])
     swap_manager_init(&memoria_config);
     frame_allocation_init();
 
-   t_config *config_file = init_config("memoria.config");
-   memoria_config = init_memoria_config(config_file);
-
-
-    /* ---------------- LOGGER ---------------- */
-    init_logger("memoria.log", "Memoria", memoria_config.LOG_LEVEL);
- 
-
-    /* ----------------HILOS DE CONEXIONES ---------------- */
     pthread_t server_thread;
     create_server_thread(&server_thread);
 
     pthread_join(server_thread, NULL);
     LOG_INFO("Server thread finished.");
+
+    destroy_memory_semaphores();
+    LOG_INFO("Memory semaphores destroyed");
+
+    process_manager_destroy(); // cleanup for process manager and its process list
     shutdown_memoria(memoria_config, config_file);
 
     return 0;
-
 }

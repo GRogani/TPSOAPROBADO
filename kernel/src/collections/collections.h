@@ -6,33 +6,27 @@
 #include <commons/collections/queue.h>
 #include <enums/Eprocess_state.h>
 #include "../utils.h"
-#include "../repository/process/new_list.h"
-#include "../repository/process/ready_list.h"
-#include "../repository/process/exec_list.h"
-#include "../repository/process/blocked_list.h"
-#include "../repository/process/exit_list.h"
-#include "../repository/process/susp_blocked_list.h"
-#include "../repository/process/susp_ready_list.h"
-#include "../repository/io_connections.h"
-#include "../repository/io_requests_link.h"
-#include "../repository/io_requests_queue.h"
-#include "../repository/cpu_connections.h"
-#include "../repository/pcb.h"
+#include "repository/process/new_list.h"
+#include "repository/process/ready_list.h"
+#include "repository/process/exec_list.h"
+#include "repository/process/blocked_list.h"
+#include "repository/process/exit_list.h"
+#include "repository/process/susp_blocked_list.h"
+#include "repository/process/susp_ready_list.h"
+#include "repository/io/io_connections.h"
+#include "repository/io/io_requests_link.h"
+#include "repository/io/io_requests_queue.h"
+#include "repository/cpu/cpu_connections.h"
+#include "repository/pcb/pcb.h"
 
 typedef struct t_cpu_connection
 {
     unsigned int id;
     int interrupt_socket_id;
     int dispatch_socket_id;
-    int current_process_executing;
+    int32_t current_process_executing;
     sem_t cpu_exec_sem;
 } t_cpu_connection;
-
-typedef struct t_io_connection
-{
-    char *device_name;
-    int current_process_executing;
-} t_io_connection;
 
 typedef struct t_io_request
 {

@@ -8,13 +8,15 @@ typedef struct t_kernel_config{
     char* memory_ip;
     char* memory_port;
     PLANIFICATION_ALGORITHM short_planification_algorithm;
-    PLANIFICATION_ALGORITHM ready_planification_algorithm;
+    PLANIFICATION_ALGORITHM long_planification_algorithm;
+    bool preemption_enabled;
     int sleep_time;
     double alpha;
     t_log_level log_level;
     char* cpu_dispatch_port;
     char* cpu_interrupt_port;
     char* io_port;
+    int cpu_quantity;
 } t_kernel_config;
 
 typedef struct t_memoria_config {
@@ -26,7 +28,6 @@ typedef struct t_memoria_config {
     int RETARDO_MEMORIA;
     int RETARDO_SWAP;
     char* PATH_SWAPFILE;
-    char* PATH_INSTRUCCIONES;
     t_log_level LOG_LEVEL;
     char* DUMP_PATH;
 } t_memoria_config;

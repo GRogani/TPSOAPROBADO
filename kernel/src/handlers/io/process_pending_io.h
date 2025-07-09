@@ -2,7 +2,7 @@
 #define PROCESS_PENDING_IO_H
 
 #include <collections/collections.h>
-#include <utils/DTOs/dtos.h>
+#include "../utils.h"
 
 typedef struct t_pending_io_args
 {
@@ -10,6 +10,6 @@ typedef struct t_pending_io_args
     int client_socket;
 } t_pending_io_args;
 
-void process_pending_io(t_pending_io_args);
+bool process_pending_io(t_pending_io_args);
 
 #endif

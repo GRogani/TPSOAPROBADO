@@ -6,13 +6,14 @@
 #include <commons/log.h>
 
 #include "../utils.h"
-#include "shutdown/shutdown.h"
-#include "handlers/cpu_server.h"
-#include "handlers/io_server.h"
+#include "globals.h"
+#include "kernel_logic/shutdown/shutdown.h"
+#include "handlers/cpu/server/cpu_server.h"
+#include "handlers/io/server/io_server.h"
 #include "collections/collections.h"
-#include "threads/create_threads.h"
+#include "kernel_logic/threads/create_threads.h"
 #include "semaphore/semaphore.h"
-#include "./handlers/cpu/init_proc_syscall.h"
+#include "kernel_logic/process_initialization.h"
 
 int main(int, char*[]);
 void process_enter();

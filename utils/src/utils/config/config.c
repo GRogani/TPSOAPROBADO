@@ -18,22 +18,15 @@ t_kernel_config init_kernel_config(t_config* config) {
     t_kernel_config conf;
     int LOG_LEVEL_INVALID = -1;
 
-    char* short_planification_algorithm_str = config_get_string_value(config, "SHORT_PLANIFICATION_ALGORITHM");
-    char* ready_planification_algorithm_str = config_get_string_value(config, "READY_PLANIFICATION_ALGORITHM");
+    const char* short_planification_algorithm_str = config_get_string_value(config, "SHORT_PLANIFICATION_ALGORITHM");
+    const char* long_planification_algorithm_str = config_get_string_value(config, "LONG_PLANIFICATION_ALGORITHM");
+    conf.short_planification_algorithm = planification_algorithm_from_string(short_planification_algorithm_str);
+    conf.long_planification_algorithm = planification_algorithm_from_string(long_planification_algorithm_str);
+
+    conf.preemption_enabled = config_get_int_value(config, "PREEMPTION");
+
     char* log_level_str = config_get_string_value(config, "LOG_LEVEL");
-    conf.short_planification_algorithm = short_planification_from_string(short_planification_algorithm_str);
-    conf.ready_planification_algorithm = ready_planification_from_string(ready_planification_algorithm_str);
     conf.log_level = log_level_from_string(log_level_str);
-
-    if (conf.short_planification_algorithm == PLANIFICATION_INVALID) {
-        LOG_ERROR("Algoritmo de planificacion corto plazo invalido: %s", short_planification_algorithm_str);
-        exit(EXIT_FAILURE);
-    }
-
-    if (conf.ready_planification_algorithm == PLANIFICATION_INVALID) {
-        LOG_ERROR("Algoritmo de planificacion ready invalido: %s", ready_planification_algorithm_str);
-        exit(EXIT_FAILURE);
-    }
 
     if (conf.log_level == LOG_LEVEL_INVALID) {
         LOG_ERROR("Nivel de log invalido: %s", log_level_str);
@@ -48,6 +41,8 @@ t_kernel_config init_kernel_config(t_config* config) {
     conf.cpu_dispatch_port = config_get_string_value(config, "CPU_DISPATCH_PORT");
     conf.cpu_interrupt_port = config_get_string_value(config, "CPU_INTERRUPT_PORT");
     conf.io_port = config_get_string_value(config, "IO_PORT");
+
+    conf.cpu_quantity = config_get_int_value(config, "CPU_QUANTITY");
 
     return conf;
 }
@@ -65,7 +60,6 @@ t_memoria_config init_memoria_config(t_config* config) {
     conf.PATH_SWAPFILE = config_get_string_value(config, "PATH_SWAPFILE");
     conf.LOG_LEVEL = log_level_from_string(config_get_string_value(config, "LOG_LEVEL"));
     conf.DUMP_PATH = config_get_string_value(config, "DUMP_PATH");
-    conf.PATH_INSTRUCCIONES = config_get_string_value(config, "PATH_INSTRUCCIONES");
 
     return conf;
 }

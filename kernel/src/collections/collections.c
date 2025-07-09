@@ -1,4 +1,5 @@
 #include "collections.h"
+#include "repository/io/io_connections.h"
 
 static t_dictionary *io_connections_dict;
 static t_dictionary *io_requests_link_dict;
