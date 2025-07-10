@@ -80,6 +80,10 @@ void* client_handler(void* client_fd_ptr) {
                 read_memory_request_handler(client_fd, package);
                 break;
 
+            case GET_PAGE_ENTRY:
+                get_page_entry_request_handler(client_fd, package);
+                break;
+
             case DUMP_MEMORY:
                 dump_memory_request_handler(client_fd, package);
                 break;

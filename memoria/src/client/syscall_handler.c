@@ -5,6 +5,7 @@
 #include "swap_space/swap_manager.h"
 #include "semaphores.h"
 #include <time.h>
+#include "utils/DTPs/page_entry_package.h"
 
 extern t_memoria_config memoria_config;
 
@@ -584,4 +585,66 @@ void swap_request_handler(int client_fd, t_package* package) {
         LOG_ERROR("SWAP: Error durante swap out para PID %u", pid);
         send_confirmation_package(client_fd, -1);
     }
-} 
+}
+
+void get_page_entry_request_handler(int socket, t_package* package) {
+    package->buffer->offset = 0;
+    
+    page_entry_request_data request = read_page_entry_request_package(package);
+    uint32_t pid = request.pid;
+    uint32_t table_ptr = request.table_ptr;
+    uint32_t entry_index = request.entry_index;
+    
+    LOG_INFO("GET_PAGE_ENTRY: PID: %u, Table PTR: %u, Entry Index: %u", pid, table_ptr, entry_index);
+    
+    process_info* proc = process_manager_find_process(pid);
+    if (proc == NULL) {
+        LOG_ERROR("GET_PAGE_ENTRY: PID %u no encontrado", pid);
+        send_page_entry_response_package(socket, 0xFFFFFFFF, false);
+        return;
+    }
+    
+    lock_process_metrics();
+    proc->metrics->page_table_access_count++;
+    unlock_process_metrics();
+    
+    lock_page_table();
+    
+    t_page_table* current_table = NULL;
+
+    if (table_ptr == 0) {
+        current_table = proc->page_table;
+    } else {
+        current_table = (t_page_table*)(uintptr_t)table_ptr;
+    }
+    
+    if (current_table == NULL) {
+        LOG_ERROR("GET_PAGE_ENTRY: Tabla no encontrada para PID %u, Table PTR %u", pid, table_ptr);
+        unlock_page_table();
+        send_page_entry_response_package(socket, 0xFFFFFFFF, 1);
+        return;
+    }
+
+    t_page_table_entry* entry = get_page_table_entry(current_table, entry_index);
+    if (entry == NULL) {
+        LOG_ERROR("GET_PAGE_ENTRY: Entrada no encontrada en índice %u para PID %u", entry_index, pid);
+        unlock_page_table();
+        send_page_entry_response_package(socket, 0xFFFFFFFF, 1);
+        return;
+    }
+
+    uint32_t return_value;
+    bool is_last_level = entry->is_last_level;
+    
+    if (is_last_level) {
+        return_value = entry->frame_number;
+        LOG_INFO("GET_PAGE_ENTRY: Devolviendo frame_number %u para PID %u", return_value, pid);
+    } else {
+        return_value = (uint32_t)(uintptr_t)(entry->next_level);
+        LOG_INFO("GET_PAGE_ENTRY: Devolviendo table_ptr %u para PID %u", return_value, pid);
+    }
+    
+    unlock_page_table();
+
+    send_page_entry_response_package(socket, return_value, is_last_level == true ? 0 : 1);
+}
