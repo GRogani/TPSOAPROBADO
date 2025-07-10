@@ -15,11 +15,10 @@ static int g_tlb_fifo_pointer = 0;
 static uint64_t g_lru_timestamp_counter = 0;
 static int g_cache_clock_pointer = 0;
 
-uint32_t mmu_request_pagetable_entry_from_memory(int *memory_socket, uint32_t table_id, uint32_t entry_index)
+uint32_t mmu_request_pagetable_entry_from_memory(int *memory_socket, uint32_t table_id, uint32_t entry_index, uint32_t pid)
 {
-  LOG_DEBUG("[MEM-REQUEST] Asking Memory for page table entry from table %u, entry %u", table_id, entry_index);
-
-  send_page_entry_request_package(memory_socket, table_id, entry_index);
+  LOG_DEBUG("[MEM-REQUEST] Requesting page table entry from memory. PID: %u, Table ID: %u, Entry Index: %u", pid, table_id, entry_index);
+  send_page_entry_request_package(*memory_socket, pid, table_id, entry_index);
 
   // Wait for response from memory
   t_package *response_package = recv_package(memory_socket);
@@ -27,56 +26,59 @@ uint32_t mmu_request_pagetable_entry_from_memory(int *memory_socket, uint32_t ta
   {
     LOG_ERROR("[MEM-REQUEST] Failed to receive valid response for page table entry request");
     if (response_package)
-      package_destroy(response_package);
+      destroy_package(response_package);
     return -1; // Error
   }
 
   // Parse the response
   page_entry_response_data response = read_page_entry_response_package(response_package);
-  package_destroy(response_package);
+  destroy_package(response_package);
 
   LOG_DEBUG("[MEM-REQUEST] Received value %u from memory", response.value);
   return response.value;
 }
 
-void mmu_request_page_read_from_memory(int *memory_socket, uint32_t frame_number, void *buffer)
+void mmu_request_page_read_from_memory(int *memory_socket, uint32_t physic_addr, void *buffer)
 {
-  LOG_DEBUG("[MEM-REQUEST] Asking Memory to read page from frame %u", frame_number);
-  // TODO, use: send_memory_read_request
-  send_mmu_page_read_request(*memory_socket, frame_number);
+  LOG_DEBUG("[MEM-REQUEST] Asking Memory to read page from physic address %u", physic_addr);
+
+  t_memory_read_request *request = create_memory_read_request(physic_addr, g_mmu_config->page_size);
+  send_memory_read_request(*memory_socket, request);
+  destroy_memory_read_request(request);
 
   // Wait for response from memory
   t_package *response_package = recv_package(*memory_socket);
   if (response_package == NULL || response_package->opcode != READ_MEMORY)
   {
-    LOG_ERROR("[MEM-REQUEST] Failed to receive valid response for page read from frame %u", frame_number);
+    LOG_ERROR("[MEM-REQUEST] Failed to receive valid response for page read request");
     if (response_package)
-      package_destroy(response_package);
+      destroy_package(response_package);
     return;
   }
 
   // Parse the response and copy data to buffer
-  t_mmu_page_read_response *response = read_mmu_page_read_response(response_package);
-  package_destroy(response_package);
+  t_mmu_page_read_response *response = read_memory_read_response(response_package);
+  destroy_package(response_package);
 
   if (response && response->page_data)
   {
     memcpy(buffer, response->page_data, response->page_size);
-    LOG_DEBUG("[MEM-REQUEST] Successfully read %u bytes from frame %u", response->page_size, frame_number);
+    LOG_DEBUG("[MEM-REQUEST] Successfully read %u bytes from physic address %u", response->page_size, physic_addr);
   }
   else
   {
-    LOG_ERROR("[MEM-REQUEST] Invalid response data for page read from frame %u", frame_number);
+    LOG_ERROR("[MEM-REQUEST] Invalid response data for page read from physic address %u", physic_addr);
   }
 
   destroy_mmu_page_read_response(response);
 }
 
-void mmu_request_page_write_to_memory(int *memory_socket, uint32_t frame_number, void *content)
+void mmu_request_page_write_to_memory(int *memory_socket, uint32_t physic_addr, void *content)
 {
-  LOG_INFO("[MEM-REQUEST] Telling Memory to write page to frame %u", frame_number);
+  LOG_INFO("[MEM-REQUEST] Telling Memory to write page to physic addres %u", physic_addr);
   uint32_t content_size = g_mmu_config->page_size;
-  send_mmu_page_write_request(*memory_socket, frame_number, content, content_size);
+  t_memory_write_request *request = create_memory_write_request(physic_addr, content_size, content);
+  send_memory_write_request(*memory_socket, request);
 }
 
 void tlb_entry_destroy(void *element)
@@ -153,7 +155,7 @@ void tlb_add_entry(uint32_t page_number, uint32_t frame_number)
   }
 }
 
-uint32_t mmu_perform_page_walk(int *memory_socket, uint32_t page_number)
+uint32_t mmu_perform_page_walk(int *memory_socket, uint32_t page_number, uint32_t pid)
 {
   LOG_INFO("[MMU] Page Walk starting for page number %u...", page_number);
 
@@ -169,7 +171,7 @@ uint32_t mmu_perform_page_walk(int *memory_socket, uint32_t page_number)
     LOG_DEBUG("  - Level %d: Power %d, Divisor %u -> table entry %u",
               level, power, divisor, entry_index);
 
-    next_table_id = mmu_request_pagetable_entry_from_memory(memory_socket, next_table_id, entry_index);
+    next_table_id = mmu_request_pagetable_entry_from_memory(memory_socket, next_table_id, entry_index, pid);
 
     LOG_DEBUG("    Next table/frame ID: %u", next_table_id);
   }
@@ -179,7 +181,7 @@ uint32_t mmu_perform_page_walk(int *memory_socket, uint32_t page_number)
   return frame_number;
 }
 
-uint32_t mmu_translate_address(int *memory_socket, uint32_t logical_address)
+uint32_t mmu_translate_address(int *memory_socket, uint32_t logical_address, uint32_t pid)
 {
 
   uint32_t page_number = logical_address / g_mmu_config->page_size; // floor() is implicit with integer division
@@ -199,7 +201,7 @@ uint32_t mmu_translate_address(int *memory_socket, uint32_t logical_address)
   else
   {
     LOG_INFO("[TLB] MISS for page number %u. Consulting page tables...", page_number);
-    frame_number = mmu_perform_page_walk(memory_socket, page_number);
+    frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
     tlb_add_entry(page_number, frame_number);
   }
 
@@ -246,7 +248,7 @@ void mmu_process_cleanup(int *memory_socket)
       if (entry->is_valid && entry->modified_bit)
       {
 
-        mmu_request_page_write_to_memory(memory_socket, entry->frame, entry->content);
+        mmu_request_page_write_to_memory(memory_socket, entry->page, entry->content);
       }
       entry->is_valid = false; // Invalidate all entries
     }
@@ -276,15 +278,13 @@ void mmu_destroy()
 
 /*CACHE*/
 
-CacheEntry *cache_find_entry(uint32_t frame_number)
+CacheEntry *cache_find_entry(uint32_t page_number)
 {
-  if (g_cache_config->entry_count == 0)
-    return NULL;
 
   bool _is_frame(void *element)
   {
     CacheEntry *entry = (CacheEntry *)element;
-    return entry->is_valid && entry->frame == frame_number;
+    return entry->is_valid && entry->page == page_number;
   }
 
   CacheEntry *entry = list_find(g_cache, _is_frame);
@@ -349,7 +349,7 @@ int cache_find_victim_clock_m()
   return cache_find_victim_clock();
 }
 
-CacheEntry *cache_load_page(uint32_t logic_dir, int *memory_socket)
+CacheEntry* select_victim_entry(int *memory_socket, uint32_t logic_dir, uint32_t pid)
 {
   LOG_INFO("[Cache] Loading page for logical address %u", logic_dir);
   int victim_index;
@@ -363,32 +363,48 @@ CacheEntry *cache_load_page(uint32_t logic_dir, int *memory_socket)
   }
 
   CacheEntry *victim_entry = list_get(g_cache, victim_index);
+
+  uint32_t physic_addr = NULL; 
+  
   if (victim_entry->is_valid && victim_entry->modified_bit)
   {
-    LOG_INFO("[Cache] Victim (frame %u) is dirty. Writing back to memory.", victim_entry->frame);
-    // TODO: traducir a la fisica y pasarle la direccion fisica en vez del frame. aca entrá la TLB, y si te da TLB miss, entra el page_walk.
-    mmu_request_page_write_to_memory(memory_socket, victim_entry->frame, victim_entry->content);
+    LOG_INFO("[Cache] Victim (page %u) is dirty. Writing back to memory.", victim_entry->page);
+    if (g_tlb_config->entry_count > 0){
+      physic_addr = mmu_translate_address(memory_socket, logic_dir, pid);
+    }
+    else{
+      uint32_t page_number = floor(logic_dir / g_mmu_config->page_size);
+      uint32_t offset = logic_dir % g_mmu_config->page_size;
+      uint32_t frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
+      physic_addr = (frame_number * g_mmu_config->page_size) + offset;
+    }
+    mmu_request_page_write_to_memory(memory_socket, physic_addr, victim_entry->content);
   }
+}
 
-  LOG_DEBUG("[Cache] Replacing victim entry at index %d (frame %u) with new page.", victim_index, victim_entry->frame);
+CacheEntry* cache_load_page(uint32_t logic_dir, int *memory_socket, CacheEntry *victim_entry, uint32_t pid)
+{
+
+  LOG_DEBUG("[Cache] Replacing victim entry (frame %u) with new page.", victim_entry->page);
   uint32_t frame_number;
   uint32_t page_number = floor(logic_dir / g_mmu_config->page_size);
   uint32_t offset = logic_dir % g_mmu_config->page_size;
+  uint32_t physic_dir = NULL;
   if (g_tlb_config->entry_count > 0)
   {
-    uint32_t physic_dir = mmu_translate_address(memory_socket, logic_dir);
+    physic_dir = mmu_translate_address(memory_socket, logic_dir,pid);
     frame_number = (physic_dir - offset) / g_mmu_config->page_size;
   }
   else
   {
-    frame_number = mmu_perform_page_walk(memory_socket, page_number);
-    uint32_t physic_dir = (frame_number * g_mmu_config->page_size) + offset;
+    frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
+    physic_dir = (frame_number * g_mmu_config->page_size) + offset;
   }
 
-  mmu_request_page_read_from_memory(memory_socket, frame_number, victim_entry->content);
+  mmu_request_page_read_from_memory(memory_socket, physic_dir, victim_entry->content);
 
   victim_entry->is_valid = true;
-  victim_entry->frame = frame_number;
+  victim_entry->page = page_number;
   victim_entry->use_bit = true;
   victim_entry->modified_bit = false;
 

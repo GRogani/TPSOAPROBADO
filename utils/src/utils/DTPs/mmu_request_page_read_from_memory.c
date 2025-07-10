@@ -23,7 +23,7 @@ int send_mmu_page_read_request(int socket, uint32_t frame_number)
 {
   t_package *package = create_mmu_page_read_request(frame_number);
   int bytes_sent = send_package(socket, package);
-  package_destroy(package);
+  destroy_package(package);
   return bytes_sent;
 }
 
