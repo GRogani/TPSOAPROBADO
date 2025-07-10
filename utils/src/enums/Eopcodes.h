@@ -6,29 +6,32 @@
 typedef uint32_t OPCODE;
 enum
 {
-    FETCH,              // cpu -> memoria
-    INSTRUCTION,        // memoria -> cpu
+    FETCH,       // cpu -> memoria
+    INSTRUCTION, // memoria -> cpu
     LIST_INSTRUCTIONS,
-    GET_FREE_SPACE,     
-    INIT_PROCESS,       // kernel -> memoria
-    UNSUSPEND_PROCESS,  // kernel -> memoria
-    KILL_PROCESS,       // kernel -> memoria
-    SWAP,               // kernel -> memoria
-    WRITE_MEMORY,       // kernel -> memoria
-    READ_MEMORY,        // kernel -> memoria
-    DUMP_MEMORY,        // kernel -> memoria
+    GET_FREE_SPACE,
+    INIT_PROCESS,      // kernel -> memoria
+    UNSUSPEND_PROCESS, // kernel -> memoria
+    KILL_PROCESS,      // kernel -> memoria
+    SWAP,              // kernel -> memoria
+    WRITE_MEMORY,      // kernel -> memoria
+    READ_MEMORY,       // kernel -> memoria
+    DUMP_MEMORY,      // kernel -> memoria
 
-    CONFIRMATION,       // server -> client
+    CONFIRMATION, // server -> client
 
-    NEW_IO,             // io -> kernel
-    IO_COMPLETION,      // io -> kernel
-    SYSCALL,            // cpu -> kernel
+    NEW_IO,        // io -> kernel
+    IO_COMPLETION, // io -> kernel
+    SYSCALL,       // cpu -> kernel
 
-    DISPATCH,           // cpu -> kernel
-    INTERRUPT,          // kernel -> cpu
-    CPU_CONTEXT,        // cpu -> kernel
+    DISPATCH,    // cpu -> kernel
+    INTERRUPT,   // kernel -> cpu
+    CPU_CONTEXT, // cpu -> kernel
 
-    IO_OPERATION,       // cpu -> kernel
+    IO_OPERATION, // cpu -> kernel
+
+    MMU_PAGE_READ_REQUEST,
+    MMU_PAGE_WRITE_REQUEST,
 };
 
 /**

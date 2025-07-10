@@ -21,6 +21,11 @@
         "handle_dispatch_client.h": "c",
         "semaphore.h": "c",
         "short_scheduler.h": "c",
-        "utils.h": "c"
+        "utils.h": "c",
+        "memory_write_request.h": "c",
+        "mmu.h": "c",
+        "stddef.h": "c",
+        "memory_read_request.h": "c",
+        "safe_alloc.h": "c"
     }
 }

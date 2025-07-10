@@ -1,4 +1,9 @@
 #include "instructionCycle.h"
+#include "mmu.h"
+
+extern CacheConfig *g_cache_config;
+extern TLBConfig *g_tlb_config;
+extern MMUConfig *g_mmu_config;
 
 t_package *fetch(int socket, uint32_t PID, uint32_t PC)
 {
@@ -86,30 +91,137 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
     {
         uint32_t logic_dir_write = instruction->operand_numeric1;
         char *valor_write = instruction->operand_string;
-        uint32_t physic_dir_write = MMU(logic_dir_write);
-        write_memory_request(socket_memory, physic_dir_write, valor_write);
-        (*PC)++;
-        break;
+        uint32_t page_number = floor(logic_dir_write / g_mmu_config->page_size);
+        uint32_t offset = logic_dir_write % g_mmu_config->page_size;
+        if (g_cache_config->entry_count > 0)
+        {
+            // If cache is enabled, we need to write to cache first
+            CacheEntry *cache_entry = cache_find_entry(page_number);
+            if (cache_entry == NULL)
+            {
+                // Cache miss, load the page into cache
+                cache_entry = cache_load_page(logic_dir_write, &socket_memory);
+            }
+            // Write to cache
+            memcpy(cache_entry->content, valor_write, instruction->operand_string_size);
+            cache_entry->modified_bit = true;
+            (*PC)++;
+            break;
+        }
+        else if (g_tlb_config->entry_count > 0)
+        {
+            if (g_tlb_config->entry_count > 0)
+            {
+                uint32_t physic_dir_write = mmu_translate_address(&socket_memory, logic_dir_write);
+                t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
+                send_memory_write_request(socket_memory, write_req);
+                destroy_memory_write_request(write_req);
+                (*PC)++;
+                break;
+            }
+            else
+            {
+                uint32_t frame_number = mmu_perform_page_walk(&socket_memory, page_number);
+                uint32_t physic_dir_write = (frame_number * g_mmu_config->page_size) + offset;
+                t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
+                send_memory_write_request(socket_memory, write_req);
+                destroy_memory_write_request(write_req);
+                (*PC)++;
+                break;
+            }
+        }
     }
     case READ:
     {
         uint32_t logic_dir_read = instruction->operand_numeric1;
         uint32_t size = instruction->operand_numeric2;
-        uint32_t physic_dir_read = MMU(logic_dir_read);
-        read_memory_request(socket_memory, physic_dir_read, size);
-        char *data = read_memory_response(socket_memory);
-        if (data != NULL)
+        uint32_t page_number = floor(logic_dir_read / g_mmu_config->page_size);
+        uint32_t offset = logic_dir_read % g_mmu_config->page_size;
+        if (g_cache_config->entry_count > 0)
         {
-            LOG_INFO("Data read from memory: %s", data);
-            free(data);
+            // If cache is enabled, we need to read from cache first
+            CacheEntry *cache_entry = cache_find_entry(page_number);
+            if (cache_entry == NULL)
+            {
+                // Cache miss, load the page into cache
+                cache_entry = cache_load_page(logic_dir_read, &socket_memory);
+            }
+            // Read from cache
+            LOG_INFO("Data read from cache: %s", cache_entry->content);
+            (*PC)++;
+            break;
         }
         else
         {
-            LOG_INFO("Failed to read data from memory");
-            return true;
+            LOG_INFO("Cache is disabled, reading directly from memory");
+            if (g_tlb_config->entry_count > 0)
+            {
+                uint32_t physic_dir_read = mmu_translate_address(&socket_memory, logic_dir_read);
+                t_memory_read_request *request = create_memory_read_request(physic_dir_read, size);
+                send_memory_read_request(socket_memory, request);
+                destroy_memory_read_request(request);
+
+                t_package *package = recv_package(socket_memory);
+                if (package == NULL || package->opcode != READ_MEMORY)
+                {
+                    LOG_INFO("Failed to read data from memory");
+                    if (package)
+                        package_destroy(package);
+                    return -1;
+                }
+
+                t_memory_read_response *response = read_memory_read_response(package);
+                package_destroy(package);
+
+                if (response->data != NULL)
+                {
+                    LOG_INFO("Data read from memory: %s", response->data);
+                    destroy_memory_read_response(response);
+                }
+                else
+                {
+                    LOG_INFO("Failed to read data from memory");
+                    destroy_memory_read_response(response);
+                    return -1;
+                }
+                (*PC)++;
+                break;
+            }
+            else
+            {
+                uint32_t frame_number = mmu_perform_page_walk(&socket_memory, page_number);
+                uint32_t physic_dir_read = (frame_number * g_mmu_config->page_size) + offset;
+                t_memory_read_request *request = create_memory_read_request(physic_dir_read, size);
+                send_memory_read_request(socket_memory, request);
+                destroy_memory_read_request(request);
+
+                t_package *package = recv_package(socket_memory);
+                if (package == NULL || package->opcode != READ_MEMORY)
+                {
+                    LOG_INFO("Failed to read data from memory");
+                    if (package)
+                        package_destroy(package);
+                    return -1;
+                }
+
+                t_memory_read_response *response = read_memory_read_response(package);
+                package_destroy(package);
+
+                if (response->data != NULL)
+                {
+                    LOG_INFO("Data read from memory: %s", response->data);
+                    destroy_memory_read_response(response);
+                }
+                else
+                {
+                    LOG_INFO("Failed to read data from memory");
+                    destroy_memory_read_response(response);
+                    return -1;
+                }
+                (*PC)++;
+                break;
+            }
         }
-        (*PC)++;
-        break;
     }
     case GOTO:
     {
@@ -150,7 +262,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
             LOG_ERROR("Failed to receive confirmation package from kernel for PID %d", *pid);
             return true; // should preempt due an issue
         }
-        int success = read_confirmation_package(package);
+        bool success = read_confirmation_package(package);
         if (!success)
         {
             LOG_ERROR("Failed to initialize process for PID %d", *pid);
@@ -192,7 +304,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
     return false;
 }
 
-void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute)
+void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute, int socket_memory)
 {
     if (package->opcode == INTERRUPT)
     {
@@ -204,6 +316,8 @@ void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_
             send_cpu_context_package(socket_interrupt, pid_received, *pc_on_execute, 0);
 
             LOG_INFO("Interrupt for PID %d executed", pid_received);
+
+            mmu_process_cleanup(socket_memory);
 
             return;
         }
@@ -259,7 +373,7 @@ bool interrupt_handler(void *thread_args)
     {
         interrupted = true;
         t_package *package = get_last_interrupt(interrupt_count());
-        check_interrupt(args->socket_interrupt, package, args->pid, args->pc);
+        check_interrupt(args->socket_interrupt, package, args->pid, args->pc, args->socket_memory);
         destroy_package(package);
     }
     unlock_interrupt_list();
@@ -267,30 +381,4 @@ bool interrupt_handler(void *thread_args)
     LOG_INFO("Interrupt found: %s", interrupted ? "yes" : "no");
 
     return interrupted;
-}
-
-uint32_t MMU(uint32_t logic_dir)
-{
-    t_config *config_memoria = init_config("../memoria/memoria.config");
-    uint32_t levels = config_get_int_value(config_memoria, "CANTIDAD_NIVELES");
-    uint32_t entrys_by_table = config_get_int_value(config_memoria, "ENTRADAS_POR_TABLA");
-    uint32_t size_pag = config_get_int_value(config_memoria, "TAM_PAGINA");
-
-    uint32_t num_page = logic_dir / size_pag;
-    uint32_t offset = logic_dir % size_pag;
-    uint32_t physic_dir = 0;
-
-    for (int actual_level = 1; actual_level <= levels; actual_level++)
-    {
-        uint32_t divisor = pow(entrys_by_table, levels - actual_level);
-        uint32_t entry = (num_page / divisor) % entrys_by_table;
-        physic_dir = physic_dir * entrys_by_table + entry;
-    }
-
-    uint32_t result = (uint32_t)(physic_dir * size_pag + offset);
-    
-    // Liberar la configuración para evitar memory leak
-    config_destroy(config_memoria);
-    
-    return result;
 }

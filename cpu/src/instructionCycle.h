@@ -30,7 +30,7 @@ void *interrupt_listener(void *socket);
 
 bool interrupt_handler(void *thread_args);
 
-void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute);
+void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute, int socket_memory);
 
 uint32_t MMU(uint32_t logic_dir);
 
