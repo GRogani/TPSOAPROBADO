@@ -7,8 +7,8 @@ int main(int argc, char *argv[])
     t_cpu_config config_cpu = init_cpu_config(config_file);
     init_logger("cpu.log", "CPU", config_cpu.LOG_LEVEL);
 
-    MMUConfig mmu_config = load_mmu_config();
-    TLBConfig tlb_config = load_tlb_config();
+    MMUConfig mmu_config = load_mmu_config(argv);
+    TLBConfig tlb_config = load_tlb_config(argv);
     CacheConfig cache_config = load_cache_config(config_file);
     mmu_init(&mmu_config, &tlb_config, &cache_config);
 
