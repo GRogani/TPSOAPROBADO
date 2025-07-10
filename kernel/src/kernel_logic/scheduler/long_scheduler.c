@@ -20,47 +20,40 @@ bool run_long_scheduler(void)
   LOG_INFO("long_scheduler: Procesando lista SUSP_READY");
 
   lock_ready_list();
-  lock_susp_ready_list();
 
-  while (true)
+  lock_susp_ready_list();
+  while (!list_is_empty(get_susp_ready_list()))
   {
     // Obtener siguiente proceso de SUSP_READY usando algoritmo configurado
     t_pcb *pcb = get_next_process_to_initialize_from_susp_ready();
-    if (pcb == NULL)
-    {
-      LOG_INFO("long_scheduler: No hay más procesos en SUSP_READY");
-      break;
-    }
 
+    // SWAP IN -> Intentar de-suspender proceso en memoria
     LOG_INFO("long_scheduler: Intentando des-suspender proceso PID=%d", pcb->pid);
 
-    // Intentar de-suspender proceso en memoria
-    // TODO: IMPLEMENTAR DESUSPENSION
-    break; // TODO: Eliminar esta línea cuando se implemente la des-suspensión
-
-    bool memory_ok = true;
-    if (memory_ok)
-    {
-      // Éxito: mover de SUSP_READY a READY
-      LOG_INFO("long_scheduler: Proceso PID=%d des-suspendido exitosamente", pcb->pid);
-
-      add_pcb_to_ready(pcb);
-      processes_initialized = true;
-
-      LOG_INFO("long_scheduler: Proceso PID=%d movido a READY", pcb->pid);
-    }
-    else
-    {
+    send_swap_in_package(memory_socket, pcb->pid);
+    t_package* response = recv_package(memory_socket);
+    if (read_confirmation_package(response) != 0){
       // Error: devolver proceso a SUSP_READY y terminar
-      LOG_WARNING("long_scheduler: No se pudo des-suspender proceso PID=%d, "
-                                "memoria sin espacio suficiente",
-                  pcb->pid);
+      LOG_WARNING("long_scheduler: No se pudo des-suspender proceso PID = %d", pcb->pid);
+      LOG_WARNING("long_scheduler: Fallo de SWAP o Memoria sin Espacio Suficiente");
       add_pcb_to_susp_ready(pcb);
+      unlock_susp_ready_list();
+      destroy_package(response);
       break;
     }
+    // Éxito: mover de SUSP_READY a READY
+    unlock_susp_ready_list();
+    LOG_INFO("long_scheduler: Proceso PID=%d des-suspendido exitosamente", pcb->pid);
+    add_pcb_to_ready(pcb);
+    processes_initialized = true;
+    LOG_INFO("long_scheduler: Proceso PID=%d movido a READY", pcb->pid);
+    destroy_package(response);
+    
+    lock_susp_ready_list();
   }
-
   unlock_susp_ready_list();
+  LOG_INFO("long_scheduler: No hay más procesos en SUSP_READY");
+
   // Fase 2: Procesar procesos nuevos (NEW)
   LOG_INFO("long_scheduler: Procesando lista NEW");
 
