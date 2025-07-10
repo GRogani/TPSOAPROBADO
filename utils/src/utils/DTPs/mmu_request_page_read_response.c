@@ -19,14 +19,14 @@ t_package *create_mmu_page_read_response(void *page_data, uint32_t page_size)
   t_buffer *buffer = buffer_create(sizeof(uint32_t) + page_size);
   buffer_add_uint32(buffer, page_size);
   buffer_add(buffer, page_data, page_size);
-  return package_create(READ_MEMORY, buffer);
+  return create_package(READ_MEMORY, buffer);
 }
 
 int send_mmu_page_read_response(int socket, void *page_data, uint32_t page_size)
 {
   t_package *package = create_mmu_page_read_response(page_data, page_size);
   int bytes_sent = send_package(socket, package);
-  package_destroy(package);
+  destroy_package(package);
   return bytes_sent;
 }
 

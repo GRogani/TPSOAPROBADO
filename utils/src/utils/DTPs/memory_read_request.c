@@ -18,9 +18,9 @@ void send_memory_read_request(int socket, t_memory_read_request *request)
   t_buffer *buffer = buffer_create(2 * sizeof(uint32_t));
   buffer_add_uint32(buffer, request->physical_address);
   buffer_add_uint32(buffer, request->size);
-  t_package *package = package_create(READ_MEMORY, buffer);
+  t_package *package = create_package(READ_MEMORY, buffer);
   send_package(socket, package);
-  package_destroy(package);
+  destroy_package(package);
 }
 
 t_memory_read_request *read_memory_read_request(t_package *package)

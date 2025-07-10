@@ -24,9 +24,9 @@ int send_memory_write_request(int socket, t_memory_write_request *request)
   buffer_add_uint32(buffer, request->physical_address);
   buffer_add_uint32(buffer, request->size);
   buffer_add(buffer, request->data, request->size);
-  t_package *package = package_create(WRITE_MEMORY, buffer);
+  t_package *package = create_package(WRITE_MEMORY, buffer);
   int result = send_package(socket, package);
-  package_destroy(package);
+  destroy_package(package);
   return result;
 }
 
