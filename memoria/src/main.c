@@ -3,9 +3,9 @@
 //Globals
 t_memoria_config memoria_config;
 
-int main(){
-
-    t_config *config_file = init_config("memoria.config");
+int main(int argc, char *argv[])
+{
+    t_config *config_file = init_config(argv[1]);
     memoria_config = init_memoria_config(config_file);
     init_logger("memoria.log", "Memoria", memoria_config.LOG_LEVEL);
     initialize_memory_semaphores();
@@ -28,5 +28,3 @@ int main(){
 
     return 0;
 }
-
-

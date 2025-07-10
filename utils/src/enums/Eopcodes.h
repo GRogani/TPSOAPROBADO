@@ -16,7 +16,8 @@ enum
     SWAP,              // kernel -> memoria
     WRITE_MEMORY,      // kernel -> memoria
     READ_MEMORY,       // kernel -> memoria
-    DUMP_MEMORY,      // kernel -> memoria
+    DUMP_MEMORY,       // kernel -> memoria
+    GET_PAGE_ENTRY,
 
     CONFIRMATION, // server -> client
 

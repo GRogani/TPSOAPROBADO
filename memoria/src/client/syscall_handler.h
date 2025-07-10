@@ -23,5 +23,6 @@ void read_memory_request_handler(int socket, t_package* package);
 void dump_memory_request_handler(int socket, t_package* package);
 void unsuspend_process_request_handler(int client_fd, t_package* package);
 void swap_request_handler(int client_fd, t_package* package);
+void get_page_entry_request_handler(int socket, t_package* package);
 
-#endif 
+#endif
