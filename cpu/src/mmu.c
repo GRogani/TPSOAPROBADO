@@ -42,6 +42,7 @@ uint32_t mmu_request_pagetable_entry_from_memory(int *memory_socket, uint32_t ta
 void mmu_request_page_read_from_memory(int *memory_socket, uint32_t frame_number, void *buffer)
 {
   LOG_DEBUG("[MEM-REQUEST] Asking Memory to read page from frame %u", frame_number);
+  // TODO, use: send_memory_read_request
   send_mmu_page_read_request(*memory_socket, frame_number);
 
   // Wait for response from memory
@@ -168,7 +169,7 @@ uint32_t mmu_perform_page_walk(int *memory_socket, uint32_t page_number)
     LOG_DEBUG("  - Level %d: Power %d, Divisor %u -> table entry %u",
               level, power, divisor, entry_index);
 
-    next_table_id = mmu_request_pagetable_entry_from_memory(next_table_id, entry_index);
+    next_table_id = mmu_request_pagetable_entry_from_memory(memory_socket, next_table_id, entry_index);
 
     LOG_DEBUG("    Next table/frame ID: %u", next_table_id);
   }
@@ -365,6 +366,7 @@ CacheEntry *cache_load_page(uint32_t logic_dir, int *memory_socket)
   if (victim_entry->is_valid && victim_entry->modified_bit)
   {
     LOG_INFO("[Cache] Victim (frame %u) is dirty. Writing back to memory.", victim_entry->frame);
+    // TODO: traducir a la fisica y pasarle la direccion fisica en vez del frame. aca entrá la TLB, y si te da TLB miss, entra el page_walk.
     mmu_request_page_write_to_memory(memory_socket, victim_entry->frame, victim_entry->content);
   }
 
