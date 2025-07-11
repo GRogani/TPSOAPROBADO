@@ -7,6 +7,7 @@
 #include "utils/DTPs/mmu_request_page_read_response.h"
 #include "utils/DTPs/mmu_request_page_write_to_memory.h"
 #include "utils/DTPs/memory_read_request.h"
+#include "utils/DTPs/memory_read_response.h"
 
 TLBConfig *g_tlb_config;
 CacheConfig *g_cache_config;
@@ -61,20 +62,20 @@ void mmu_request_page_read_from_memory(int memory_socket, uint32_t physic_addr, 
   }
 
   // Parse the response and copy data to buffer
-  t_mmu_page_read_response *response = read_mmu_page_read_response(response_package);
+  t_memory_read_response *response = read_memory_read_response(response_package);
   destroy_package(response_package);
 
-  if (response && response->page_data)
+  if (response && response->data)
   {
-    memcpy(buffer, response->page_data, response->page_size);
-    LOG_DEBUG("[MEM-REQUEST] Successfully read %u bytes from physic address %u", response->page_size, physic_addr);
+    memcpy(buffer, response->data, response->data_size);
+    LOG_DEBUG("[MEM-REQUEST] Successfully read %u bytes from physic address %u", response->data_size, physic_addr);
   }
   else
   {
     LOG_ERROR("[MEM-REQUEST] Invalid response data for page read from physic address %u", physic_addr);
   }
 
-  destroy_mmu_page_read_response(response);
+  destroy_memory_read_response(response);
 }
 
 void mmu_request_page_write_to_memory(int memory_socket, uint32_t physic_addr, void *content)
@@ -83,6 +84,7 @@ void mmu_request_page_write_to_memory(int memory_socket, uint32_t physic_addr, v
   uint32_t content_size = g_mmu_config->page_size;
   t_memory_write_request *request = create_memory_write_request(physic_addr, content_size, content);
   send_memory_write_request(memory_socket, request);
+  destroy_memory_write_request(request);
 }
 
 void tlb_entry_destroy(void *element)
@@ -233,7 +235,7 @@ void mmu_init(MMUConfig *mmu_config, TLBConfig *tlb_config, CacheConfig *cache_c
     {
       CacheEntry *entry = malloc(sizeof(CacheEntry));
       entry->is_valid = false;
-      entry->content = malloc(g_mmu_config->page_size);
+      entry->content = safe_calloc(1, g_mmu_config->page_size); // Initialize with zeros
       list_add(g_cache, entry);
     }
   }
