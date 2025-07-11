@@ -55,43 +55,32 @@ void handle_cpu_syscall(t_package *package, int socket)
 
   switch (syscall->syscall_type)
   {
-  case SYSCALL_INIT_PROC:
-  {
-    LOG_INFO("PROCESSING INIT_PROC SYSCALL");
-    // Execute init_proc syscall
-    handle_init_proc_syscall(syscall->pid,
-                                     syscall->pc,
-                                     syscall->params.init_proc.memory_space,
-                                     syscall->params.init_proc.pseudocode_file,
-                                     socket);
+    case SYSCALL_INIT_PROC:
+      LOG_OBLIGATORIO("## (%d) - Solicitó syscall: INIT_PROC", syscall->pid);
+      handle_init_proc_syscall(syscall->pid,
+                                syscall->pc,
+                                syscall->params.init_proc.memory_space,
+                                syscall->params.init_proc.pseudocode_file,
+                                socket);
     break;
-  }
-  case SYSCALL_IO:
-  {
-    LOG_INFO("PROCESSING IO SYSCALL");
-    handle_io_process_syscall(syscall->pid,
-                              syscall->pc,
-                              syscall->params.io.sleep_time,
-                              syscall->params.io.device_name);
+    case SYSCALL_IO:
+      LOG_OBLIGATORIO("## (%d) - Solicitó syscall: IO", syscall->pid);
+      handle_io_process_syscall(syscall->pid,
+                                syscall->pc,
+                                syscall->params.io.sleep_time,
+                                syscall->params.io.device_name);
     break;
-  }
-  case SYSCALL_DUMP_PROCESS:
-  {
-    LOG_INFO("PROCESSING DUMP_PROCESS SYSCALL");
-    dump_memory_syscall(syscall->pid);
+    case SYSCALL_DUMP_PROCESS:
+      LOG_OBLIGATORIO("## (%d) - Solicitó syscall: DUMP_PROCESS", syscall->pid);
+      dump_memory_syscall(syscall->pid);
     break;
-  }
-  case SYSCALL_EXIT:
-  {
-    LOG_INFO("PROCESSING EXIT SYSCALL");
-    exit_process_syscall(syscall->pid);
+    case SYSCALL_EXIT:
+      LOG_OBLIGATORIO("## (%d) - Solicitó syscall: EXIT", syscall->pid);
+      exit_process_syscall(syscall->pid);
     break;
-  }
-  default:
-  {
-    LOG_ERROR("Unknown syscall type: %d", syscall->syscall_type);
+    default:
+      LOG_ERROR("Unknown syscall type: %d", syscall->syscall_type);
     break;
-  }
   }
 
   destroy_syscall_package(syscall);

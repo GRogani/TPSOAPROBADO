@@ -29,7 +29,7 @@ bool exit_routine(t_pcb* pcb) {
 
   if (mem_response == 0)
   {
-    LOG_INFO("## (%d) - Finaliza el proceso", pcb->pid);
+    LOG_OBLIGATORIO("## (%d) - Finaliza el proceso", pcb->pid);
     memory_space_free = true;
     pcb->MT.exit_time_ms = total_time_ms(pcb->state_start_time_ms);
   }
@@ -48,7 +48,7 @@ bool exit_routine(t_pcb* pcb) {
 
 void log_process_metrics(uint32_t pid, t_state_metrics state_metrics, t_time_metrics time_metrics)
 {
-  LOG_INFO("## (%d) - Metricas de estado: NEW (%d) (%ldms), READY (%d) (%ldms),  SUSPEND REDY (%d) (%ldms), EXEC (%d) (%ldms), BLOCK (%d) (%ldms), SUSPEND BLOCK (%d) (%ldms), EXIT (%d) (%ldms)", 
+  LOG_OBLIGATORIO("## (%d) - Metricas de estado: NEW (%d) (%ldms), READY (%d) (%ldms),  SUSPEND REDY (%d) (%ldms), EXEC (%d) (%ldms), BLOCK (%d) (%ldms), SUSPEND BLOCK (%d) (%ldms), EXIT (%d) (%ldms)", 
           pid, 
           state_metrics.new_count          , time_metrics.new_time_ms, 
           state_metrics.ready_count        , time_metrics.ready_time_ms,

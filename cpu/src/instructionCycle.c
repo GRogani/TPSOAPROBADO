@@ -1,5 +1,6 @@
 #include "instructionCycle.h"
 #include "mmu.h"
+#include <pthread.h>
 
 extern CacheConfig *g_cache_config;
 extern TLBConfig *g_tlb_config;
@@ -9,7 +10,7 @@ t_package *fetch(int socket, uint32_t PID, uint32_t PC)
 {
     t_package *package;
 
-    LOG_INFO("Fetching instruction for PID: %d, PC: %d", PID, PC);
+    LOG_OBLIGATORIO("## PID: %d - FETCH - Program Counter: %d", PID, PC);
 
     send_fetch_package(socket, PID, PC);
 
@@ -82,12 +83,14 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
     switch (instruction->instruction_code)
     {
     case NOOP:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: NOOP -", *pid);
     {
         // No operation
         (*PC)++;
         break;
     }
     case WRITE:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: WRITE - %d %s", *pid, instruction->operand_numeric1, instruction->operand_string);
     {
         uint32_t logic_dir_write = instruction->operand_numeric1;
         char *valor_write = instruction->operand_string;
@@ -96,10 +99,10 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         if (g_cache_config->entry_count > 0)
         {
             // If cache is enabled, we need to write to cache first
-            CacheEntry *cache_entry = cache_find_entry(page_number);
+            CacheEntry *cache_entry = cache_find_entry(page_number, *pid);
             if (cache_entry == NULL)
             {
-                cache_entry = select_victim_entry(&socket_memory, logic_dir_write, *pid);
+                cache_entry = select_victim_entry(socket_memory, logic_dir_write, *pid);
                 cache_entry->is_valid = true;
                 cache_entry->page = page_number;
                 cache_entry->use_bit = true;
@@ -114,8 +117,9 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         {
             if (g_tlb_config->entry_count > 0)
             {
-                uint32_t physic_dir_write = mmu_translate_address(&socket_memory, logic_dir_write, *pid);
+                uint32_t physic_dir_write = mmu_translate_address(socket_memory, logic_dir_write, *pid);
                 t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
+                LOG_OBLIGATORIO("PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %s", *pid, physic_dir_write, valor_write);
                 send_memory_write_request(socket_memory, write_req);
                 destroy_memory_write_request(write_req);
                 (*PC)++;
@@ -123,9 +127,10 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
             }
             else
             {
-                uint32_t frame_number = mmu_perform_page_walk(&socket_memory, page_number, *pid);
+                uint32_t frame_number = mmu_perform_page_walk(socket_memory, page_number, *pid);
                 uint32_t physic_dir_write = (frame_number * g_mmu_config->page_size) + offset;
                 t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
+                LOG_OBLIGATORIO("PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %s", *pid, physic_dir_write, valor_write);
                 send_memory_write_request(socket_memory, write_req);
                 destroy_memory_write_request(write_req);
                 (*PC)++;
@@ -134,6 +139,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         }
     }
     case READ:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: READ - %d %d", *pid, instruction->operand_numeric1, instruction->operand_numeric2);
     {
         uint32_t logic_dir_read = instruction->operand_numeric1;
         uint32_t size = instruction->operand_numeric2;
@@ -142,12 +148,12 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         if (g_cache_config->entry_count > 0)
         {
             // If cache is enabled, we need to read from cache first
-            CacheEntry *cache_entry = cache_find_entry(page_number);
+            CacheEntry *cache_entry = cache_find_entry(page_number, *pid);
             if (cache_entry == NULL)
             {
                 
-                cache_entry = select_victim_entry(&socket_memory, logic_dir_read, *pid);
-                cache_entry = cache_load_page(logic_dir_read, &socket_memory, cache_entry, *pid);
+                cache_entry = select_victim_entry(socket_memory, logic_dir_read, *pid);
+                cache_entry = cache_load_page(logic_dir_read, socket_memory, cache_entry, *pid);
             }
             // Read from cache
             LOG_INFO("Data read from cache: %p", cache_entry->content);
@@ -159,7 +165,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
             LOG_INFO("Cache is disabled, reading directly from memory");
             if (g_tlb_config->entry_count > 0)
             {
-                uint32_t physic_dir_read = mmu_translate_address(&socket_memory, logic_dir_read, *pid);
+                uint32_t physic_dir_read = mmu_translate_address(socket_memory, logic_dir_read, *pid);
                 t_memory_read_request *request = create_memory_read_request(physic_dir_read, size);
                 send_memory_read_request(socket_memory, request);
                 destroy_memory_read_request(request);
@@ -178,6 +184,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
 
                 if (response->data != NULL)
                 {
+                    LOG_OBLIGATORIO("PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", *pid, physic_dir_read, response->data);
                     LOG_INFO("Data read from memory: %s", response->data);
                     destroy_memory_read_response(response);
                 }
@@ -192,7 +199,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
             }
             else
             {
-                uint32_t frame_number = mmu_perform_page_walk(&socket_memory, page_number, *pid);
+                uint32_t frame_number = mmu_perform_page_walk(socket_memory, page_number, *pid);
                 uint32_t physic_dir_read = (frame_number * g_mmu_config->page_size) + offset;
                 t_memory_read_request *request = create_memory_read_request(physic_dir_read, size);
                 send_memory_read_request(socket_memory, request);
@@ -212,6 +219,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
 
                 if (response->data != NULL)
                 {
+                    LOG_OBLIGATORIO("PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", *pid, physic_dir_read, response->data);
                     LOG_INFO("Data read from memory: %s", response->data);
                     destroy_memory_read_response(response);
                 }
@@ -227,13 +235,15 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         }
     }
     case GOTO:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: GOTO - %d", *pid, instruction->operand_numeric1);
     {
         *PC = instruction->operand_numeric1;
         break;
     }
     case IO:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: IO - %s %d", *pid, instruction->operand_string, instruction->operand_numeric1);
     {
-        LOG_INFO("Executing IO operation, sending syscall to kernel");
+
         (*PC)++;
         syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_IO;
@@ -246,8 +256,8 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         return true;
     }
     case INIT_PROC:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: INIT_PROC - %s %d", *pid, instruction->operand_string, instruction->operand_numeric1);
     {
-        LOG_INFO("Executing INIT_PROC, sending syscall to kernel");
         (*PC)++;
         syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_INIT_PROC;
@@ -275,8 +285,8 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         break;
     }
     case DUMP_PROCESS:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: DUMP_PROCESS -", *pid);
     {
-        LOG_INFO("Executing DUMP_PROCESS, sending syscall to kernel");
         (*PC)++;
         syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_DUMP_PROCESS;
@@ -287,8 +297,8 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         return true;
     }
     case EXIT:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: EXIT -", *pid);
     {
-        LOG_INFO("Executing EXIT, sending syscall to kernel");
         (*PC)++;
         syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_EXIT;
@@ -311,6 +321,7 @@ void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_
 {
     if (package->opcode == INTERRUPT)
     {
+        LOG_OBLIGATORIO("## Llega interrupción al puerto Interrupt");
         int pid_received = read_interrupt_package(package);
 
         if (pid_received == *pid_on_execute)
@@ -320,7 +331,7 @@ void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_
 
             LOG_INFO("Interrupt for PID %d executed", pid_received);
 
-            mmu_process_cleanup(&socket_memory);
+            mmu_process_cleanup(socket_memory);
 
             return;
         }

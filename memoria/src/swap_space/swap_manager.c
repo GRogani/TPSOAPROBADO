@@ -350,8 +350,7 @@ t_list* swap_allocate_pages(uint32_t pid, uint32_t num_pages) {
         list_add(pages, page);
     }
 
-    LOG_INFO("Swap Manager: Asignadas %u paginas en SWAP para PID %u en offset %u (pagina %u)", 
-             num_pages, pid, start_offset, start_page);
+    LOG_OBLIGATORIO("## SWAP - PID: %u - Asignadas %u páginas en offset %u (página %u)", pid, num_pages, start_offset, start_page);
     
     unlock_swap_file();
     return pages;
@@ -390,7 +389,8 @@ bool swap_write_pages(t_list* pages, void* process_memory, uint32_t page_size_pa
         }
     }
 
-    LOG_DEBUG("Swap Manager: Escritas %d paginas al archivo de swap", list_size(pages));
+    LOG_OBLIGATORIO("## SWAP - PID: %u - Escritura de %d páginas en swap", ((t_swap_page_info*)list_get(pages,0))->pid, list_size(pages));
+    
     unlock_swap_file();
     return true;
 }
@@ -428,7 +428,8 @@ bool swap_read_pages(t_list* pages, void* process_memory, uint32_t page_size_par
         }
     }
 
-    LOG_DEBUG("Swap Manager: Leidas %d paginas del archivo de swap", list_size(pages));
+    LOG_OBLIGATORIO("## SWAP - PID: %u - Lectura de %d páginas desde swap", ((t_swap_page_info*)list_get(pages,0))->pid, list_size(pages));
+    
     unlock_swap_file();
     return true;
 }
@@ -454,8 +455,7 @@ void swap_free_pages(uint32_t pid) {
             
             // Marcar como libre (no eliminar, para poder reutilizar)
             block->is_used = false;
-            LOG_INFO("Swap Manager: Proceso PID %u marcado como libre en offset %u (paginas %u-%u)", 
-                     pid, block->start_offset, start_page, start_page + block->num_pages - 1);
+            LOG_OBLIGATORIO("## SWAP - PID: %u - Liberadas %u páginas en offset %u (páginas %u-%u)", pid, block->num_pages, block->start_offset, start_page, start_page + block->num_pages - 1);
             break;
         }
     }

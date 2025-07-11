@@ -1,4 +1,5 @@
 #include "mmu_request_page_read_from_memory.h"
+#include "utils/serialization/package.h"
 
 // read from cpu/mmu
 t_mmu_page_read_request *read_mmu_page_read_request(t_package *package)
@@ -16,7 +17,7 @@ t_package *create_mmu_page_read_request(uint32_t frame_number)
 {
   t_buffer *buffer = buffer_create(sizeof(uint32_t));
   buffer_add_uint32(buffer, frame_number);
-  return package_create(MMU_PAGE_READ_REQUEST, buffer);
+  return create_package(MMU_PAGE_READ_REQUEST, buffer);
 }
 
 int send_mmu_page_read_request(int socket, uint32_t frame_number)

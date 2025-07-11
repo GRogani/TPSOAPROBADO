@@ -34,6 +34,7 @@ void* client_handler(void* client_fd_ptr) {
     int client_fd = *(int*)client_fd_ptr;
 
     t_package* package;
+    bool kernel_logged = false;
     
     while (1) {
         package = recv_package(client_fd);
@@ -41,6 +42,22 @@ void* client_handler(void* client_fd_ptr) {
             LOG_INFO("Client disconnected: %d", client_fd);
             close(client_fd);
             return NULL;
+        }
+
+        // Loguear solo si es el Kernel y solo una vez por conexión
+        if (!kernel_logged) {
+            switch (package->opcode) {
+                case INIT_PROCESS:
+                case KILL_PROCESS:
+                case UNSUSPEND_PROCESS:
+                case SWAP:
+                case GET_FREE_SPACE:
+                    LOG_OBLIGATORIO("## Kernel Conectado - FD del socket: %d", client_fd);
+                    kernel_logged = true;
+                    break;
+                default:
+                    break;
+            }
         }
 
         switch (package->opcode) {

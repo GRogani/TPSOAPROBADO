@@ -18,7 +18,7 @@ t_page_table_entry* create_page_table_entry(bool is_last_level) {
     t_page_table_entry* new_entry = safe_malloc(sizeof(t_page_table_entry));
     new_entry->is_last_level = is_last_level;
     if (is_last_level) {
-        new_entry->frame_number = -1; // Placeholder, despues lo inicializamos
+        new_entry->frame_number = INVALID_FRAME_NUMBER; // Placeholder, despues lo inicializamos
     } else {
         new_entry->next_level = list_create();
         if (new_entry->next_level == NULL) {
@@ -38,13 +38,34 @@ void add_page_table_entry(t_page_table* page_table, int index, t_page_table_entr
 }
 
 t_page_table_entry* get_page_table_entry(t_page_table* page_table, int index) {
-    if (page_table == NULL || page_table->entries == NULL) {
+    if (page_table == NULL) {
+        LOG_ERROR("get_page_table_entry: page_table is NULL");
         return NULL;
     }
-    if (index < 0 || index >= list_size(page_table->entries)) {
+    if (page_table->entries == NULL) {
+        LOG_ERROR("get_page_table_entry: page_table->entries is NULL");
         return NULL;
     }
-    return (t_page_table_entry*) list_get(page_table->entries, index);
+    
+    int list_size_val = list_size(page_table->entries);
+    LOG_INFO("get_page_table_entry: index=%d, list_size=%d", index, list_size_val);
+    
+    if (index < 0 || index >= list_size_val) {
+        LOG_ERROR("get_page_table_entry: index %d out of bounds [0, %d)", index, list_size_val);
+        return NULL;
+    }
+    
+    // Verificar que la lista no esté corrupta
+    if (page_table->entries->head == NULL && list_size_val > 0) {
+        LOG_ERROR("get_page_table_entry: list has size %d but head is NULL", list_size_val);
+        return NULL;
+    }
+    
+    t_page_table_entry* entry = (t_page_table_entry*) list_get(page_table->entries, index);
+    if (entry == NULL) {
+        LOG_ERROR("get_page_table_entry: list_get returned NULL for index %d", index);
+    }
+    return entry;
 }
 
 void destroy_page_table_entry(void* entry_void_ptr) {
@@ -72,16 +93,22 @@ t_page_table* create_nested_page_table(int current_level, int total_levels, int 
         return NULL;
     }
 
+    LOG_INFO("create_nested_page_table: level=%d, total_levels=%d, entries_per_table=%d", 
+             current_level, total_levels, entries_per_table);
+
     t_page_table* new_table = create_page_table();
     if (new_table == NULL) {
+        LOG_ERROR("create_nested_page_table: failed to create page table");
         return NULL;
     }
 
     bool is_last_level_flag = (current_level == total_levels);
+    LOG_INFO("create_nested_page_table: is_last_level=%s", is_last_level_flag ? "true" : "false");
 
     for (int i = 0; i < entries_per_table; i++) {
         t_page_table_entry* entry = create_page_table_entry(is_last_level_flag);
         if (entry == NULL) {
+            LOG_ERROR("create_nested_page_table: failed to create entry %d", i);
             // Clean up already created entries and table
             list_destroy_and_destroy_elements(new_table->entries, destroy_page_table_entry);
             free(new_table);
@@ -91,6 +118,7 @@ t_page_table* create_nested_page_table(int current_level, int total_levels, int 
         if (!is_last_level_flag) {
             t_page_table* nested_table = create_nested_page_table(current_level + 1, total_levels, entries_per_table);
             if (nested_table == NULL) {
+                LOG_ERROR("create_nested_page_table: failed to create nested table for entry %d", i);
                 // Clean up already created entries and table
                 destroy_page_table_entry(entry); // Free the current entry
                 list_destroy_and_destroy_elements(new_table->entries, destroy_page_table_entry);
@@ -98,11 +126,16 @@ t_page_table* create_nested_page_table(int current_level, int total_levels, int 
                 return NULL;
             }
             entry->next_level = nested_table->entries; // The entry points to the list of entries of the nested table
-            free(nested_table); // Free the outer t_page_table struct, as its 'entries' list is now held by the entry
+            // Liberar la estructura t_page_table pero mantener la lista de entradas
+            free(nested_table);
+            LOG_INFO("create_nested_page_table: entry %d assigned next_level with %d entries", 
+                     i, list_size(entry->next_level));
         }
         list_add(new_table->entries, entry); // Use list_add as we're populating sequentially
+        LOG_INFO("create_nested_page_table: added entry %d to table", i);
     }
     new_table->num_entries = entries_per_table; // Set the total number of entries
+    LOG_INFO("create_nested_page_table: created table with %zu entries", new_table->num_entries);
     return new_table;
 }
 
@@ -137,7 +170,7 @@ bool reset_page_table_frames(t_page_table* current_table, int total_levels, int 
         }
 
         if (is_last_level_of_hierarchy) {
-            entry->frame_number = -1; // Reset to invalid frame number
+            entry->frame_number = INVALID_FRAME_NUMBER; // Reset to invalid frame number
         } else {
             t_page_table next_level_table_mock;
             next_level_table_mock.entries = entry->next_level;

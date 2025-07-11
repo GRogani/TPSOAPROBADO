@@ -31,12 +31,12 @@ TLBConfig load_tlb_config()
   }
   else
   {
-    free(algo_str);
+    // Don't free algo_str here as it's managed by the config system
+    config_destroy(config);
     exit(EXIT_FAILURE);
   }
 
   config_destroy(config);
-  free(algo_str);
   return tlb_config;
 }
 
@@ -56,10 +56,10 @@ CacheConfig load_cache_config(t_config *config)
   }
   else
   {
-    free(algo_str);
+    // Don't free algo_str here as it's managed by the config system
     exit(EXIT_FAILURE);
   }
 
-  free(algo_str);
+  // Don't free algo_str here as it's managed by the config system
   return cache_config;
 }

@@ -25,9 +25,13 @@ void send_memory_read_request(int socket, t_memory_read_request *request)
 
 t_memory_read_request *read_memory_read_request(t_package *package)
 {
-  t_memory_read_request *request = safe_malloc(sizeof(t_memory_read_request));
+  uint32_t physical_address;
+  uint32_t size;
+
   package->buffer->offset = 0;
-  request->physical_address = buffer_read_uint32(package->buffer);
-  request->size = buffer_read_uint32(package->buffer);
+  physical_address = buffer_read_uint32(package->buffer);
+  size = buffer_read_uint32(package->buffer);
+
+  t_memory_read_request *request = create_memory_read_request(physical_address, size);
   return request;
 }

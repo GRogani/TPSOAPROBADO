@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     pthread_t io_server_handler;
 
     create_io_server_thread(&io_server_handler);
-    LOG_INFO("%d", kernel_config.cpu_quantity);
+    LOG_INFO("Cantidad de CPUs configuradas: %d", kernel_config.cpu_quantity);
     connect_to_cpus(kernel_config.cpu_quantity); // Levanta el server entran los N cpu y lo baja.
 
     process_enter(argv[1], atoi(argv[2]));
@@ -46,6 +46,6 @@ void process_enter(char* pseudocode_file_name, uint32_t program_size)
     printf("Presione Enter para comenzar...\n");
     getchar();
 
-    LOG_INFO("Ejecutando syscall init_proc para el proceso 0");
+    LOG_INFO("Llamando a syscall init_proc para el proceso 0");
     initialize_root_process(0, program_size, pseudocode_file_name);
 }

@@ -4,21 +4,24 @@
 #include <commons/collections/list.h>
 #include "../utils.h"
 
+// Constante para frame number inválido
+#define INVALID_FRAME_NUMBER -1
+
+// Page Table structure (definir primero)
+typedef struct page_table {
+    t_list* entries;
+    size_t num_entries;
+} t_page_table;
+
 // Page Table Entry structure
 typedef struct page_table_entry
 {
     bool is_last_level;
     union {
-        uint32_t frame_number;
+        int32_t frame_number;  // Cambiar a int32_t para permitir valores negativos
         t_list* next_level;
     };
 } t_page_table_entry;
-
-// Page Table structure
-typedef struct page_table {
-    t_list* entries;
-    size_t num_entries;
-} t_page_table;
 
 // Function declarations for Page Table management
 
