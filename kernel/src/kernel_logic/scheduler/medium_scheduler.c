@@ -15,11 +15,20 @@ void run_medium_scheduler(uint32_t  pid){
     LOG_INFO("MEDIUM_SCHEDULER: Tiempo de espera de [%d] milisegundos para PID [%u]", kernel_config.sleep_time, pid);
     usleep(kernel_config.sleep_time * 1000); // Conversión milisegundos -> macrosegundos de la función usleep
     lock_blocked_list();
-    if(!find_pcb_in_blocked(pid)) {
+    t_pcb* blocked_pid_found = find_pcb_in_blocked(pid);
+    if(!blocked_pid_found) {
         unlock_blocked_list();
-        LOG_ERROR("MEDIUM_SCHEDULER: PID [%d] no está en BLOCKED.", pid);
+        LOG_WARNING("MEDIUM_SCHEDULER: PID [%d] no está en BLOCKED.", pid);
         return;
     }
+
+    if (blocked_pid_found->state_start_time_ms < kernel_config.sleep_time)
+    {
+        LOG_INFO("MEDIUM_SCHEDULER: El PID [%d] no necesita ser suspendido, ya que su tiempo de inicio de estado es menor al tiempo de espera.", pid);
+        unlock_blocked_list();
+        return;
+    }
+
     // BLOCKED -> SUSPEND_BLOCKED
     t_pcb* pcb = remove_pcb_from_blocked(pid);
     unlock_blocked_list();

@@ -1,5 +1,7 @@
 #include "init_proc_syscall.h"
 
+_Atomic uint32_t new_pid = 0; // PID 0 reservado para el proceso root
+
 void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc, 
                                      uint32_t new_process_memory_space, 
                                      char *new_process_pseudocode_file,
@@ -23,7 +25,9 @@ void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc,
     unlock_exec_list();
 
     // 2. Crear PCB del nuevo proceso
-    uint32_t new_pid = generate_new_pid();
+    // uint32_t new_pid = generate_new_pid();
+    new_pid++;
+
     t_pcb *new_pcb = pcb_create(new_pid, 0, new_process_memory_space, new_process_pseudocode_file); // PC inicial en 0
     if (new_pcb == NULL)
     {

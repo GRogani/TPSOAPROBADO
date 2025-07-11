@@ -550,7 +550,6 @@ void swap_request_handler(int client_fd, t_package* package) {
             // Liberar frames físicos
             if (proc->allocated_frames != NULL) {
                 frame_free_frames(proc->allocated_frames);
-                list_destroy(proc->allocated_frames);
                 proc->allocated_frames = NULL;
             }
             

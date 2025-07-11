@@ -21,14 +21,14 @@ void unlock_blocked_list() {
     sem_post(&sem_blocked);
 }
 
-bool find_pcb_in_blocked(uint32_t pid) {
+void* find_pcb_in_blocked(uint32_t pid) {
     bool pid_matches(void* ptr) {
         t_pcb* pcb = (t_pcb*) ptr;
         return pcb->pid == pid;
     };
 
     void* pcb_found = list_find(get_blocked_list(), pid_matches);
-    return pcb_found != NULL;
+    return pcb_found;
 }
 
 void add_pcb_to_blocked(t_pcb* pcb) {
