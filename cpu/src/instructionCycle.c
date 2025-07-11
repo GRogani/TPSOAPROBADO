@@ -98,7 +98,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         if (g_cache_config->entry_count > 0)
         {
             // If cache is enabled, we need to write to cache first
-            CacheEntry *cache_entry = cache_find_entry(page_number);
+            CacheEntry *cache_entry = cache_find_entry(page_number, *pid);
             if (cache_entry == NULL)
             {
                 cache_entry = select_victim_entry(&socket_memory, logic_dir_write, *pid);
@@ -145,7 +145,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         if (g_cache_config->entry_count > 0)
         {
             // If cache is enabled, we need to read from cache first
-            CacheEntry *cache_entry = cache_find_entry(page_number);
+            CacheEntry *cache_entry = cache_find_entry(page_number, *pid);
             if (cache_entry == NULL)
             {
                 
@@ -316,7 +316,7 @@ void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_
 {
     if (package->opcode == INTERRUPT)
     {
-        LOG_OBLIGATORIO("## Llega interrupción al puerto Interrupt");
+        LOG_OBLIGATORIO("## Llega interrupción al puerto Interrupt", NULL);
         int pid_received = read_interrupt_package(package);
 
         if (pid_received == *pid_on_execute)

@@ -14,11 +14,15 @@
 #define SOLO_LOGS_OBLIGATORIOS 0 // 1 para solo obligatorios, 0 para todos
 
 
-#define LOG_OBLIGATORIO(...)                      \
-    do {                                          \
-        lock_logger();                            \
-        log_info(get_logger(), __VA_ARGS__);      \
-        unlock_logger();                          \
+#define LOG_OBLIGATORIO(fmt, ...)                                 \
+    do {                                                         \
+        lock_logger();                                           \
+        char _log_obl_msg[1024];                                 \
+        snprintf(_log_obl_msg, sizeof(_log_obl_msg), fmt, __VA_ARGS__); \
+        char _log_obl_colored[1200];                             \
+        snprintf(_log_obl_colored, sizeof(_log_obl_colored), "\x1b[32m%s\x1b[0m", _log_obl_msg); \
+        log_info(get_logger(), "%s", _log_obl_colored);        \
+        unlock_logger();                                         \
     } while(0)
 
 #if SOLO_LOGS_OBLIGATORIOS

@@ -50,7 +50,7 @@ void tlb_add_entry(uint32_t page_number, uint32_t frame_number);
 uint32_t mmu_perform_page_walk(int* memory_socket, uint32_t page_number, uint32_t pid);
 
 // Cache Functions
-CacheEntry* cache_find_entry(uint32_t page_number);
+CacheEntry* cache_find_entry(uint32_t page_number, uint32_t pid);
 int cache_find_victim_clock(void);
 int cache_find_victim_clock_m(void);
 CacheEntry* cache_load_page(uint32_t logic_dir, int* memory_socket, CacheEntry *victim_entry, uint32_t pid);
