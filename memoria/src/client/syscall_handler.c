@@ -6,6 +6,7 @@
 #include "semaphores.h"
 #include <time.h>
 #include "utils/DTPs/page_entry_package.h"
+#include "kernel_space/page_table.h"
 
 extern t_memoria_config memoria_config;
 
@@ -84,6 +85,11 @@ uint32_t translate_address(uint32_t pid, uint32_t virtual_address) {
 
     if (final_pte == NULL) {
         LOG_ERROR("## PID: %u - Error al obtener PTE final para direccion virtual %u.", pid, virtual_address);
+        return (uint32_t)-1;
+    }
+
+    if (final_pte->frame_number == INVALID_FRAME_NUMBER) {
+        LOG_ERROR("## PID: %u - Error: Frame number invalido para direccion virtual %u.", pid, virtual_address);
         return (uint32_t)-1;
     }
 
@@ -598,11 +604,14 @@ void get_page_entry_request_handler(int socket, t_package* package) {
     lock_page_table();
     
     t_page_table* current_table = NULL;
+    t_page_table table_mock;
 
     if (table_ptr == 0) {
         current_table = proc->page_table;
     } else {
-        current_table = (t_page_table*)(uintptr_t)table_ptr;
+        table_mock.entries = (t_list*)(uintptr_t)table_ptr;
+        table_mock.num_entries = list_size(table_mock.entries);
+        current_table = &table_mock;
     }
     
     if (current_table == NULL) {

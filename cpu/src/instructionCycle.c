@@ -321,7 +321,7 @@ void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_
 {
     if (package->opcode == INTERRUPT)
     {
-        LOG_OBLIGATORIO("## Llega interrupción al puerto Interrupt", NULL);
+        LOG_OBLIGATORIO("## Llega interrupción al puerto Interrupt");
         int pid_received = read_interrupt_package(package);
 
         if (pid_received == *pid_on_execute)

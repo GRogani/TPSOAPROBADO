@@ -36,7 +36,6 @@ TLBConfig load_tlb_config()
   }
 
   config_destroy(config);
-  free(algo_str);
   return tlb_config;
 }
 

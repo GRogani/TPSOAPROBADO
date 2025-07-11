@@ -18,7 +18,7 @@
     do {                                                         \
         lock_logger();                                           \
         char _log_obl_msg[1024];                                 \
-        snprintf(_log_obl_msg, sizeof(_log_obl_msg), fmt, __VA_ARGS__); \
+        snprintf(_log_obl_msg, sizeof(_log_obl_msg), fmt, ##__VA_ARGS__); \
         char _log_obl_colored[1200];                             \
         snprintf(_log_obl_colored, sizeof(_log_obl_colored), "\x1b[32m%s\x1b[0m", _log_obl_msg); \
         log_info(get_logger(), "%s", _log_obl_colored);        \
