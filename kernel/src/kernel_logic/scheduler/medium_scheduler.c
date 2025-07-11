@@ -22,9 +22,12 @@ void run_medium_scheduler(uint32_t  pid){
         return;
     }
 
-    if (blocked_pid_found->state_start_time_ms < kernel_config.sleep_time)
+    
+    uint64_t time_in_blocked = total_time_ms(blocked_pid_found->state_start_time_ms);
+    LOG_INFO("TIEMPO STATE START: %lu", time_in_blocked);
+    if (time_in_blocked < kernel_config.sleep_time)
     {
-        LOG_INFO("MEDIUM_SCHEDULER: El PID [%d] no necesita ser suspendido, ya que su tiempo de inicio de estado es menor al tiempo de espera.", pid);
+        LOG_INFO("MEDIUM_SCHEDULER: El PID [%d] no necesita ser suspendido, ya que su tiempo en BLOCKED (%lu ms) es menor al tiempo de espera (%d ms).", pid, time_in_blocked, kernel_config.sleep_time);
         unlock_blocked_list();
         return;
     }
@@ -54,9 +57,8 @@ void run_medium_scheduler(uint32_t  pid){
         unlock_blocked_list();
         return;
     }
-    if(read_confirmation_package(package) != 0) { // Success = 0
+    if(!read_confirmation_package(package)) { // Success = 0
         LOG_WARNING("MEDIUM_SCHEDULER: Falló el SWAP del PID [%d]", pid);
-        LOG_DEBUG("Resultado del paquete enviado = %d", read_confirmation_package(package));
         // TODO: si falla el SWAP, por ahora hago esto SUSPEND_BLOCKED -> BLOCKED
         lock_blocked_list();
         add_pcb_to_blocked(pcb);
