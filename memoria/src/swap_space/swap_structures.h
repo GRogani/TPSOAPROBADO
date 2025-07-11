@@ -13,11 +13,14 @@ typedef struct {
 } t_swap_page_info;
 
 /**
- * @brief Estructura para representar un bloque de espacio libre en el archivo de SWAP.
+ * @brief Estructura para representar un bloque de proceso en el archivo de SWAP.
+ * Simplifica la gestión al manejar procesos completos en lugar de páginas individuales.
  */
 typedef struct {
-    uint32_t start_offset; /** @brief Offset de inicio del bloque libre. */
-    size_t size;           /** @brief Tamaño del bloque libre en bytes. */
-} t_swap_free_block;
+    uint32_t pid;                 /** @brief ID del proceso. */
+    uint32_t start_offset;        /** @brief Offset de inicio del bloque en el archivo. */
+    uint32_t num_pages;           /** @brief Número de páginas que ocupa el proceso. */
+    bool is_used;                 /** @brief Si el bloque está ocupado o libre. */
+} t_swap_process_info;
 
 #endif
