@@ -4,20 +4,20 @@ bool run_long_scheduler(void)
 {
   extern t_kernel_config kernel_config;
 
-  LOG_INFO("long_scheduler: Iniciando planificador de largo plazo");
+  LOG_INFO("Iniciando planificador de largo plazo");
 
   // Establecer conexión con memoria
   int memory_socket = connect_to_memory(&kernel_config);
   if (memory_socket == -1)
   {
-    LOG_ERROR("long_scheduler: Error conectando con memoria");
+    LOG_ERROR("Error conectando con memoria");
     return false;
   }
 
   bool processes_initialized = false;
 
   // Fase 1: Procesar procesos suspendidos listos (SUSP_READY)
-  LOG_INFO("long_scheduler: Procesando lista SUSP_READY");
+  LOG_INFO("Procesando lista SUSP_READY");
 
   lock_ready_list();
 
@@ -28,14 +28,14 @@ bool run_long_scheduler(void)
     t_pcb *pcb = get_next_process_to_initialize_from_susp_ready();
 
     // SWAP IN -> Intentar de-suspender proceso en memoria
-    LOG_INFO("long_scheduler: Intentando des-suspender proceso PID=%d", pcb->pid);
+    LOG_INFO("Intentando des-suspender proceso con PID %d", pcb->pid);
 
     send_swap_in_package(memory_socket, pcb->pid);
     t_package* response = recv_package(memory_socket);
     if (!read_confirmation_package(response)){
       // Error: devolver proceso a SUSP_READY y terminar
-      LOG_WARNING("long_scheduler: No se pudo des-suspender proceso PID = %d", pcb->pid);
-      LOG_WARNING("long_scheduler: Fallo de SWAP o Memoria sin Espacio Suficiente");
+      LOG_WARNING("No se pudo des-suspender proceso con PID %d", pcb->pid);
+      LOG_WARNING("Fallo de SWAP o memoria sin espacio suficiente");
       add_pcb_to_susp_ready(pcb);
       unlock_susp_ready_list();
       destroy_package(response);
@@ -43,19 +43,19 @@ bool run_long_scheduler(void)
     }
     // Éxito: mover de SUSP_READY a READY
     unlock_susp_ready_list();
-    LOG_INFO("long_scheduler: Proceso PID=%d des-suspendido exitosamente", pcb->pid);
+    LOG_INFO("Proceso con PID %d des-suspendido correctamente", pcb->pid);
     add_pcb_to_ready(pcb);
     processes_initialized = true;
-    LOG_INFO("long_scheduler: Proceso PID=%d movido a READY", pcb->pid);
+    LOG_INFO("Proceso con PID %d movido a READY", pcb->pid);
     destroy_package(response);
     
     lock_susp_ready_list();
   }
   unlock_susp_ready_list();
-  LOG_INFO("long_scheduler: No hay más procesos en SUSP_READY");
+  LOG_INFO("No hay mas procesos en SUSP_READY");
 
   // Fase 2: Procesar procesos nuevos (NEW)
-  LOG_INFO("long_scheduler: Procesando lista NEW");
+  LOG_INFO("Procesando lista NEW");
 
   lock_new_list();
 
@@ -65,11 +65,11 @@ bool run_long_scheduler(void)
     t_pcb *pcb = get_next_process_to_initialize_from_new();
     if (pcb == NULL)
     {
-      LOG_INFO("long_scheduler: No hay más procesos en NEW");
+      LOG_INFO("No hay mas procesos en NEW");
       break;
     }
 
-    LOG_INFO("long_scheduler: Intentando inicializar proceso PID=%d", pcb->pid);
+    LOG_INFO("Intentando inicializar proceso con PID %d", pcb->pid);
 
     // Intentar crear proceso en memoria (para inicialización usamos tamaño mock)
     bool memory_ok = create_process(memory_socket, pcb->pid, pcb->size, pcb->pseudocode_file);
@@ -77,17 +77,17 @@ bool run_long_scheduler(void)
     if (memory_ok)
     {
       // Éxito: mover de NEW a READY
-      LOG_INFO("long_scheduler: Proceso PID=%d inicializado exitosamente", pcb->pid);
+      LOG_INFO("Proceso con PID %d inicializado correctamente", pcb->pid);
 
       add_pcb_to_ready(pcb);
       processes_initialized = true;
 
-      LOG_INFO("long_scheduler: Proceso PID=%d movido a READY", pcb->pid);
+      LOG_INFO("Proceso con PID %d movido a READY", pcb->pid);
     }
     else
     {
       // Error: devolver proceso a NEW y terminar
-      LOG_WARNING("long_scheduler: No se pudo inicializar proceso PID=%d, memoria sin espacio suficiente", pcb->pid);
+      LOG_WARNING("No se pudo inicializar proceso con PID %d, memoria sin espacio suficiente", pcb->pid);
       add_pcb_to_new(pcb);
       break;
     }
@@ -101,12 +101,12 @@ bool run_long_scheduler(void)
 
   if (processes_initialized)
   {
-    LOG_INFO("long_scheduler: Planificador de largo plazo completado - Se inicializaron procesos exitosamente");
+    LOG_INFO("Planificador de largo plazo finalizado - Se inicializaron procesos correctamente");
     return true; // indicamos que se inicializaron procesos, asi corremos el algoritmo de corto plazo.
   }
   else
   {
-    LOG_INFO("long_scheduler: Planificador de largo plazo completado - No se inicializaron nuevos procesos");
+    LOG_INFO("Planificador de largo plazo finalizado - No se inicializaron nuevos procesos");
   }
 
   return false;

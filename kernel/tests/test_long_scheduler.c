@@ -6,7 +6,7 @@
 int memory_swap_in_requests = 0;
 
 void test_successful_long_scheduling_desuspension() {
-    LOG_DEBUG("=== TEST: Desuspensión Exitosa del Planificador de Largo Plazo ===");
+    LOG_DEBUG("=== TEST: Desuspension Exitosa del Planificador de Largo Plazo ===");
     
     // Resetear contadores
     memory_swap_in_requests = 0;
@@ -33,38 +33,38 @@ void test_successful_long_scheduling_desuspension() {
     LOG_DEBUG("✓ Estado inicial verificado\n");
 
     // Ejecutar el planificador de largo plazo
-    LOG_INFO("Ejecutando planificador de largo plazo...\n");
+    LOG_INFO("Ejecutando planificador de largo plazo");
     bool result = run_long_scheduler();
     
     // IMPORTANTE: Dar tiempo para que todas las conexiones se cierren
     usleep(200000); // 200ms
     
     // Verificaciones principales
-    LOG_DEBUG("Verificando resultados...\n");
+    LOG_DEBUG("Verificando resultados");
     
     // Verificar que el planificador retornó true (indicando que inicializó procesos)
     assert(result == true);
-    LOG_DEBUG("✓ El planificador retornó true (procesos inicializados)\n");
+    LOG_DEBUG("El planificador retorno true (procesos inicializados)\n");
     
     // Verificar que se hizo la solicitud de SWAP-IN a memoria
     assert(memory_swap_in_requests == 1);
-    LOG_DEBUG("✓ Se realizó 1 solicitud de SWAP-IN a memoria\n");
+    LOG_DEBUG("Se realizo 1 solicitud de SWAP-IN a memoria\n");
     
     // Verificar transición SUSPEND_READY -> READY
     assert(!find_pcb_in_susp_ready(200));
-    LOG_DEBUG("✓ El proceso ya no está en la lista SUSP_READY\n");
+    LOG_DEBUG("El proceso ya no esta en la lista SUSP_READY\n");
     assert(find_pcb_in_ready(200));
-    LOG_DEBUG("✓ El proceso está en la lista READY\n");
+    LOG_DEBUG("El proceso esta en la lista READY\n");
     assert(test_pcb_susp->current_state == READY);
-    LOG_DEBUG("✓ El estado del PCB es READY\n");
+    LOG_DEBUG("El estado del PCB es READY\n");
     
     // Verificar que el proceso NEW NO fue procesado (tiene menor prioridad)
     assert(find_pcb_in_new(300));
     assert(!find_pcb_in_ready(300));
     assert(test_pcb_new->current_state == NEW);
-    LOG_DEBUG("✓ Proceso PID 300: permanece en NEW (menor prioridad)\n");
+    LOG_DEBUG("Proceso PID 300: permanece en NEW (menor prioridad)\n");
 
-    LOG_DEBUG("✓ TEST EXITOSO: El proceso fue correctamente desuspendido y movido a READY\n");
+    LOG_DEBUG("TEST EXITOSO: El proceso fue correctamente desuspendido y movido a READY\n");
     
     // Cleanup 
     pcb_destroyer(test_pcb_new);
@@ -81,7 +81,7 @@ int main() {
     
     // Inicializar configuración del kernel
     init_logger("long_scheduler_tester.log", "[LONG_SCHEDULER_TESTER]", LOG_LEVEL_DEBUG);
-    LOG_DEBUG("Inicializando configuración del kernel...\n");
+    LOG_DEBUG("Inicializando configuracion del kernel");
     
     t_config* config = init_config("kernel.config");
     kernel_config = init_kernel_config(config);
@@ -90,7 +90,7 @@ int main() {
     initialize_global_lists();
     initialize_global_semaphores();
     
-    LOG_DEBUG("Configuración completada. Iniciando tests...\n");
+    LOG_DEBUG("Configuracion completada. Iniciando tests");
     
     // Ejecutar el test
     test_successful_long_scheduling_desuspension();

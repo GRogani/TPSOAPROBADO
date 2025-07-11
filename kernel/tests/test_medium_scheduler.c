@@ -6,7 +6,7 @@
 int memory_suspend_requests = 0;
 
 void test_successful_medium_scheduling() {
-    LOG_DEBUG("=== TEST: Planificación de Mediano Plazo Exitosa ===");
+    LOG_DEBUG("=== TEST: Planificacion de Mediano Plazo Exitosa ===");
     
     // Resetear contadores
     memory_suspend_requests = 0;
@@ -25,32 +25,32 @@ void test_successful_medium_scheduling() {
     assert(!find_pcb_in_susp_blocked(100));
     
     // Ejecutar el planificador de mediano plazo
-    LOG_INFO("Ejecutando planificador de mediano plazo...\n");
+    LOG_INFO("Ejecutando planificador de mediano plazo");
     run_medium_scheduler(100);
     
     // IMPORTANTE: Dar tiempo para que todas las conexiones se cierren
     usleep(200000); // 200ms
     
     // Verificaciones principales
-    LOG_DEBUG("Verificando resultados...\n");
+    LOG_DEBUG("Verificando resultados");
     
     // Verificar que se hizo la solicitud a memoria
     assert(memory_suspend_requests == 1);
-    LOG_DEBUG("✓ Se realizó 1 solicitud de suspensión a memoria\n");
+    LOG_DEBUG("Se realizo 1 solicitud de suspension a memoria");
     
     // Verificar que el proceso no está más en BLOCKED
     assert(!find_pcb_in_blocked(100));
-    LOG_DEBUG("✓ El proceso ya no está en la lista BLOCKED\n");
+    LOG_DEBUG("El proceso ya no esta en la lista BLOCKED");
     
     // Verificar que el proceso está en SUSP_BLOCKED
     assert(find_pcb_in_susp_blocked(100));
-    LOG_DEBUG("✓ El proceso está en la lista SUSP_BLOCKED\n");
+    LOG_DEBUG("El proceso esta en la lista SUSP_BLOCKED");
     
     // Verificar el estado del PCB
     assert(test_pcb->current_state == SUSP_BLOCKED);
-    LOG_DEBUG("✓ El estado del PCB es SUSP_BLOCKED\n");
+    LOG_DEBUG("El estado del PCB es SUSP_BLOCKED");
     
-    LOG_DEBUG("✓ TEST EXITOSO: El proceso fue correctamente suspendido\n");
+    LOG_DEBUG("TEST EXITOSO: El proceso fue correctamente suspendido");
     pcb_destroyer(test_pcb);
 }
 
@@ -61,13 +61,13 @@ int main() {
     
     // Inicializar configuración del kernel
     init_logger("tester.log", "[TESTER]", LOG_LEVEL_DEBUG);
-    LOG_DEBUG("Inicializando configuración del kernel...\n");
+    LOG_DEBUG("Inicializando configuracion del kernel");
     t_config* config = init_config("kernel.config");
     kernel_config = init_kernel_config(config);
     // Inicializar las listas globales del kernel
     initialize_global_lists();
     initialize_global_semaphores();
-    LOG_DEBUG("Configuración completada. Iniciando tests...\n");
+    LOG_DEBUG("Configuracion completada. Iniciando tests");
     
     // Ejecutar los tests
     test_successful_medium_scheduling();
