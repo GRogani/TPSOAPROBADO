@@ -416,73 +416,75 @@ void unsuspend_process_request_handler(int client_fd, t_package* package) {
         return;
     }
     
-    bool swap_in_success = true;
-    uint32_t pages_restored = 0;
-    
-    lock_swap_file();
-    
-    for (uint32_t page = 0; page < pages_needed && swap_in_success; page++) {
-        t_swap_page_info* swap_info = list_get(proc->swap_pages_info, page);
-        uint32_t* frame_num_ptr = list_get(new_frames, page);
-        
-        if (swap_info != NULL && frame_num_ptr != NULL) {
-            uint32_t physical_address = *frame_num_ptr * memoria_config.TAM_PAGINA;
-            
-            char* page_buffer = malloc(memoria_config.TAM_PAGINA);
-            if (page_buffer != NULL) {
-                if (swap_read_page(swap_info->swap_offset, page_buffer, memoria_config.TAM_PAGINA)) {
-                    if (write_memory(physical_address, page_buffer, memoria_config.TAM_PAGINA)) {
-                        pages_restored++;
-                        LOG_DEBUG("UNSUSPEND_PROCESS: Página %u del PID %u restaurada desde swapfile.bin en frame %u", 
-                                 page, pid, *frame_num_ptr);
-                    } else {
-                        LOG_ERROR("UNSUSPEND_PROCESS: Error escribiendo página %u del PID %u en memoria", page, pid);
-                        swap_in_success = false;
-                    }
-                } else {
-                    LOG_ERROR("UNSUSPEND_PROCESS: Error leyendo página %u del PID %u desde swapfile.bin", page, pid);
-                    swap_in_success = false;
-                }
-                free(page_buffer);
-            } else {
-                LOG_ERROR("UNSUSPEND_PROCESS: Error asignando memoria para página %u", page);
-                swap_in_success = false;
-            }
-        } else {
-            LOG_ERROR("UNSUSPEND_PROCESS: Información de swap o frame no encontrada para página %u", page);
-            swap_in_success = false;
-        }
+    // Crear buffer temporal para todas las páginas del proceso
+    char* process_memory = malloc(proc->process_size);
+    if (process_memory == NULL) {
+        LOG_ERROR("UNSUSPEND_PROCESS: Error asignando memoria temporal para PID %u", pid);
+        frame_free_frames(new_frames);
+        list_destroy(new_frames);
+        send_confirmation_package(client_fd, -1);
+        return;
     }
     
-    unlock_swap_file();
-    
-    if (swap_in_success) {
-        bool page_table_update_success = update_process_page_table(proc, new_frames);
-        if (!page_table_update_success) {
-            LOG_ERROR("UNSUSPEND_PROCESS: Error actualizando tabla de páginas para PID %u", pid);
-            frame_free_frames(new_frames);
-            send_confirmation_package(client_fd, -1);
-            return;
+    // Leer todas las páginas desde el archivo de swap
+    if (swap_read_pages(proc->swap_pages_info, process_memory, memoria_config.TAM_PAGINA)) {
+        // Escribir páginas a los nuevos frames físicos
+        bool write_success = true;
+        for (uint32_t page = 0; page < pages_needed && write_success; page++) {
+            uint32_t* frame_num_ptr = list_get(new_frames, page);
+            if (frame_num_ptr != NULL) {
+                uint32_t physical_address = *frame_num_ptr * memoria_config.TAM_PAGINA;
+                void* page_content = process_memory + (page * memoria_config.TAM_PAGINA);
+                
+                if (!write_memory(physical_address, page_content, memoria_config.TAM_PAGINA)) {
+                    LOG_ERROR("UNSUSPEND_PROCESS: Error escribiendo página %u del PID %u en memoria", page, pid);
+                    write_success = false;
+                }
+            } else {
+                LOG_ERROR("UNSUSPEND_PROCESS: Frame no encontrado para página %u", page);
+                write_success = false;
+            }
         }
         
-        proc->is_suspended = false;
-        proc->allocated_frames = new_frames;
-        
-        list_destroy_and_destroy_elements(proc->swap_pages_info, free);
-        proc->swap_pages_info = NULL;
-        
-        lock_process_metrics();
-        proc->metrics->swap_in_count++;
-        unlock_process_metrics();
-        
-        LOG_INFO("UNSUSPEND_PROCESS: Swap in completado para PID %u. %u páginas restauradas desde swapfile.bin", pid, pages_restored);
-        send_confirmation_package(client_fd, 0);
+        if (write_success) {
+            bool page_table_update_success = update_process_page_table(proc, new_frames);
+            if (!page_table_update_success) {
+                LOG_ERROR("UNSUSPEND_PROCESS: Error actualizando tabla de páginas para PID %u", pid);
+                frame_free_frames(new_frames);
+                list_destroy(new_frames);
+                free(process_memory);
+                send_confirmation_package(client_fd, -1);
+                return;
+            }
+            
+            proc->is_suspended = false;
+            proc->allocated_frames = new_frames;
+            
+            // Liberar páginas del swap y limpiar información
+            swap_free_pages(pid);
+            list_destroy_and_destroy_elements(proc->swap_pages_info, free);
+            proc->swap_pages_info = NULL;
+            
+            lock_process_metrics();
+            proc->metrics->swap_in_count++;
+            unlock_process_metrics();
+            
+            LOG_INFO("UNSUSPEND_PROCESS: Swap in completado para PID %u. %u páginas restauradas", pid, pages_needed);
+            send_confirmation_package(client_fd, 0);
+        } else {
+            frame_free_frames(new_frames);
+            list_destroy(new_frames);
+            LOG_ERROR("UNSUSPEND_PROCESS: Error escribiendo páginas a memoria para PID %u", pid);
+            send_confirmation_package(client_fd, -1);
+        }
     } else {
         frame_free_frames(new_frames);
-        
-        LOG_ERROR("UNSUSPEND_PROCESS: Error durante swap in para PID %u", pid);
+        list_destroy(new_frames);
+        LOG_ERROR("UNSUSPEND_PROCESS: Error leyendo páginas desde swap para PID %u", pid);
         send_confirmation_package(client_fd, -1);
     }
+    
+    free(process_memory);
 }
 
 void swap_request_handler(int client_fd, t_package* package) {
@@ -502,89 +504,74 @@ void swap_request_handler(int client_fd, t_package* package) {
         return;
     }
     
-    bool swap_success = true;
-    uint32_t pages_swapped = 0;
-    
-    lock_swap_file();
-    
     uint32_t total_pages = (proc->process_size + memoria_config.TAM_PAGINA - 1) / memoria_config.TAM_PAGINA;
     
+    // Asignar espacio en swap para todas las páginas del proceso
     t_list* swap_pages_info = swap_allocate_pages(pid, total_pages);
     if (swap_pages_info == NULL) {
         LOG_ERROR("SWAP: No se pudo asignar espacio en swapfile.bin para PID %u", pid);
-        unlock_swap_file();
         send_confirmation_package(client_fd, -1);
         return;
     }
     
-    for (uint32_t page = 0; page < total_pages && swap_success; page++) {
+    // Crear buffer temporal para todas las páginas del proceso
+    char* process_memory = malloc(proc->process_size);
+    if (process_memory == NULL) {
+        LOG_ERROR("SWAP: Error asignando memoria temporal para PID %u", pid);
+        list_destroy_and_destroy_elements(swap_pages_info, free);
+        list_destroy(swap_pages_info);
+        send_confirmation_package(client_fd, -1);
+        return;
+    }
+    
+    // Leer todas las páginas del proceso desde memoria física
+    bool read_success = true;
+    for (uint32_t page = 0; page < total_pages && read_success; page++) {
         uint32_t virtual_address = page * memoria_config.TAM_PAGINA;
         uint32_t physical_address = translate_address(pid, virtual_address);
         
         if (physical_address != (uint32_t)-1) {
-            char* page_buffer = malloc(memoria_config.TAM_PAGINA);
-            if (page_buffer != NULL) {
-                if (read_memory(physical_address, page_buffer, memoria_config.TAM_PAGINA)) {
-                    t_swap_page_info* swap_info = list_get(swap_pages_info, page);
-                    if (swap_info != NULL) {
-                        swap_info->virtual_page_number = page;
-                        
-                        if (swap_write_page(swap_info->swap_offset, page_buffer, memoria_config.TAM_PAGINA)) {
-                            pages_swapped++;
-                            LOG_DEBUG("SWAP: Página %u del PID %u escrita en swapfile.bin en offset %u", 
-                                     page, pid, swap_info->swap_offset);
-                        } else {
-                            LOG_ERROR("SWAP: Error escribiendo página %u del PID %u en swapfile.bin", page, pid);
-                            swap_success = false;
-                        }
-                    } else {
-                        LOG_ERROR("SWAP: Información de swap no encontrada para página %u", page);
-                        swap_success = false;
-                    }
-                } else {
-                    LOG_ERROR("SWAP: Error leyendo página %u del PID %u de memoria física", page, pid);
-                    swap_success = false;
-                }
-                free(page_buffer);
-            } else {
-                LOG_ERROR("SWAP: Error asignando memoria para página %u", page);
-                swap_success = false;
+            void* page_dest = process_memory + (page * memoria_config.TAM_PAGINA);
+            if (!read_memory(physical_address, page_dest, memoria_config.TAM_PAGINA)) {
+                LOG_ERROR("SWAP: Error leyendo página %u del PID %u de memoria física", page, pid);
+                read_success = false;
             }
         } else {
             LOG_WARNING("SWAP: Página %u del PID %u no está en memoria física", page, pid);
         }
     }
     
-    unlock_swap_file();
-    
-    if (swap_success) {
-        proc->is_suspended = true;
-        
-        if (proc->swap_pages_info != NULL) {
-            list_destroy_and_destroy_elements(proc->swap_pages_info, free);
+    if (read_success) {
+        // Escribir todas las páginas al archivo de swap
+        if (swap_write_pages(swap_pages_info, process_memory, memoria_config.TAM_PAGINA)) {
+            proc->is_suspended = true;
+            proc->swap_pages_info = swap_pages_info;
+            
+            // Liberar frames físicos
+            if (proc->allocated_frames != NULL) {
+                frame_free_frames(proc->allocated_frames);
+                list_destroy(proc->allocated_frames);
+                proc->allocated_frames = NULL;
+            }
+            
+            lock_process_metrics();
+            proc->metrics->swap_out_count++;
+            unlock_process_metrics();
+            
+            LOG_INFO("SWAP: Swap out completado para PID %u. %u páginas swapeadas", pid, total_pages);
+            send_confirmation_package(client_fd, 0);
+        } else {
+            LOG_ERROR("SWAP: Error escribiendo páginas al archivo de swap para PID %u", pid);
+            swap_free_pages(pid);
+            send_confirmation_package(client_fd, -1);
         }
-        proc->swap_pages_info = swap_pages_info;
-        
-        if (proc->allocated_frames != NULL) {
-            frame_free_frames(proc->allocated_frames);
-            list_destroy(proc->allocated_frames);
-            proc->allocated_frames = NULL;
-        }
-        
-        lock_process_metrics();
-        proc->metrics->swap_out_count++;
-        unlock_process_metrics();
-        
-        LOG_INFO("SWAP: Swap out completado para PID %u. %u páginas swapeadas en swapfile.bin", pid, pages_swapped);
-        send_confirmation_package(client_fd, 0);
     } else {
-        lock_swap_file();
-        swap_free_pages(swap_pages_info, memoria_config.TAM_PAGINA);
-        unlock_swap_file();
-        
-        LOG_ERROR("SWAP: Error durante swap out para PID %u", pid);
+        LOG_ERROR("SWAP: Error leyendo memoria del proceso PID %u", pid);
+        swap_free_pages(pid);
         send_confirmation_package(client_fd, -1);
     }
+    
+    free(process_memory);
 }
 
 void get_page_entry_request_handler(int socket, t_package* package) {
