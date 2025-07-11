@@ -60,7 +60,7 @@ void* io_completion(void *thread_args)
     pcb = remove_pcb_from_blocked(pid);
     if (pcb != NULL) {
         found_in_blocked = true;
-        LOG_INFO("Process PID %d found in BLOCKED, moving to READY", pid);
+        LOG_OBLIGATORIO("## (%d) finalizó IO y pasa a READY", pid);
         add_pcb_to_ready(pcb);
     } else {
         // Si no se encontró en BLOCKED, buscar en SUSPENDED_BLOCKED

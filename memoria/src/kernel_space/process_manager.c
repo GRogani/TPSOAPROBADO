@@ -69,6 +69,15 @@ void destroy_process_info(void* proc_void_ptr) {
     LOG_INFO(" - Subidas a Memoria Principal: %u", proc->metrics->swap_in_count);
     LOG_INFO(" - Lecturas de Memoria: %u", proc->metrics->memory_read_count);
     LOG_INFO(" - Escrituras de Memoria: %u", proc->metrics->memory_write_count);
+    LOG_OBLIGATORIO("## PID: %u - Proceso Destruido - Métricas - Acc.T.Pag: %u; Inst.Sol.: %u; SWAP: %u; Mem.Prin.: %u; Lec.Mem.: %u; Esc.Mem.: %u",
+        proc->pid,
+        proc->metrics->page_table_access_count,
+        proc->metrics->instruction_requests_count,
+        proc->metrics->swap_out_count,
+        proc->metrics->swap_in_count,
+        proc->metrics->memory_read_count,
+        proc->metrics->memory_write_count
+    );
 
     if (proc->instructions) {
         list_destroy_and_destroy_elements(proc->instructions, free);
@@ -229,8 +238,7 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char* script_pat
     list_add(global_process_list, proc);
     unlock_process_list();
 
-    LOG_INFO("## PID: %u - Proceso Creado. Tamano: %u. Tabla de Paginas inicializada y frames asignados.", pid, size);
-
+    LOG_OBLIGATORIO("## PID: %u - Proceso Creado - Tamaño: %u", pid, size);
     return 0;
 }
 

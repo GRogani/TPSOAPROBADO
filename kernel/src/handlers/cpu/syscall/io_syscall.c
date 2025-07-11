@@ -43,6 +43,7 @@ void handle_io_process_syscall(uint32_t pid, uint32_t pc, uint32_t sleep_time, c
   add_pcb_to_blocked(pcb);
   create_io_request_element(io_request->io_requests_queue, pid, sleep_time);
 
+  LOG_OBLIGATORIO("## (%d) - Bloqueado por IO: %s", pid, device_name);
   unlock_blocked_list();
   unlock_exec_list();
   unlock_io_requests_queue(&io_request->io_requests_queue_semaphore);
@@ -54,7 +55,6 @@ void handle_io_process_syscall(uint32_t pid, uint32_t pc, uint32_t sleep_time, c
   pending_io_args.client_socket = io_connection.socket_id;
   process_pending_io(pending_io_args);
 
-  LOG_INFO("Process with PID %d added to BLOCKED state for device %s", pid, device_name);
   // TODO: create detachable thread and run medium_scheduler -> Falta testear
   pthread_t thread;
   LOG_INFO("io_syscall: Attempting to run the medium-term scheduler");

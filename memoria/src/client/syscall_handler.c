@@ -118,6 +118,7 @@ bool read_user_memory(uint32_t pid, uint32_t virtual_address, void* buffer, size
     proc->metrics->memory_read_count++;
     unlock_process_metrics();
 
+    LOG_OBLIGATORIO("## PID: %u - Lectura de memoria virtual en dirección %u, tamaño %zu", pid, virtual_address, size);
     return read_memory(physical_address, buffer, size);
 }
 
@@ -144,6 +145,7 @@ bool write_user_memory(uint32_t pid, uint32_t virtual_address, const void* data,
     proc->metrics->memory_write_count++;
     unlock_process_metrics();
 
+    LOG_OBLIGATORIO("## PID: %u - Escritura de memoria virtual en dirección %u, tamaño %zu", pid, virtual_address, size);
     return write_memory(physical_address, data, size);
 }
 
@@ -175,7 +177,7 @@ void get_instruction_request_handler(int socket, t_package* package) {
         if (proc->instructions && pc < list_size(proc->instructions)) {
             char* instruction = list_get(proc->instructions, pc);
             if (instruction) {
-                LOG_INFO("## PID: %u - Obtener Instruccion: %u - Instruccion: %s", pid, pc, instruction);
+                LOG_OBLIGATORIO("## PID: %u - Obtener instrucción: %u - Instrucción: %s", pid, pc, instruction);
                 send_instruction_package(socket, instruction);
             } else {
                 LOG_ERROR("## PID: %u - PC %u la instruccion es NULL.", pid, pc);
@@ -279,8 +281,7 @@ void read_memory_request_handler(int socket, t_package* package) {
 
 void dump_memory_request_handler(int socket, t_package* package) {
     uint32_t pid = read_dump_memory_package(package);
-    
-    LOG_INFO("DUMP_MEMORY: Solicitud de dump para PID %u", pid);
+    LOG_OBLIGATORIO("## PID: %u - Memory Dump solicitado", pid);
     
     process_info* proc = process_manager_find_process(pid);
     if (proc == NULL) {
@@ -469,7 +470,7 @@ void unsuspend_process_request_handler(int client_fd, t_package* package) {
             proc->metrics->swap_in_count++;
             unlock_process_metrics();
             
-            LOG_INFO("UNSUSPEND_PROCESS: Swap in completado para PID %u. %u páginas restauradas", pid, pages_needed);
+            LOG_OBLIGATORIO("## UNSUSPEND_PROCESS - PID: %u - Swap in completado (%u páginas restauradas)", pid, pages_needed);
             send_confirmation_package(client_fd, 0);
         } else {
             frame_free_frames(new_frames);
@@ -557,7 +558,7 @@ void swap_request_handler(int client_fd, t_package* package) {
             proc->metrics->swap_out_count++;
             unlock_process_metrics();
             
-            LOG_INFO("SWAP: Swap out completado para PID %u. %u páginas swapeadas", pid, total_pages);
+            LOG_OBLIGATORIO("## SWAP - PID: %u - Swap out completado (%u páginas swapeadas)", pid, total_pages);
             send_confirmation_package(client_fd, 0);
         } else {
             LOG_ERROR("SWAP: Error escribiendo páginas al archivo de swap para PID %u", pid);

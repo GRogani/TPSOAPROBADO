@@ -177,7 +177,7 @@ uint32_t mmu_perform_page_walk(int *memory_socket, uint32_t page_number, uint32_
   }
 
   uint32_t frame_number = next_table_id;
-  LOG_INFO("[MMU] Page Walk complete. Page number %u maps to Frame %u.", page_number, frame_number);
+  LOG_OBLIGATORIO("PID: %d - OBTENER MARCO - Página: %u - Marco: %u", pid, page_number, frame_number);
   return frame_number;
 }
 
@@ -195,12 +195,12 @@ uint32_t mmu_translate_address(int *memory_socket, uint32_t logical_address, uin
 
   if (tlb_entry)
   {
-    LOG_INFO("[TLB] HIT! Page number %u -> Frame %u.", page_number, tlb_entry->frame);
+    LOG_OBLIGATORIO("PID: %d - TLB HIT - Pagina: %u", pid, page_number);
     frame_number = tlb_entry->frame;
   }
   else
   {
-    LOG_INFO("[TLB] MISS for page number %u. Consulting page tables...", page_number);
+    LOG_OBLIGATORIO("PID: %d - TLB MISS - Pagina: %u", pid, page_number);
     frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
     tlb_add_entry(page_number, frame_number);
   }
@@ -278,7 +278,7 @@ void mmu_destroy()
 
 /*CACHE*/
 
-CacheEntry *cache_find_entry(uint32_t page_number)
+CacheEntry *cache_find_entry(uint32_t page_number, uint32_t pid)
 {
 
   bool _is_frame(void *element)
@@ -291,6 +291,11 @@ CacheEntry *cache_find_entry(uint32_t page_number)
   if (entry)
   {
     entry->use_bit = true;
+    LOG_OBLIGATORIO("PID: %d - Cache Hit - Pagina: %u", pid, page_number);
+  }
+  else
+  {
+    LOG_OBLIGATORIO("PID: %d - Cache Miss - Pagina: %u", pid, page_number);
   }
   return entry;
 }
@@ -408,6 +413,7 @@ CacheEntry* cache_load_page(uint32_t logic_dir, int *memory_socket, CacheEntry *
   victim_entry->use_bit = true;
   victim_entry->modified_bit = false;
 
+  LOG_OBLIGATORIO("PID: %d - Cache Add - Pagina: %u", pid, page_number);
   return victim_entry;
 }
 /*CACHE*/

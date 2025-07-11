@@ -150,7 +150,7 @@ void run_short_scheduler(void)
     else if (should_preempt_executing_process(pcb_in_ready, pcb_in_exec))
     {
         // (4.2) CPU ocupada, pero se puede desalojar
-        LOG_INFO("short_scheduler: Desalojando proceso PID=%d", cpu->current_process_executing);
+        LOG_OBLIGATORIO("## (%d) - Desalojado por algoritmo SJF/SRT", cpu->current_process_executing);
 
         cpu_context_package_data cpu_context = send_and_receive_interrupt(cpu->interrupt_socket_id, cpu->current_process_executing);
 

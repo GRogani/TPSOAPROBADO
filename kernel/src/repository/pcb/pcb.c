@@ -38,6 +38,8 @@ t_pcb* pcb_create(uint32_t pid, uint32_t pc, uint32_t size, char* pseudocode_fil
     // Incrementar contador del estado inicial (NEW)
     pcb->ME.new_count = 1;
 
+    LOG_OBLIGATORIO("## (%d) Se crea el proceso - Estado: NEW", pid);
+
     return pcb;
 }
 
@@ -88,6 +90,8 @@ void pcb_change_state(t_pcb* pcb, PROCESS_STATE new_state) {
             break;
     }
 
+    const char* estados[] = {"NEW", "READY", "EXEC", "BLOCKED", "SUSP_BLOCKED", "SUSP_READY", "EXIT"};
+    LOG_OBLIGATORIO("## (%d) Pasa del estado %s al estado %s", pcb->pid, estados[pcb->current_state], estados[new_state]);
     // Cambiar al nuevo estado
     pcb->current_state = new_state;
     

@@ -9,7 +9,7 @@ t_package *fetch(int socket, uint32_t PID, uint32_t PC)
 {
     t_package *package;
 
-    LOG_INFO("Fetching instruction for PID: %d, PC: %d", PID, PC);
+    LOG_OBLIGATORIO("## PID: %d - FETCH - Program Counter: %d", PID, PC);
 
     send_fetch_package(socket, PID, PC);
 
@@ -82,12 +82,14 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
     switch (instruction->instruction_code)
     {
     case NOOP:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: NOOP -", *pid);
     {
         // No operation
         (*PC)++;
         break;
     }
     case WRITE:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: WRITE - %d %s", *pid, instruction->operand_numeric1, instruction->operand_string);
     {
         uint32_t logic_dir_write = instruction->operand_numeric1;
         char *valor_write = instruction->operand_string;
@@ -134,6 +136,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         }
     }
     case READ:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: READ - %d %d", *pid, instruction->operand_numeric1, instruction->operand_numeric2);
     {
         uint32_t logic_dir_read = instruction->operand_numeric1;
         uint32_t size = instruction->operand_numeric2;
@@ -227,13 +230,15 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         }
     }
     case GOTO:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: GOTO - %d", *pid, instruction->operand_numeric1);
     {
         *PC = instruction->operand_numeric1;
         break;
     }
     case IO:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: IO - %s %d", *pid, instruction->operand_string, instruction->operand_numeric1);
     {
-        LOG_INFO("Executing IO operation, sending syscall to kernel");
+
         (*PC)++;
         syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_IO;
@@ -246,8 +251,8 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         return true;
     }
     case INIT_PROC:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: INIT_PROC - %s %d", *pid, instruction->operand_string, instruction->operand_numeric1);
     {
-        LOG_INFO("Executing INIT_PROC, sending syscall to kernel");
         (*PC)++;
         syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_INIT_PROC;
@@ -275,8 +280,8 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         break;
     }
     case DUMP_PROCESS:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: DUMP_PROCESS -", *pid);
     {
-        LOG_INFO("Executing DUMP_PROCESS, sending syscall to kernel");
         (*PC)++;
         syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_DUMP_PROCESS;
@@ -287,8 +292,8 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         return true;
     }
     case EXIT:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: EXIT -", *pid);
     {
-        LOG_INFO("Executing EXIT, sending syscall to kernel");
         (*PC)++;
         syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
         syscall_req->syscall_type = SYSCALL_EXIT;
@@ -311,6 +316,7 @@ void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_
 {
     if (package->opcode == INTERRUPT)
     {
+        LOG_OBLIGATORIO("## Llega interrupción al puerto Interrupt");
         int pid_received = read_interrupt_package(package);
 
         if (pid_received == *pid_on_execute)
