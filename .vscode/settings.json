@@ -31,6 +31,10 @@
         "fetch_package.h": "c",
         "mmu_request_page_write_to_memory.h": "c",
         "cpuprotocol.h": "c",
-        "cpu_context_package.h": "c"
+        "cpu_context_package.h": "c",
+        "medium_scheduler.h": "c",
+        "collections.h": "c",
+        "long_scheduler.h": "c",
+        "io_syscall.h": "c"
     }
 }

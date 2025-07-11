@@ -253,7 +253,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         syscall_req->syscall_type = SYSCALL_INIT_PROC;
         syscall_req->pid = *pid;
         syscall_req->pc = *PC;
-        syscall_req->params.init_proc.pseudocode_file = instruction->operand_string;
+        syscall_req->params.init_proc.pseudocode_file = strdup(instruction->operand_string);
         syscall_req->params.init_proc.memory_space = instruction->operand_numeric1;
         send_syscall_package(socket_dispatch, syscall_req);
         destroy_syscall_package(syscall_req);

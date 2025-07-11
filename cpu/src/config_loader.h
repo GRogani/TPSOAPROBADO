@@ -33,7 +33,7 @@ typedef struct {
 
 MMUConfig load_mmu_config();
 
-TLBConfig load_tlb_config(char *argv[]);
+TLBConfig load_tlb_config();
 
 CacheConfig load_cache_config(t_config* config);
 
