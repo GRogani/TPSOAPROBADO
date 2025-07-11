@@ -20,11 +20,7 @@ t_page_table_entry* create_page_table_entry(bool is_last_level) {
     if (is_last_level) {
         new_entry->frame_number = INVALID_FRAME_NUMBER; // Placeholder, despues lo inicializamos
     } else {
-        new_entry->next_level = list_create();
-        if (new_entry->next_level == NULL) {
-            free(new_entry);
-            return NULL;
-        }
+        new_entry->next_table = NULL; // Will be set later when creating nested table
     }
     return new_entry;
 }
@@ -73,8 +69,8 @@ void destroy_page_table_entry(void* entry_void_ptr) {
     if (entry == NULL) {
         return;
     }
-    if (!entry->is_last_level) {
-        list_destroy_and_destroy_elements(entry->next_level, destroy_page_table_entry);
+    if (!entry->is_last_level && entry->next_table != NULL) {
+        destroy_page_table(entry->next_table);
     }
     free(entry);
 }
@@ -125,11 +121,9 @@ t_page_table* create_nested_page_table(int current_level, int total_levels, int 
                 free(new_table);
                 return NULL;
             }
-            entry->next_level = nested_table->entries; // The entry points to the list of entries of the nested table
-            // Liberar la estructura t_page_table pero mantener la lista de entradas
-            free(nested_table);
-            LOG_INFO("create_nested_page_table: entry %d assigned next_level with %d entries", 
-                     i, list_size(entry->next_level));
+            entry->next_table = nested_table; // Store the complete nested table structure
+            LOG_INFO("create_nested_page_table: entry %d assigned next_table with %zu entries", 
+                     i, nested_table->num_entries);
         }
         list_add(new_table->entries, entry); // Use list_add as we're populating sequentially
         LOG_INFO("create_nested_page_table: added entry %d to table", i);
@@ -172,12 +166,10 @@ bool reset_page_table_frames(t_page_table* current_table, int total_levels, int 
         if (is_last_level_of_hierarchy) {
             entry->frame_number = INVALID_FRAME_NUMBER; // Reset to invalid frame number
         } else {
-            t_page_table next_level_table_mock;
-            next_level_table_mock.entries = entry->next_level;
-            next_level_table_mock.num_entries = list_size(entry->next_level);
-
-            if (!reset_page_table_frames(&next_level_table_mock, total_levels, current_level + 1)) {
-                return false;
+            if (entry->next_table != NULL) {
+                if (!reset_page_table_frames(entry->next_table, total_levels, current_level + 1)) {
+                    return false;
+                }
             }
         }
     }

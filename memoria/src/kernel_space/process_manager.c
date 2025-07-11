@@ -40,12 +40,10 @@ bool assign_frames_to_page_table(t_page_table* current_table, t_list* allocated_
             entry->frame_number = *frame_num_ptr;
             (*current_frame_index)++;
         } else {
-            t_page_table next_level_table_mock;
-            next_level_table_mock.entries = entry->next_level;
-            next_level_table_mock.num_entries = list_size(entry->next_level);
-
-            if (!assign_frames_to_page_table(&next_level_table_mock, allocated_frames_for_process, current_frame_index, total_levels, current_level + 1, pages_needed)) {
-                return false;
+            if (entry->next_table != NULL) {
+                if (!assign_frames_to_page_table(entry->next_table, allocated_frames_for_process, current_frame_index, total_levels, current_level + 1, pages_needed)) {
+                    return false;
+                }
             }
         }
     }

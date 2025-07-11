@@ -19,7 +19,7 @@ typedef struct page_table_entry
     bool is_last_level;
     union {
         int32_t frame_number;  // Cambiar a int32_t para permitir valores negativos
-        t_list* next_level;
+        t_page_table* next_table;  // Store the actual table structure, not just the entries list
     };
 } t_page_table_entry;
 
