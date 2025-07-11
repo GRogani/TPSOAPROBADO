@@ -1,4 +1,5 @@
 #include "mmu_request_page_write_to_memory.h"
+#include "utils/serialization/package.h"
 
 // read from cpu/mmu
 t_mmu_page_write_request *read_mmu_page_write_request(t_package *package)
@@ -34,14 +35,14 @@ t_package *create_mmu_page_write_request(uint32_t frame_number, void *content, u
     buffer_add(buffer, content, content_size);
   }
 
-  return package_create(MMU_PAGE_WRITE_REQUEST, buffer);
+  return create_package(MMU_PAGE_WRITE_REQUEST, buffer);
 }
 
 int send_mmu_page_write_request(int socket, uint32_t frame_number, void *content, uint32_t content_size)
 {
   t_package *package = create_mmu_page_write_request(frame_number, content, content_size);
   int bytes_sent = send_package(socket, package);
-  package_destroy(package);
+  destroy_package(package);
   return bytes_sent;
 }
 

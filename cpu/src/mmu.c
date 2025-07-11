@@ -3,6 +3,10 @@
 #include <math.h>
 #include <string.h>
 #include "utils/safe_alloc.h"
+#include "utils/serialization/package.h"
+#include "utils/DTPs/mmu_request_page_read_response.h"
+#include "utils/DTPs/mmu_request_page_write_to_memory.h"
+#include "utils/DTPs/memory_read_request.h"
 
 TLBConfig *g_tlb_config;
 CacheConfig *g_cache_config;
@@ -15,10 +19,10 @@ static int g_tlb_fifo_pointer = 0;
 static uint64_t g_lru_timestamp_counter = 0;
 static int g_cache_clock_pointer = 0;
 
-uint32_t mmu_request_pagetable_entry_from_memory(int *memory_socket, uint32_t table_id, uint32_t entry_index, uint32_t pid)
+uint32_t mmu_request_pagetable_entry_from_memory(int memory_socket, uint32_t table_id, uint32_t entry_index, uint32_t pid)
 {
   LOG_DEBUG("[MEM-REQUEST] Requesting page table entry from memory. PID: %u, Table ID: %u, Entry Index: %u", pid, table_id, entry_index);
-  send_page_entry_request_package(*memory_socket, pid, table_id, entry_index);
+  send_page_entry_request_package(memory_socket, pid, table_id, entry_index);
 
   // Wait for response from memory
   t_package *response_package = recv_package(memory_socket);
@@ -38,16 +42,16 @@ uint32_t mmu_request_pagetable_entry_from_memory(int *memory_socket, uint32_t ta
   return response.value;
 }
 
-void mmu_request_page_read_from_memory(int *memory_socket, uint32_t physic_addr, void *buffer)
+void mmu_request_page_read_from_memory(int memory_socket, uint32_t physic_addr, void *buffer)
 {
   LOG_DEBUG("[MEM-REQUEST] Asking Memory to read page from physic address %u", physic_addr);
 
   t_memory_read_request *request = create_memory_read_request(physic_addr, g_mmu_config->page_size);
-  send_memory_read_request(*memory_socket, request);
+  send_memory_read_request(memory_socket, request);
   destroy_memory_read_request(request);
 
   // Wait for response from memory
-  t_package *response_package = recv_package(*memory_socket);
+  t_package *response_package = recv_package(memory_socket);
   if (response_package == NULL || response_package->opcode != READ_MEMORY)
   {
     LOG_ERROR("[MEM-REQUEST] Failed to receive valid response for page read request");
@@ -57,7 +61,7 @@ void mmu_request_page_read_from_memory(int *memory_socket, uint32_t physic_addr,
   }
 
   // Parse the response and copy data to buffer
-  t_mmu_page_read_response *response = read_memory_read_response(response_package);
+  t_mmu_page_read_response *response = read_mmu_page_read_response(response_package);
   destroy_package(response_package);
 
   if (response && response->page_data)
@@ -73,12 +77,12 @@ void mmu_request_page_read_from_memory(int *memory_socket, uint32_t physic_addr,
   destroy_mmu_page_read_response(response);
 }
 
-void mmu_request_page_write_to_memory(int *memory_socket, uint32_t physic_addr, void *content)
+void mmu_request_page_write_to_memory(int memory_socket, uint32_t physic_addr, void *content)
 {
   LOG_INFO("[MEM-REQUEST] Telling Memory to write page to physic addres %u", physic_addr);
   uint32_t content_size = g_mmu_config->page_size;
   t_memory_write_request *request = create_memory_write_request(physic_addr, content_size, content);
-  send_memory_write_request(*memory_socket, request);
+  send_memory_write_request(memory_socket, request);
 }
 
 void tlb_entry_destroy(void *element)
@@ -155,7 +159,7 @@ void tlb_add_entry(uint32_t page_number, uint32_t frame_number)
   }
 }
 
-uint32_t mmu_perform_page_walk(int *memory_socket, uint32_t page_number, uint32_t pid)
+uint32_t mmu_perform_page_walk(int memory_socket, uint32_t page_number, uint32_t pid)
 {
   LOG_INFO("[MMU] Page Walk starting for page number %u...", page_number);
 
@@ -181,7 +185,7 @@ uint32_t mmu_perform_page_walk(int *memory_socket, uint32_t page_number, uint32_
   return frame_number;
 }
 
-uint32_t mmu_translate_address(int *memory_socket, uint32_t logical_address, uint32_t pid)
+uint32_t mmu_translate_address(int memory_socket, uint32_t logical_address, uint32_t pid)
 {
 
   uint32_t page_number = logical_address / g_mmu_config->page_size; // floor() is implicit with integer division
@@ -236,7 +240,7 @@ void mmu_init(MMUConfig *mmu_config, TLBConfig *tlb_config, CacheConfig *cache_c
   LOG_INFO("MMU, TLB, and Cache initialized.");
 }
 
-void mmu_process_cleanup(int *memory_socket)
+void mmu_process_cleanup(int memory_socket)
 {
   LOG_INFO("--- Cleaning up for process eviction ---");
   if (g_cache_config->entry_count > 0)
@@ -354,7 +358,7 @@ int cache_find_victim_clock_m()
   return cache_find_victim_clock();
 }
 
-CacheEntry* select_victim_entry(int *memory_socket, uint32_t logic_dir, uint32_t pid)
+CacheEntry* select_victim_entry(int memory_socket, uint32_t logic_dir, uint32_t pid)
 {
   LOG_INFO("[Cache] Loading page for logical address %u", logic_dir);
   int victim_index;
@@ -369,7 +373,7 @@ CacheEntry* select_victim_entry(int *memory_socket, uint32_t logic_dir, uint32_t
 
   CacheEntry *victim_entry = list_get(g_cache, victim_index);
 
-  uint32_t physic_addr = NULL; 
+  uint32_t physic_addr = 0; 
   
   if (victim_entry->is_valid && victim_entry->modified_bit)
   {
@@ -385,16 +389,17 @@ CacheEntry* select_victim_entry(int *memory_socket, uint32_t logic_dir, uint32_t
     }
     mmu_request_page_write_to_memory(memory_socket, physic_addr, victim_entry->content);
   }
+  return victim_entry;
 }
 
-CacheEntry* cache_load_page(uint32_t logic_dir, int *memory_socket, CacheEntry *victim_entry, uint32_t pid)
+CacheEntry* cache_load_page(uint32_t logic_dir, int memory_socket, CacheEntry *victim_entry, uint32_t pid)
 {
 
   LOG_DEBUG("[Cache] Replacing victim entry (frame %u) with new page.", victim_entry->page);
   uint32_t frame_number;
   uint32_t page_number = floor(logic_dir / g_mmu_config->page_size);
   uint32_t offset = logic_dir % g_mmu_config->page_size;
-  uint32_t physic_dir = NULL;
+  uint32_t physic_dir = 0;
   if (g_tlb_config->entry_count > 0)
   {
     physic_dir = mmu_translate_address(memory_socket, logic_dir,pid);
@@ -416,4 +421,3 @@ CacheEntry* cache_load_page(uint32_t logic_dir, int *memory_socket, CacheEntry *
   LOG_OBLIGATORIO("PID: %d - Cache Add - Pagina: %u", pid, page_number);
   return victim_entry;
 }
-/*CACHE*/

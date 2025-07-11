@@ -1,5 +1,6 @@
 #include "instructionCycle.h"
 #include "mmu.h"
+#include <pthread.h>
 
 extern CacheConfig *g_cache_config;
 extern TLBConfig *g_tlb_config;
@@ -98,10 +99,10 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         if (g_cache_config->entry_count > 0)
         {
             // If cache is enabled, we need to write to cache first
-            CacheEntry *cache_entry = cache_find_entry(page_number);
+            CacheEntry *cache_entry = cache_find_entry(page_number, *pid);
             if (cache_entry == NULL)
             {
-                cache_entry = select_victim_entry(&socket_memory, logic_dir_write, *pid);
+                cache_entry = select_victim_entry(socket_memory, logic_dir_write, *pid);
                 cache_entry->is_valid = true;
                 cache_entry->page = page_number;
                 cache_entry->use_bit = true;
@@ -116,7 +117,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         {
             if (g_tlb_config->entry_count > 0)
             {
-                uint32_t physic_dir_write = mmu_translate_address(&socket_memory, logic_dir_write, *pid);
+                uint32_t physic_dir_write = mmu_translate_address(socket_memory, logic_dir_write, *pid);
                 t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
                 send_memory_write_request(socket_memory, write_req);
                 destroy_memory_write_request(write_req);
@@ -125,7 +126,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
             }
             else
             {
-                uint32_t frame_number = mmu_perform_page_walk(&socket_memory, page_number, *pid);
+                uint32_t frame_number = mmu_perform_page_walk(socket_memory, page_number, *pid);
                 uint32_t physic_dir_write = (frame_number * g_mmu_config->page_size) + offset;
                 t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
                 send_memory_write_request(socket_memory, write_req);
@@ -145,12 +146,12 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         if (g_cache_config->entry_count > 0)
         {
             // If cache is enabled, we need to read from cache first
-            CacheEntry *cache_entry = cache_find_entry(page_number);
+            CacheEntry *cache_entry = cache_find_entry(page_number, *pid);
             if (cache_entry == NULL)
             {
                 
-                cache_entry = select_victim_entry(&socket_memory, logic_dir_read, *pid);
-                cache_entry = cache_load_page(logic_dir_read, &socket_memory, cache_entry, *pid);
+                cache_entry = select_victim_entry(socket_memory, logic_dir_read, *pid);
+                cache_entry = cache_load_page(logic_dir_read, socket_memory, cache_entry, *pid);
             }
             // Read from cache
             LOG_INFO("Data read from cache: %p", cache_entry->content);
@@ -162,7 +163,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
             LOG_INFO("Cache is disabled, reading directly from memory");
             if (g_tlb_config->entry_count > 0)
             {
-                uint32_t physic_dir_read = mmu_translate_address(&socket_memory, logic_dir_read, *pid);
+                uint32_t physic_dir_read = mmu_translate_address(socket_memory, logic_dir_read, *pid);
                 t_memory_read_request *request = create_memory_read_request(physic_dir_read, size);
                 send_memory_read_request(socket_memory, request);
                 destroy_memory_read_request(request);
@@ -195,7 +196,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
             }
             else
             {
-                uint32_t frame_number = mmu_perform_page_walk(&socket_memory, page_number, *pid);
+                uint32_t frame_number = mmu_perform_page_walk(socket_memory, page_number, *pid);
                 uint32_t physic_dir_read = (frame_number * g_mmu_config->page_size) + offset;
                 t_memory_read_request *request = create_memory_read_request(physic_dir_read, size);
                 send_memory_read_request(socket_memory, request);
@@ -326,7 +327,7 @@ void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_
 
             LOG_INFO("Interrupt for PID %d executed", pid_received);
 
-            mmu_process_cleanup(&socket_memory);
+            mmu_process_cleanup(socket_memory);
 
             return;
         }
