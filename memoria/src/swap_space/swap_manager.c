@@ -23,6 +23,7 @@ static t_list* process_blocks = NULL;
  * @return true si a < b, false en caso contrario
  */
 bool compare_by_offset(void* a, void* b) {
+    if (a == NULL || b == NULL) return false;
     t_swap_process_info* block_a = (t_swap_process_info*)a;
     t_swap_process_info* block_b = (t_swap_process_info*)b;
     return block_a->start_offset < block_b->start_offset;
@@ -33,8 +34,10 @@ bool compare_by_offset(void* a, void* b) {
  * @param element Puntero al elemento a liberar
  */
 void free_swap_process_info(void* element) {
-    t_swap_process_info* info = (t_swap_process_info*)element;
-    free(info);
+    if (element != NULL) {
+        t_swap_process_info* info = (t_swap_process_info*)element;
+        free(info);
+    }
 }
 
 /**
@@ -43,8 +46,8 @@ void free_swap_process_info(void* element) {
  * @return Offset de inicio del espacio libre o -1 si no hay
  */
 uint32_t find_free_space_with_bitmap(uint32_t pages_needed) {
-    if (free_pages_bitmap == NULL) {
-        return 0; // Archivo vacío
+    if (free_pages_bitmap == NULL || pages_needed == 0) {
+        return 0; // Archivo vacío o parámetro inválido
     }
     
     uint32_t consecutive_free = 0;
@@ -76,6 +79,10 @@ uint32_t find_free_space_with_bitmap(uint32_t pages_needed) {
  * @param num_pages Número de páginas a marcar
  */
 void mark_pages_as_used(uint32_t start_page, uint32_t num_pages) {
+    if (free_pages_bitmap == NULL || num_pages == 0) {
+        return;
+    }
+    
     for (uint32_t i = 0; i < num_pages && (start_page + i) < bitmap_size; i++) {
         free_pages_bitmap[start_page + i] = false;
     }
@@ -87,6 +94,10 @@ void mark_pages_as_used(uint32_t start_page, uint32_t num_pages) {
  * @param num_pages Número de páginas a marcar
  */
 void mark_pages_as_free(uint32_t start_page, uint32_t num_pages) {
+    if (free_pages_bitmap == NULL || num_pages == 0) {
+        return;
+    }
+    
     for (uint32_t i = 0; i < num_pages && (start_page + i) < bitmap_size; i++) {
         free_pages_bitmap[start_page + i] = true;
     }
@@ -95,19 +106,28 @@ void mark_pages_as_free(uint32_t start_page, uint32_t num_pages) {
 /**
  * @brief Extiende el bitmap si es necesario
  * @param new_pages_needed Número de páginas adicionales necesarias
+ * @return true si éxito, false si error
  */
-void extend_bitmap_if_needed(uint32_t new_pages_needed) {
+bool extend_bitmap_if_needed(uint32_t new_pages_needed) {
+    if (new_pages_needed == 0) {
+        return true;
+    }
+    
     uint32_t new_bitmap_size = bitmap_size + new_pages_needed;
     bool* new_bitmap = realloc(free_pages_bitmap, new_bitmap_size * sizeof(bool));
     
-    if (new_bitmap != NULL) {
-        free_pages_bitmap = new_bitmap;
-        // Marcar las nuevas páginas como libres
-        for (uint32_t i = bitmap_size; i < new_bitmap_size; i++) {
-            free_pages_bitmap[i] = true;
-        }
-        bitmap_size = new_bitmap_size;
+    if (new_bitmap == NULL) {
+        LOG_ERROR("Swap Manager: Error extendiendo bitmap de %u a %u páginas", bitmap_size, new_bitmap_size);
+        return false;
     }
+    
+    free_pages_bitmap = new_bitmap;
+    // Marcar las nuevas páginas como libres
+    for (uint32_t i = bitmap_size; i < new_bitmap_size; i++) {
+        free_pages_bitmap[i] = true;
+    }
+    bitmap_size = new_bitmap_size;
+    return true;
 }
 
 // --- Funciones Públicas del Swap Manager ---
@@ -117,6 +137,9 @@ bool swap_manager_init(const t_memoria_config* config) {
         LOG_ERROR("Swap Manager: Configuracion invalida para inicializacion");
         return false;
     }
+
+    // Limpiar estado previo si existe
+    swap_manager_destroy();
 
     swap_file_path = strdup(config->PATH_SWAPFILE);
     if (swap_file_path == NULL) {
@@ -131,8 +154,9 @@ bool swap_manager_init(const t_memoria_config* config) {
     if (swap_file == NULL) {
         swap_file = fopen(swap_file_path, "w+b");
         if (swap_file == NULL) {
-            LOG_ERROR("Swap Manager: No se pudo abrir/crear el archivo SWAP");
+            LOG_ERROR("Swap Manager: No se pudo abrir/crear el archivo SWAP: %s", swap_file_path);
             free(swap_file_path);
+            swap_file_path = NULL;
             return false;
         }
     }
@@ -142,14 +166,46 @@ bool swap_manager_init(const t_memoria_config* config) {
     if (process_blocks == NULL) {
         LOG_ERROR("Swap Manager: Error al crear lista de bloques de proceso");
         fclose(swap_file);
+        swap_file = NULL;
         free(swap_file_path);
+        swap_file_path = NULL;
         return false;
     }
 
     // Obtener el tamaño actual del archivo y calcular páginas
-    fseek(swap_file, 0, SEEK_END);
+    if (fseek(swap_file, 0, SEEK_END) != 0) {
+        LOG_ERROR("Swap Manager: Error al posicionar en el final del archivo");
+        fclose(swap_file);
+        swap_file = NULL;
+        free(swap_file_path);
+        swap_file_path = NULL;
+        list_destroy(process_blocks);
+        process_blocks = NULL;
+        return false;
+    }
+    
     long file_size = ftell(swap_file);
-    fseek(swap_file, 0, SEEK_SET);
+    if (file_size < 0) {
+        LOG_ERROR("Swap Manager: Error al obtener tamaño del archivo");
+        fclose(swap_file);
+        swap_file = NULL;
+        free(swap_file_path);
+        swap_file_path = NULL;
+        list_destroy(process_blocks);
+        process_blocks = NULL;
+        return false;
+    }
+    
+    if (fseek(swap_file, 0, SEEK_SET) != 0) {
+        LOG_ERROR("Swap Manager: Error al posicionar al inicio del archivo");
+        fclose(swap_file);
+        swap_file = NULL;
+        free(swap_file_path);
+        swap_file_path = NULL;
+        list_destroy(process_blocks);
+        process_blocks = NULL;
+        return false;
+    }
     
     total_pages = file_size / page_size;
     next_free_offset = file_size;
@@ -159,10 +215,13 @@ bool swap_manager_init(const t_memoria_config* config) {
         bitmap_size = total_pages;
         free_pages_bitmap = calloc(bitmap_size, sizeof(bool));
         if (free_pages_bitmap == NULL) {
-            LOG_ERROR("Swap Manager: Error al crear bitmap");
+            LOG_ERROR("Swap Manager: Error al crear bitmap de %u páginas", bitmap_size);
             fclose(swap_file);
+            swap_file = NULL;
             free(swap_file_path);
+            swap_file_path = NULL;
             list_destroy(process_blocks);
+            process_blocks = NULL;
             return false;
         }
         // Marcar todas las páginas como libres inicialmente
@@ -195,12 +254,21 @@ void swap_manager_destroy() {
         free(free_pages_bitmap);
         free_pages_bitmap = NULL;
     }
+    bitmap_size = 0;
+    total_pages = 0;
+    next_free_offset = 0;
+    page_size = 0;
     LOG_INFO("Swap Manager: Destruido y archivo SWAP cerrado");
 }
 
 t_list* swap_allocate_pages(uint32_t pid, uint32_t num_pages) {
     if (num_pages == 0) {
         return list_create();
+    }
+
+    if (swap_file == NULL) {
+        LOG_ERROR("Swap Manager: Archivo de swap no inicializado");
+        return NULL;
     }
 
     lock_swap_file();
@@ -224,9 +292,15 @@ t_list* swap_allocate_pages(uint32_t pid, uint32_t num_pages) {
         start_offset = next_free_offset;
         
         // Extender bitmap
-        extend_bitmap_if_needed(num_pages);
-        if (bitmap_size < start_page + num_pages) {
+        if (!extend_bitmap_if_needed(num_pages)) {
             LOG_ERROR("Swap Manager: Error extendiendo bitmap");
+            list_destroy(pages);
+            unlock_swap_file();
+            return NULL;
+        }
+        
+        if (bitmap_size < start_page + num_pages) {
+            LOG_ERROR("Swap Manager: Error en extensión del bitmap");
             list_destroy(pages);
             unlock_swap_file();
             return NULL;
@@ -284,7 +358,7 @@ t_list* swap_allocate_pages(uint32_t pid, uint32_t num_pages) {
 }
 
 bool swap_write_pages(t_list* pages, void* process_memory, uint32_t page_size_param) {
-    if (swap_file == NULL || pages == NULL || process_memory == NULL) {
+    if (swap_file == NULL || pages == NULL || process_memory == NULL || page_size_param == 0) {
         LOG_ERROR("Swap Manager: Parametros invalidos para escritura");
         return false;
     }
@@ -293,12 +367,24 @@ bool swap_write_pages(t_list* pages, void* process_memory, uint32_t page_size_pa
 
     for (int i = 0; i < list_size(pages); i++) {
         t_swap_page_info* page = list_get(pages, i);
+        if (page == NULL) {
+            LOG_ERROR("Swap Manager: Página NULL en índice %d", i);
+            unlock_swap_file();
+            return false;
+        }
+        
         void* page_content = (char*)process_memory + (page->virtual_page_number * page_size_param);
         
-        fseek(swap_file, page->swap_offset, SEEK_SET);
-        if (fwrite(page_content, 1, page_size_param, swap_file) != page_size_param) {
-            LOG_ERROR("Swap Manager: Error escribiendo pagina %u en offset %u", 
-                     page->virtual_page_number, page->swap_offset);
+        if (fseek(swap_file, page->swap_offset, SEEK_SET) != 0) {
+            LOG_ERROR("Swap Manager: Error posicionando en offset %u", page->swap_offset);
+            unlock_swap_file();
+            return false;
+        }
+        
+        size_t written = fwrite(page_content, 1, page_size_param, swap_file);
+        if (written != page_size_param) {
+            LOG_ERROR("Swap Manager: Error escribiendo pagina %u en offset %u (escrito %zu de %u bytes)", 
+                     page->virtual_page_number, page->swap_offset, written, page_size_param);
             unlock_swap_file();
             return false;
         }
@@ -310,7 +396,7 @@ bool swap_write_pages(t_list* pages, void* process_memory, uint32_t page_size_pa
 }
 
 bool swap_read_pages(t_list* pages, void* process_memory, uint32_t page_size_param) {
-    if (swap_file == NULL || pages == NULL || process_memory == NULL) {
+    if (swap_file == NULL || pages == NULL || process_memory == NULL || page_size_param == 0) {
         LOG_ERROR("Swap Manager: Parametros invalidos para lectura");
         return false;
     }
@@ -319,12 +405,24 @@ bool swap_read_pages(t_list* pages, void* process_memory, uint32_t page_size_par
 
     for (int i = 0; i < list_size(pages); i++) {
         t_swap_page_info* page = list_get(pages, i);
+        if (page == NULL) {
+            LOG_ERROR("Swap Manager: Página NULL en índice %d", i);
+            unlock_swap_file();
+            return false;
+        }
+        
         void* page_content = (char*)process_memory + (page->virtual_page_number * page_size_param);
         
-        fseek(swap_file, page->swap_offset, SEEK_SET);
-        if (fread(page_content, 1, page_size_param, swap_file) != page_size_param) {
-            LOG_ERROR("Swap Manager: Error leyendo pagina %u desde offset %u", 
-                     page->virtual_page_number, page->swap_offset);
+        if (fseek(swap_file, page->swap_offset, SEEK_SET) != 0) {
+            LOG_ERROR("Swap Manager: Error posicionando en offset %u", page->swap_offset);
+            unlock_swap_file();
+            return false;
+        }
+        
+        size_t read = fread(page_content, 1, page_size_param, swap_file);
+        if (read != page_size_param) {
+            LOG_ERROR("Swap Manager: Error leyendo pagina %u desde offset %u (leido %zu de %u bytes)", 
+                     page->virtual_page_number, page->swap_offset, read, page_size_param);
             unlock_swap_file();
             return false;
         }
@@ -345,6 +443,9 @@ void swap_free_pages(uint32_t pid) {
     // Buscar el bloque del proceso
     for (int i = 0; i < list_size(process_blocks); i++) {
         t_swap_process_info* block = list_get(process_blocks, i);
+        if (block == NULL) {
+            continue;
+        }
         
         if (block->pid == pid && block->is_used) {
             // Marcar páginas como libres en el bitmap

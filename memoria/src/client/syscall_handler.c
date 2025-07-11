@@ -417,7 +417,7 @@ void unsuspend_process_request_handler(int client_fd, t_package* package) {
     }
     
     // Crear buffer temporal para todas las páginas del proceso
-    char* process_memory = malloc(proc->process_size);
+    char* process_memory = calloc(pages_needed, memoria_config.TAM_PAGINA);
     if (process_memory == NULL) {
         LOG_ERROR("UNSUSPEND_PROCESS: Error asignando memoria temporal para PID %u", pid);
         frame_free_frames(new_frames);
@@ -515,7 +515,7 @@ void swap_request_handler(int client_fd, t_package* package) {
     }
     
     // Crear buffer temporal para todas las páginas del proceso
-    char* process_memory = malloc(proc->process_size);
+    char* process_memory = calloc(total_pages, memoria_config.TAM_PAGINA);
     if (process_memory == NULL) {
         LOG_ERROR("SWAP: Error asignando memoria temporal para PID %u", pid);
         list_destroy_and_destroy_elements(swap_pages_info, free);
