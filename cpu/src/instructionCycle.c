@@ -1,6 +1,4 @@
 #include "instructionCycle.h"
-#include "mmu.h"
-#include <pthread.h>
 
 extern CacheConfig *g_cache_config;
 extern TLBConfig *g_tlb_config;

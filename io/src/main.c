@@ -3,7 +3,7 @@
 int main(int argc, char* argv[]) {
 
     if (argc < 2)
-        argv[1] = "I/O_DEVICE"; //nombre defualt si no se especiofica
+        argv[1] = "DISCO"; //nombre defualt si no se especiofica
 
     t_config* config_file = init_config("io.config");
     t_io_config io_config = init_io_config(config_file);
