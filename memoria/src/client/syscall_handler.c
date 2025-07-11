@@ -89,7 +89,7 @@ uint32_t translate_address(uint32_t pid, uint32_t virtual_address) {
 
     uint32_t physical_address = final_pte->frame_number * memoria_config.TAM_PAGINA + page_offset;
 
-    LOG_INFO("## PID: %u - Traduccion: Dir Virtual %u -> Marco %u -> Dir Fisica %u",
+    LOG_OBLIGATORIO("## PID: %u - Traduccion: Dir Virtual %u -> Marco %u -> Dir Fisica %u",
              pid, virtual_address, final_pte->frame_number, physical_address);
 
     return physical_address;
@@ -152,7 +152,7 @@ bool write_user_memory(uint32_t pid, uint32_t virtual_address, const void* data,
 void init_process_request_handler(int socket, t_package* package) {
     init_process_package_data* init_process_args = read_init_process_package(package);
 
-    LOG_INFO("## PID: %u - Solicitud de creacion de Proceso Recibida.", init_process_args->pid);
+    LOG_OBLIGATORIO("## PID: %u - Solicitud de creacion de Proceso Recibida.", init_process_args->pid);
 
     int result = process_manager_create_process(init_process_args->pid, init_process_args->size, init_process_args->pseudocode_path);
 
@@ -203,7 +203,7 @@ void delete_process_request_handler(int socket, t_package *package) {
     int result = process_manager_delete_process(pid_to_delete);
 
     if (result == 0) {
-        LOG_INFO("## PID: %u - Proceso Finalizado y recursos liberados.", pid_to_delete);
+        LOG_OBLIGATORIO("## PID: %u - Proceso Finalizado y recursos liberados.", pid_to_delete);
         send_confirmation_package(socket, 0);
     } else {
         LOG_ERROR("## PID: %u - Intento de finalizar proceso no existente.", pid_to_delete);
@@ -231,7 +231,7 @@ void write_memory_request_handler(int socket, t_package* package) {
     uint32_t data_size;
     char* data = buffer_read_string(package->buffer, &data_size);
     
-    LOG_INFO("WRITE_MEMORY: Escritura en dirección física %u con datos: %s", physical_address, data);
+    //LOG_INFO("WRITE_MEMORY: Escritura en dirección física %u con datos: %s", physical_address, data);
     
     bool success = write_memory(physical_address, data, data_size);
     
@@ -252,7 +252,7 @@ void read_memory_request_handler(int socket, t_package* package) {
     uint32_t physical_address = buffer_read_uint32(package->buffer);
     uint32_t size = buffer_read_uint32(package->buffer);
     
-    LOG_INFO("READ_MEMORY: Lectura de %u bytes desde dirección física %u", size, physical_address);
+    //LOG_INFO("READ_MEMORY: Lectura de %u bytes desde dirección física %u", size, physical_address);
     
     char* buffer = malloc(size);
     if (buffer == NULL) {

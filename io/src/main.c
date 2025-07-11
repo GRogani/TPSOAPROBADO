@@ -62,11 +62,11 @@ void waiting_requests(int kernel_socket, char* id_IO)
 
 void processing_operation(io_operation_package_data* io) 
 {
-    LOG_INFO("## PID: %d - Inicio de IO - Tiempo: %d", io->pid, io->sleep_time);
+    LOG_OBLIGATORIO("## PID: %d - Inicio de IO - Tiempo: %d", io->pid, io->sleep_time);
     
     usleep(io->sleep_time * 1000); // Convert milliseconds to microseconds
     
-    LOG_INFO("## PID: %d - Fin de IO", io->pid);
+    LOG_OBLIGATORIO("## PID: %d - Fin de IO", io->pid);
     
     LOG_INFO("Estoy libre [%s]", io->device_name);
     

@@ -55,7 +55,7 @@ void handle_io_process_syscall(uint32_t pid, uint32_t pc, uint32_t sleep_time, c
   pending_io_args.client_socket = io_connection.socket_id;
   process_pending_io(pending_io_args);
 
-  // TODO: create detachable thread and run medium_scheduler -> Falta testear
+  // TODO: testear esto de abajo
   pthread_t thread;
   LOG_INFO("io_syscall: Attempting to run the medium-term scheduler");
   if(pthread_create(&thread, NULL, medium_scheduler_thread,(void*)(uintptr_t)pcb->pid) != 0){

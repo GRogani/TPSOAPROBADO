@@ -118,6 +118,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
             {
                 uint32_t physic_dir_write = mmu_translate_address(&socket_memory, logic_dir_write, *pid);
                 t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
+                LOG_OBLIGATORIO("PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %s", *pid, physic_dir_write, valor_write);
                 send_memory_write_request(socket_memory, write_req);
                 destroy_memory_write_request(write_req);
                 (*PC)++;
@@ -128,6 +129,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
                 uint32_t frame_number = mmu_perform_page_walk(&socket_memory, page_number, *pid);
                 uint32_t physic_dir_write = (frame_number * g_mmu_config->page_size) + offset;
                 t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
+                LOG_OBLIGATORIO("PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %s", *pid, physic_dir_write, valor_write);
                 send_memory_write_request(socket_memory, write_req);
                 destroy_memory_write_request(write_req);
                 (*PC)++;
@@ -181,6 +183,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
 
                 if (response->data != NULL)
                 {
+                    LOG_OBLIGATORIO("PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", *pid, physic_dir_read, response->data);
                     LOG_INFO("Data read from memory: %s", response->data);
                     destroy_memory_read_response(response);
                 }
@@ -215,6 +218,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
 
                 if (response->data != NULL)
                 {
+                    LOG_OBLIGATORIO("PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", *pid, physic_dir_read, response->data);
                     LOG_INFO("Data read from memory: %s", response->data);
                     destroy_memory_read_response(response);
                 }

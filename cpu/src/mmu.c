@@ -376,12 +376,15 @@ CacheEntry* select_victim_entry(int *memory_socket, uint32_t logic_dir, uint32_t
     LOG_INFO("[Cache] Victim (page %u) is dirty. Writing back to memory.", victim_entry->page);
     if (g_tlb_config->entry_count > 0){
       physic_addr = mmu_translate_address(memory_socket, logic_dir, pid);
+      uint32_t frame_number = (physic_addr) / g_mmu_config->page_size;
+      LOG_OBLIGATORIO("PID: %u - Memory Update - Página: %u - Frame: %u", pid, victim_entry->page, frame_number);
     }
     else{
       uint32_t page_number = floor(logic_dir / g_mmu_config->page_size);
       uint32_t offset = logic_dir % g_mmu_config->page_size;
       uint32_t frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
       physic_addr = (frame_number * g_mmu_config->page_size) + offset;
+      LOG_OBLIGATORIO("PID: %u - Memory Update - Página: %u - Frame: %u", pid, victim_entry->page, frame_number);
     }
     mmu_request_page_write_to_memory(memory_socket, physic_addr, victim_entry->content);
   }
