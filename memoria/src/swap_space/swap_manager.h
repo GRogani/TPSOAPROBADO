@@ -2,7 +2,7 @@
 #define SWAP_SPACE_SWAP_MANAGER_H
 
 #include "../utils.h"
-#include "semaphores.h"
+#include "../semaphores.h"
 #include "swap_structures.h"
 
 /**
