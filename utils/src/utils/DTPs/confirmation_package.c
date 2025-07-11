@@ -15,7 +15,7 @@ int send_confirmation_package(int socket, uint32_t success)
     return bytes_sent;
 }
 
-uint32_t read_confirmation_package(t_package *package)
+bool read_confirmation_package(t_package *package)
 {
     package->buffer->offset = 0;
     int success = buffer_read_uint32(package->buffer);

@@ -1,6 +1,0 @@
-IO teclado 10
-IO teclado 5
-NOOP
-NOOP
-INIT_PROC process1 100
-EXIT

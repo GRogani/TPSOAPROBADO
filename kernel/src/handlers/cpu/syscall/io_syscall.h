@@ -5,6 +5,7 @@
 #include "repository/process/exit_list.h"
 #include "kernel_logic/scheduler/long_scheduler.h"
 #include "kernel_logic/scheduler/short_scheduler.h"
+#include "kernel_logic/scheduler/medium_scheduler.h"
 #include "repository/pcb/pcb.h"
 #include "exit_syscall.h"
 #include "../../io/process_pending_io.h"

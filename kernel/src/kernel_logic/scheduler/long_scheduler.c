@@ -32,7 +32,7 @@ bool run_long_scheduler(void)
 
     send_swap_in_package(memory_socket, pcb->pid);
     t_package* response = recv_package(memory_socket);
-    if (read_confirmation_package(response) != 0){
+    if (!read_confirmation_package(response)){
       // Error: devolver proceso a SUSP_READY y terminar
       LOG_WARNING("long_scheduler: No se pudo des-suspender proceso PID = %d", pcb->pid);
       LOG_WARNING("long_scheduler: Fallo de SWAP o Memoria sin Espacio Suficiente");

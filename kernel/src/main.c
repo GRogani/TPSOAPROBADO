@@ -8,7 +8,7 @@ int main(int argc, char* argv[]) {
 
     extern t_kernel_config kernel_config;  // en globals.h
 
-    t_config* config = init_config("kernel.config");
+    t_config *config = init_config("kernel.config");
 
     kernel_config = init_kernel_config(config);
 
@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     pthread_t io_server_handler;
 
     create_io_server_thread(&io_server_handler);
-
+    LOG_INFO("%d", kernel_config.cpu_quantity);
     connect_to_cpus(kernel_config.cpu_quantity); // Levanta el server entran los N cpu y lo baja.
 
     process_enter(argv[1], atoi(argv[2]));

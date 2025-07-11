@@ -7,6 +7,11 @@ int main(int argc, char *argv[])
     t_cpu_config config_cpu = init_cpu_config(config_file);
     init_logger("cpu.log", "CPU", config_cpu.LOG_LEVEL);
 
+    MMUConfig mmu_config = load_mmu_config();
+    TLBConfig tlb_config = load_tlb_config();
+    CacheConfig cache_config = load_cache_config(config_file);
+    mmu_init(&mmu_config, &tlb_config, &cache_config);
+
     int memory_socket = -1;
     int kernel_dispatch_socket = -1;
     int kernel_interrupt_socket = -1;
@@ -16,7 +21,7 @@ int main(int argc, char *argv[])
     t_package *kernel_package = NULL;
     uint32_t pid, pc;
 
-    interrupt_args_t thread_args = {kernel_interrupt_socket, &pid, &pc};
+    interrupt_args_t thread_args = {kernel_interrupt_socket, &pid, &pc, memory_socket};
     
     pthread_t interrupt_listener_thread;
     pthread_create(&interrupt_listener_thread, NULL, interrupt_listener, &thread_args);

@@ -8,6 +8,7 @@
 #include "../utils.h"
 #include "lists_and_mutex.h"
 #include "instructionCycle.h"
+#include "config_loader.h"
 
 void cleanup_instruction(t_instruction* instruction);
 

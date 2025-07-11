@@ -7,6 +7,7 @@
 #include "enums/Eopcodes.h"
 #include "collections/collections.h"
 #include "kernel_logic/algorithms/scheduling_algorithms.h"
+#include "repository/process/exec_list.h"
 
 /**
  * @brief Ejecuta el planificador de corto plazo

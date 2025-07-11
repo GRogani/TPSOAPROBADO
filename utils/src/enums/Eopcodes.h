@@ -30,6 +30,9 @@ enum
     CPU_CONTEXT, // cpu -> kernel
 
     IO_OPERATION, // cpu -> kernel
+
+    MMU_PAGE_READ_REQUEST,
+    MMU_PAGE_WRITE_REQUEST,
 };
 
 /**

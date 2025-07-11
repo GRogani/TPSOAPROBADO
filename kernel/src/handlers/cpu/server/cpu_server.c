@@ -13,18 +13,19 @@ int connect_to_cpus(int cpus_quantity)
 
     for (int i = 0; i < cpus_quantity; i++)
     {
-        int socket_dispatch_connection = -1;
-        int socket_interrupt_connection = -1;
 
-        while ( (socket_dispatch_connection < 0) || (socket_interrupt_connection < 0) )
+        int socket_dispatch_connection = accept_connection("DISPATCH SERVER", socket_server_dispatch);
+        if (socket_dispatch_connection < 0)
         {
-            if (socket_dispatch_connection < 0)
-                socket_dispatch_connection = accept_connection("DISPATCH SERVER", socket_server_dispatch);
+            LOG_ERROR("Failed to accept connection for dispatch CPU server");
+            exit(1); // Exit if we cannot accept the interrupt connection
+        }
 
-            if (socket_interrupt_connection < 0)
-                socket_interrupt_connection = accept_connection("INTERRUPT SERVER", socket_server_interrupt);
-
-            sleep(3);
+        int socket_interrupt_connection = accept_connection("INTERRUPT SERVER", socket_server_interrupt);
+        if (socket_interrupt_connection < 0)
+        {
+            LOG_ERROR("Failed to accept connection for interrupt CPU server");
+            exit(1); // Exit if we cannot accept the interrupt connection
         }
 
         LOG_INFO("CPU connected successfully. Adding connection to list of connected CPUs");
@@ -44,8 +45,6 @@ int connect_to_cpus(int cpus_quantity)
             continue;
         }
         pthread_detach(t1);
-
-        i++;
 
         // Do not create thread for interrupt.
         // interruptions should be awaited and sent into the short term scheduler

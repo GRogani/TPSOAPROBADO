@@ -54,4 +54,12 @@
 #include "src/utils/DTPs/kill_process_package.h"
 #include "src/utils/DTPs/swap_package.h"
 
+#include "src/utils/DTPs/mmu_request_page_read_from_memory.h"
+#include "src/utils/DTPs/mmu_request_page_read_response.h"
+#include "src/utils/DTPs/mmu_request_page_write_to_memory.h"
+#include "src/utils/DTPs/memory_write_request.h"
+#include "src/utils/DTPs/memory_read_response.h"
+#include "src/utils/DTPs/memory_read_request.h"
+#include "src/utils/DTPs/page_entry_package.h"
+
 #endif 
