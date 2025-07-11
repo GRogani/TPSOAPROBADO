@@ -3,6 +3,7 @@
 
 #include "../../enums/Eplanification_algorithm.h"
 #include <commons/log.h>
+#include <stdint.h>
 
 typedef struct t_kernel_config{
     char* memory_ip;
@@ -17,6 +18,7 @@ typedef struct t_kernel_config{
     char* cpu_interrupt_port;
     char* io_port;
     int cpu_quantity;
+    uint64_t default_estimated_cpu_burst_ms;
 } t_kernel_config;
 
 typedef struct t_memoria_config {

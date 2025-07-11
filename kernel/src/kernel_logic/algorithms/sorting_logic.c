@@ -12,10 +12,10 @@ bool compare_cpu_bursts(void *a, void *b)
 
     //Est(n+1) =  R(n) + (1-) Est(n) ;
 
-    pcb_a->MT.last_estimated_cpu_busrt_ms = pcb_a->MT.last_estimated_cpu_busrt_ms * (1 - alpha) + pcb_a->MT.last_cpu_burst_ms * alpha;
-    pcb_b->MT.last_estimated_cpu_busrt_ms = pcb_b->MT.last_estimated_cpu_busrt_ms * (1 - alpha) + pcb_b->MT.last_cpu_burst_ms * alpha;
+    pcb_a->MT.last_estimated_cpu_burst_ms = pcb_a->MT.last_estimated_cpu_burst_ms * (1 - alpha) + pcb_a->MT.last_cpu_burst_ms * alpha;
+    pcb_b->MT.last_estimated_cpu_burst_ms = pcb_b->MT.last_estimated_cpu_burst_ms * (1 - alpha) + pcb_b->MT.last_cpu_burst_ms * alpha;
 
-    return pcb_a->MT.last_estimated_cpu_busrt_ms < pcb_b->MT.last_estimated_cpu_busrt_ms;
+    return pcb_a->MT.last_estimated_cpu_burst_ms < pcb_b->MT.last_estimated_cpu_burst_ms;
 }
 
 void sort_ready_list_by_SJF()

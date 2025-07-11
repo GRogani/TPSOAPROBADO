@@ -10,7 +10,7 @@ void log_ready_list(const char* title) {
     for (int i = 0; i < list_size(ready_list); i++) {
         t_pcb* pcb = list_get(ready_list, i);
         LOG_INFO("PCB PID=%u | Estimado=%lu", 
-            pcb->pid, pcb->MT.last_estimated_cpu_busrt_ms);
+            pcb->pid, pcb->MT.last_estimated_cpu_burst_ms);
     }
     LOG_INFO("Total PCBs in ready list: %d", list_size(ready_list));
 
@@ -32,11 +32,11 @@ int main()
     t_pcb *pcb3 = pcb_create(3, 150, 3, "test3.pseudocode");
 
     // Estimaciones iniciales
-    pcb1->MT.last_estimated_cpu_busrt_ms = 100;
+    pcb1->MT.last_estimated_cpu_burst_ms = 100;
     pcb1->MT.last_cpu_burst_ms = 120;
-    pcb2->MT.last_estimated_cpu_busrt_ms = 80;
+    pcb2->MT.last_estimated_cpu_burst_ms = 80;
     pcb2->MT.last_cpu_burst_ms = 90;
-    pcb3->MT.last_estimated_cpu_busrt_ms = 150;
+    pcb3->MT.last_estimated_cpu_burst_ms = 150;
     pcb3->MT.last_cpu_burst_ms = 130;
 
     // Agregar a ready
@@ -56,7 +56,7 @@ int main()
     // Obtener siguiente PCB
     t_pcb* next_pcb = get_next_pcb_from_ready();
     LOG_INFO("Next PCB to execute -> PID=%u | Estimado=%lu", 
-        next_pcb->pid, next_pcb->MT.last_estimated_cpu_busrt_ms);
+        next_pcb->pid, next_pcb->MT.last_estimated_cpu_burst_ms);
 
     // Cleanup
     pcb_destroy(pcb1);

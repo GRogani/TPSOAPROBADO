@@ -1,5 +1,7 @@
 #include "pcb.h"
 
+extern t_kernel_config kernel_config; // en globals.h
+
 t_pcb* pcb_create(uint32_t pid, uint32_t pc, uint32_t size, char* pseudocode_file) {
     t_pcb* pcb = safe_malloc(sizeof(t_pcb));
     if (pcb == NULL) {
@@ -37,6 +39,7 @@ t_pcb* pcb_create(uint32_t pid, uint32_t pc, uint32_t size, char* pseudocode_fil
     
     // Incrementar contador del estado inicial (NEW)
     pcb->ME.new_count = 1;
+    pcb->MT.last_estimated_cpu_burst_ms = kernel_config.default_estimated_cpu_burst_ms;
 
     return pcb;
 }

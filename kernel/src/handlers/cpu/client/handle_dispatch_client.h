@@ -7,6 +7,7 @@
 #include "../utils.h"
 #include "handlers/cpu/syscall/exit_syscall.h"
 #include "handlers/cpu/syscall/io_syscall.h"
+#include "handlers/cpu/syscall/dump_memory_syscall.h"
 #include "../syscall/init_proc_syscall.h"
 
 void *handle_dispatch_client(void *);

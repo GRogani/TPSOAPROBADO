@@ -78,8 +78,7 @@ void handle_cpu_syscall(t_package *package, int socket)
   case SYSCALL_DUMP_PROCESS:
   {
     LOG_INFO("PROCESSING DUMP_PROCESS SYSCALL");
-    // TODO: Handle dump process syscall
-    LOG_INFO("Dump process syscall not implemented yet");
+    dump_memory_syscall(syscall->pid);
     break;
   }
   case SYSCALL_EXIT:

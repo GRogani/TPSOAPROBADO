@@ -79,7 +79,7 @@ void run_medium_scheduler(uint32_t  pid){
     // Llamo al Planificador de Largo Plazo
     LOG_INFO("MEDIUM_SCHEDULER: Llamando a planificador de largo plazo para admitir nuevos procesos.");
     if (!run_long_scheduler()) {
-        LOG_WARNING("MEDIUM_SCHEDULER: El planificador de largo plazo NO puede admitir nuevos procesos.");
+        LOG_INFO("MEDIUM_SCHEDULER: El planificador de largo plazo NO inicializó ningun proceso.");
         return;
     }        
     LOG_INFO("MEDIUM_SCHEDULER: El planificador de largo plazo admitió a un nuevo PID [%d].", pid);

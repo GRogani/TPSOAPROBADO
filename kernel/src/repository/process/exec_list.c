@@ -45,5 +45,10 @@ t_pcb* remove_pcb_from_exec(uint32_t pid) {
     };
 
     t_pcb* removed_pcb = list_remove_by_condition(get_exec_list(), pid_matches);
+
+    if(removed_pcb != NULL)  {
+        removed_pcb->MT.last_cpu_burst_ms = now();
+    }
+
     return removed_pcb;
 }

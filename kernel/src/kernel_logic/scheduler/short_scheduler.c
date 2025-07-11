@@ -6,20 +6,6 @@ t_cpu_connection *get_cpu_to_dispatch(void)
     // Buscar CPU que no esté procesando (current_process_executing == -1)
     t_list *all_cpus = (t_list *)get_all_cpu_connections();
 
-    bool is_cpu_free(void *ptr)
-    {
-        t_cpu_connection *cpu = (t_cpu_connection *)ptr;
-        return cpu->current_process_executing == -1;
-    };
-
-    t_cpu_connection *free_cpu = list_find(all_cpus, is_cpu_free);
-    if (free_cpu != NULL)
-    {
-        LOG_DEBUG("short_scheduler: CPU libre encontrada");
-        list_destroy(all_cpus);
-        return free_cpu;
-    }
-
     bool cpu_process_not_in_exec(void *ptr)
     {
         t_cpu_connection *cpu = (t_cpu_connection *)ptr;
@@ -31,7 +17,7 @@ t_cpu_connection *get_cpu_to_dispatch(void)
     };
 
     t_cpu_connection *available_cpu = list_find(all_cpus, cpu_process_not_in_exec);
-    if (available_cpu)
+    if (available_cpu != NULL)
     {
         LOG_DEBUG("short_scheduler: CPU con PID %d no está en lista EXEC, CPU disponible", 
                    available_cpu->current_process_executing);
@@ -40,13 +26,13 @@ t_cpu_connection *get_cpu_to_dispatch(void)
         return available_cpu;
     }
 
-    free_cpu =  get_cpu_by_algorithm(all_cpus);
+    available_cpu =  get_cpu_by_algorithm(all_cpus);
     list_destroy(all_cpus);
 
-    if (free_cpu == NULL)
+    if (available_cpu == NULL)
         LOG_ERROR("short_scheduler: No se encontró CPU libre, no se puede despachar");
 
-    return free_cpu;
+    return available_cpu;
     
 
 }
@@ -133,7 +119,7 @@ void run_short_scheduler(void)
 
     get_short_scheduler_context(&cpu, &pcb_in_ready, &pcb_in_exec);
     if (cpu == NULL || pcb_in_ready == NULL) {
-        LOG_INFO("short_scheduler: %s", pcb_in_ready ? "No se pudo obtener CPU" : "No se pudo obtener proceso READY");
+        LOG_INFO("short_scheduler: %s", pcb_in_ready != NULL ? "No se pudo obtener CPU" : "No hay ningun proceso en READY");
         unlock_cpu_connections();
         unlock_ready_list();
         unlock_exec_list();

@@ -20,6 +20,8 @@ void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc,
         send_confirmation_package(response_socket, 1); // 1 = error
         return;
     }
+
+    current_pcb->MT.last_cpu_burst_ms = now();
     
     current_pcb->pc = caller_pc;
     unlock_exec_list();

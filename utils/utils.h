@@ -21,6 +21,9 @@
 #include "src/utils/config/config.h"
 #include "src/utils/config/t_configs.h"
 
+// Time Utils
+#include "src/utils/time_utils.h"
+
 // Serialization
 #include "src/utils/serialization/buffer.h"
 #include "src/utils/serialization/package.h"
@@ -62,4 +65,4 @@
 #include "src/utils/DTPs/memory_read_request.h"
 #include "src/utils/DTPs/page_entry_package.h"
 
-#endif 
+#endif

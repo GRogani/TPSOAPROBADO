@@ -10,4 +10,7 @@
 #include "repository/pcb/pcb.h"
 #include "handlers/memory/client/memory_client.h"
 
+void dump_memory_syscall(uint32_t pid);
+
+
 #endif
