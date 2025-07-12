@@ -4,6 +4,7 @@ static t_list *global_process_list = NULL;
 
 extern t_memoria_config memoria_config;
 
+<<<<<<< Updated upstream
 /**
  * @brief Asigna frames a las entradas de la tabla de páginas de forma recursiva
  * @param current_table Tabla de páginas actual
@@ -18,6 +19,10 @@ bool assign_frames_to_page_table(t_page_table *current_table, t_list *allocated_
 {
     if (current_table == NULL || allocated_frames_for_process == NULL)
     {
+=======
+bool assign_frames_to_page_table(t_page_table* current_table, t_list* allocated_frames_for_process, int* current_frame_index, int total_levels, int current_level, int pages_needed) {
+    if (current_table == NULL || allocated_frames_for_process == NULL) {
+>>>>>>> Stashed changes
         LOG_ERROR("Error: Tabla actual o lista de frames es NULL en assign_frames_to_page_table.");
         return false;
     }
@@ -57,6 +62,7 @@ bool assign_frames_to_page_table(t_page_table *current_table, t_list *allocated_
     return true;
 }
 
+<<<<<<< Updated upstream
 /**
  * @brief Destruye la estructura process_info y libera todos sus recursos
  * @param proc_void_ptr Puntero a la estructura process_info
@@ -66,6 +72,11 @@ void destroy_process_info(void *proc_void_ptr)
     process_info *proc = (process_info *)proc_void_ptr;
     if (proc == NULL)
         return;
+=======
+void destroy_process_info(void* proc_void_ptr) {
+    process_info* proc = (process_info*) proc_void_ptr;
+    if (proc == NULL) return;
+>>>>>>> Stashed changes
 
     LOG_INFO("## PID: %u - Liberando recursos del proceso.", proc->pid);
 
@@ -110,29 +121,40 @@ void destroy_process_info(void *proc_void_ptr)
     free(proc);
 }
 
+<<<<<<< Updated upstream
 /**
  * @brief Inicializa el process manager creando la lista global de procesos
  */
 void process_manager_init()
 {
+=======
+
+void process_manager_init() {
+>>>>>>> Stashed changes
     global_process_list = list_create();
     if (global_process_list == NULL)
     {
         LOG_ERROR("Process Manager: Fallo al crear la lista global de procesos(PIDs).");
-        exit(EXIT_FAILURE);
+        exit(1);
     }
     LOG_INFO("Process Manager: Inicializado.");
 }
 
+<<<<<<< Updated upstream
 /**
  * @brief Destruye el process manager liberando todos los recursos
  */
 void process_manager_destroy()
 {
+=======
+
+void process_manager_destroy() {
+>>>>>>> Stashed changes
     list_destroy_and_destroy_elements(global_process_list, destroy_process_info);
     LOG_INFO("Process Manager: Destruido.");
 }
 
+<<<<<<< Updated upstream
 /**
  * @brief Carga las líneas de pseudocódigo desde un archivo
  * @param path Ruta del archivo de pseudocódigo
@@ -140,6 +162,10 @@ void process_manager_destroy()
  */
 t_list *process_manager_load_script_lines(char *path)
 {
+=======
+
+t_list* process_manager_load_script_lines(char* path) {
+>>>>>>> Stashed changes
     char full_path[512];
     snprintf(full_path, sizeof(full_path), "%s%s", memoria_config.PATH_INSTRUCCIONES, path);
 
@@ -178,6 +204,7 @@ t_list *process_manager_load_script_lines(char *path)
     return list;
 }
 
+<<<<<<< Updated upstream
 /**
  * @brief Crea un nuevo proceso con todos sus recursos
  * @param pid ID del proceso
@@ -188,6 +215,11 @@ t_list *process_manager_load_script_lines(char *path)
 int process_manager_create_process(uint32_t pid, uint32_t size, char *script_path)
 {
     process_info *proc = safe_malloc(sizeof(process_info));
+=======
+
+int process_manager_create_process(uint32_t pid, uint32_t size, char* script_path) {
+    process_info* proc = safe_malloc(sizeof(process_info));
+>>>>>>> Stashed changes
 
     proc->pid = pid;
     proc->process_size = size;
@@ -273,6 +305,7 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char *script_pat
     return 0;
 }
 
+<<<<<<< Updated upstream
 /**
  * @brief Busca un proceso por PID en la lista global
  * @param pid ID del proceso a buscar
@@ -281,6 +314,11 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char *script_pat
 process_info *process_manager_find_process(uint32_t pid)
 {
     process_info *found_proc = NULL;
+=======
+
+process_info* process_manager_find_process(uint32_t pid) {
+    process_info* found_proc = NULL;
+>>>>>>> Stashed changes
     lock_process_list();
     for (int i = 0; i < list_size(global_process_list); i++)
     {
@@ -295,6 +333,7 @@ process_info *process_manager_find_process(uint32_t pid)
     return found_proc;
 }
 
+<<<<<<< Updated upstream
 /**
  * @brief Actualiza la tabla de páginas de un proceso con nuevos frames
  * @param proc Proceso a actualizar
@@ -305,6 +344,11 @@ bool update_process_page_table(process_info *proc, t_list *new_frames)
 {
     if (proc == NULL || new_frames == NULL)
     {
+=======
+
+bool update_process_page_table(process_info* proc, t_list* new_frames) {
+    if (proc == NULL || new_frames == NULL) {
+>>>>>>> Stashed changes
         LOG_ERROR("Error: Proceso o lista de frames es NULL en update_process_page_table.");
         return false;
     }
@@ -334,6 +378,7 @@ bool update_process_page_table(process_info *proc, t_list *new_frames)
     return true;
 }
 
+<<<<<<< Updated upstream
 /**
  * @brief Elimina un proceso y libera todos sus recursos
  * @param pid ID del proceso a eliminar
@@ -341,6 +386,10 @@ bool update_process_page_table(process_info *proc, t_list *new_frames)
  */
 int process_manager_delete_process(uint32_t pid)
 {
+=======
+
+int process_manager_delete_process(uint32_t pid) {
+>>>>>>> Stashed changes
     int result = -1;
     lock_process_list();
     int found_index = -1;
@@ -368,6 +417,7 @@ int process_manager_delete_process(uint32_t pid)
     return result;
 }
 
+<<<<<<< Updated upstream
 /**
  * @brief Verifica si un proceso existe en la lista global
  * @param pid ID del proceso a verificar
@@ -375,6 +425,10 @@ int process_manager_delete_process(uint32_t pid)
  */
 bool process_manager_process_exists(uint32_t pid)
 {
+=======
+
+bool process_manager_process_exists(uint32_t pid) {
+>>>>>>> Stashed changes
     bool exists = false;
     lock_process_list();
     for (int i = 0; i < list_size(global_process_list); i++)
