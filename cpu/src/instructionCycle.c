@@ -24,6 +24,7 @@ t_instruction *decode(t_package *package)
     t_instruction *instruction = safe_calloc(1, sizeof(t_instruction));
 
     char *instruction_string = read_instruction_package(package);
+    LOG_DEBUG("decode: received instruction string: '%s'", instruction_string ? instruction_string : "NULL");
 
     parse_instruction(instruction_string, instruction);
 
@@ -34,11 +35,18 @@ t_instruction *decode(t_package *package)
 
 void parse_instruction(char *instruction_string, t_instruction *instruction)
 {
+    LOG_DEBUG("parse_instruction: parsing instruction string: '%s'", instruction_string ? instruction_string : "NULL");
+    
+    if (instruction_string == NULL || strlen(instruction_string) == 0) {
+        LOG_ERROR("Invalid instruction format: instruction_string is NULL or empty");
+        return;
+    }
+    
     char *already_parsed;
     char *instruction_code = strtok_r(instruction_string, " ", &already_parsed); // con el instruction_code no hace falta
     if (instruction_code == NULL)
     {
-        LOG_ERROR("Invalid instruction format");
+        LOG_ERROR("Invalid instruction format: no instruction code found in string '%s'", instruction_string);
         return;
     }
 
@@ -107,8 +115,8 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
                 cache_entry->page = page_number;
                 cache_entry->use_bit = true;
             }
-            // Write to cache
-            memcpy(cache_entry->content, valor_write, instruction->operand_string_size);
+            // Write to cache at correct offset
+            memcpy((char*)cache_entry->content + offset, valor_write, instruction->operand_string_size);
             cache_entry->modified_bit = true;
             (*PC)++;
             break;
@@ -122,6 +130,10 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
                 LOG_OBLIGATORIO("PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %s", *pid, physic_dir_write, valor_write);
                 send_memory_write_request(socket_memory, write_req);
                 destroy_memory_write_request(write_req);
+                t_package *package = recv_package(socket_memory);
+                read_confirmation_package(package);
+                destroy_package(package);
+                
                 (*PC)++;
                 break;
             }
@@ -133,6 +145,10 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
                 LOG_OBLIGATORIO("PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %s", *pid, physic_dir_write, valor_write);
                 send_memory_write_request(socket_memory, write_req);
                 destroy_memory_write_request(write_req);
+                t_package *package = recv_package(socket_memory);
+                read_confirmation_package(package);
+                destroy_package(package);
+                
                 (*PC)++;
                 break;
             }
@@ -155,8 +171,13 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
                 cache_entry = select_victim_entry(socket_memory, logic_dir_read, *pid);
                 cache_entry = cache_load_page(logic_dir_read, socket_memory, cache_entry, *pid);
             }
-            // Read from cache
-            LOG_INFO("Data read from cache: %p", cache_entry->content);
+            // Read from cache at correct offset
+            char* data_at_offset = (char*)cache_entry->content + offset;
+            char* read_data = malloc(size + 1);
+            memcpy(read_data, data_at_offset, size);
+            read_data[size] = '\0';
+            LOG_OBLIGATORIO("PID: %u - Acción: LEER CACHE - Dirección Virtual: %u - Valor: %s", *pid, logic_dir_read, read_data);
+            free(read_data);
             (*PC)++;
             break;
         }
@@ -322,7 +343,7 @@ void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_
     if (package->opcode == INTERRUPT)
     {
         LOG_OBLIGATORIO("## Llega interrupción al puerto Interrupt");
-        int pid_received = read_interrupt_package(package);
+        uint32_t pid_received = read_interrupt_package(package);
 
         if (pid_received == *pid_on_execute)
         {

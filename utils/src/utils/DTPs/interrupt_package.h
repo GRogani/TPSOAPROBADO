@@ -9,7 +9,7 @@ t_package* create_interrupt_package (uint32_t pid);
 
 int send_interrupt_package (int socket, uint32_t pid);
 
-int read_interrupt_package(t_package *package);
+uint32_t read_interrupt_package(t_package *package);
 
 
 #endif

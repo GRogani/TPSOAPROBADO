@@ -3,7 +3,7 @@
 t_package *create_confirmation_package(uint32_t success)
 {
     t_buffer *buffer = buffer_create(sizeof(uint32_t) * 1);
-    buffer_add_uint32(buffer, (uint32_t)success);
+    buffer_add_uint32(buffer, success); // 0 = success, 1 = failure
     return create_package(CONFIRMATION, buffer);
 }
 

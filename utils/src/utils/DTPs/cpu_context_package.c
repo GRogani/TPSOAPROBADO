@@ -23,7 +23,7 @@ cpu_context_package_data read_cpu_context_package(t_package *package)
     package->buffer->offset = 0;
     cpu_context.pid = buffer_read_uint32(package->buffer);
     cpu_context.pc = buffer_read_uint32(package->buffer);
-    cpu_context.interrupted_same_pid = buffer_read_uint32(package->buffer);
+    cpu_context.interrupted_same_pid = (int32_t)buffer_read_uint32(package->buffer);
 
     return cpu_context;
 }

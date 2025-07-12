@@ -27,15 +27,15 @@ page_entry_request_data read_page_entry_request_package(t_package* package)
     return data;
 }
 
-t_package* create_page_entry_response_package(uint32_t value, uint32_t is_last_level)
+t_package* create_page_entry_response_package(uint32_t value, bool is_last_level)
 {
     t_buffer* buffer = buffer_create(sizeof(uint32_t) * 2);
     buffer_add_uint32(buffer, value);
-    buffer_add_uint32(buffer, is_last_level);
+    buffer_add_uint32(buffer, is_last_level ? 1 : 0);
     return create_package(GET_PAGE_ENTRY, buffer);
 }
 
-void send_page_entry_response_package(int socket, uint32_t value, uint32_t is_last_level)
+void send_page_entry_response_package(int socket, uint32_t value, bool is_last_level)
 {
     t_package* package = create_page_entry_response_package(value, is_last_level);
     send_package(socket, package);
@@ -47,7 +47,7 @@ page_entry_response_data read_page_entry_response_package(t_package* package)
     page_entry_response_data data;
     package->buffer->offset = 0;
     data.value = buffer_read_uint32(package->buffer);
-    data.is_last_level = buffer_read_uint32(package->buffer) == 0;
+    data.is_last_level = buffer_read_uint32(package->buffer) == 1;
     
     return data;
 }

@@ -31,6 +31,7 @@ void add_page_table_entry(t_page_table* page_table, int index, t_page_table_entr
     }
     list_add_in_index(page_table->entries, index, entry);
     page_table->num_entries = list_size(page_table->entries);
+    LOG_DEBUG("add_page_table_entry: added entry at index %d, total entries: %zu", index, page_table->num_entries);
 }
 
 t_page_table_entry* get_page_table_entry(t_page_table* page_table, int index) {
@@ -43,15 +44,20 @@ t_page_table_entry* get_page_table_entry(t_page_table* page_table, int index) {
         return NULL;
     }
     
-    int list_size_val = list_size(page_table->entries);
-    LOG_INFO("get_page_table_entry: index=%d, list_size=%d", index, list_size_val);
-    
-    if (index < 0 || index >= list_size_val) {
-        LOG_ERROR("get_page_table_entry: index %d out of bounds [0, %d)", index, list_size_val);
+    // Use num_entries for consistency
+    if (index < 0 || index >= page_table->num_entries) {
+        LOG_ERROR("get_page_table_entry: index %d out of bounds [0, %zu)", index, page_table->num_entries);
         return NULL;
     }
     
-    // Verificar que la lista no esté corrupta
+    // Verify list integrity
+    int list_size_val = list_size(page_table->entries);
+    if (list_size_val != page_table->num_entries) {
+        LOG_ERROR("get_page_table_entry: inconsistency between num_entries (%zu) and list_size (%d)", 
+                  page_table->num_entries, list_size_val);
+        return NULL;
+    }
+    
     if (page_table->entries->head == NULL && list_size_val > 0) {
         LOG_ERROR("get_page_table_entry: list has size %d but head is NULL", list_size_val);
         return NULL;

@@ -15,9 +15,9 @@ int send_interrupt_package (int socket, uint32_t pid)
     return bytes_sent;
 }
 
-int read_interrupt_package (t_package *package)
+uint32_t read_interrupt_package (t_package *package)
 {
     package->buffer->offset = 0;
-    int pid = buffer_read_uint32(package->buffer);
+    uint32_t pid = buffer_read_uint32(package->buffer);
     return pid;
 }

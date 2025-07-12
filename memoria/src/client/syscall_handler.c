@@ -65,9 +65,14 @@ static t_page_table_entry* get_pte_at_level(t_page_table* current_table, uint32_
     uint32_t offset_bits_per_level = (uint32_t)log2(memoria_config.ENTRADAS_POR_TABLA);
     uint32_t page_offset_bits = (uint32_t)log2(memoria_config.TAM_PAGINA);
 
-    uint32_t remaining_bits_for_vpn = (sizeof(uint32_t) * 8) - page_offset_bits;
-    uint32_t vpn_prefix_length = remaining_bits_for_vpn - (total_levels - current_level) * offset_bits_per_level;
-    uint32_t current_level_index = (virtual_address >> vpn_prefix_length) & ((1 << offset_bits_per_level) - 1);
+    // Calculate the index for this level
+    // For a 2-level table with 4 entries each:
+    // Level 1: bits [30:31] (assuming 32-bit addresses, 6-bit page offset)
+    // Level 2: bits [28:29]
+    uint32_t bits_per_level = offset_bits_per_level;
+    uint32_t shift_amount = page_offset_bits + (total_levels - current_level) * bits_per_level;
+    uint32_t mask = (1 << bits_per_level) - 1;
+    uint32_t current_level_index = (virtual_address >> shift_amount) & mask;
 
     if (metrics) {
         lock_process_metrics();
@@ -76,6 +81,9 @@ static t_page_table_entry* get_pte_at_level(t_page_table* current_table, uint32_
     }
     usleep(memoria_config.RETARDO_MEMORIA * 1000);
 
+    LOG_DEBUG("get_pte_at_level: level=%d, virtual_addr=0x%x, index=%u, table_entries=%zu", 
+              current_level, virtual_address, current_level_index, current_table->num_entries);
+    
     t_page_table_entry* entry = get_page_table_entry(current_table, current_level_index);
     if (entry == NULL) {
         LOG_ERROR("Error: Entrada de tabla de paginas no encontrada en nivel %d, indice %u.", current_level, current_level_index);
@@ -256,7 +264,7 @@ void delete_process_request_handler(int socket, t_package *package) {
         send_confirmation_package(socket, 0);
     } else {
         LOG_ERROR("## PID: %u - Intento de finalizar proceso no existente.", pid_to_delete);
-        send_confirmation_package(socket, -1);
+        send_confirmation_package(socket, 1);
     }
 }
 
@@ -274,6 +282,7 @@ void get_free_space_request_handler(int socket) {
 }
 
 void write_memory_request_handler(int socket, t_package* package) {
+    
     package->buffer->offset = 0;
     
     uint32_t physical_address = buffer_read_uint32(package->buffer);
@@ -289,7 +298,7 @@ void write_memory_request_handler(int socket, t_package* package) {
         send_confirmation_package(socket, 0);
     } else {
         LOG_ERROR("WRITE_MEMORY: Error al escribir en dirección %u", physical_address);
-        send_confirmation_package(socket, -1);
+        send_confirmation_package(socket, 1);
     }
     
     free(data);
@@ -306,7 +315,7 @@ void read_memory_request_handler(int socket, t_package* package) {
     char* buffer = malloc(size);
     if (buffer == NULL) {
         LOG_ERROR("READ_MEMORY: Error al asignar memoria para buffer de lectura");
-        send_confirmation_package(socket, -1);
+        send_confirmation_package(socket, 1);
         return;
     }
     
@@ -322,7 +331,7 @@ void read_memory_request_handler(int socket, t_package* package) {
         destroy_package(response_package);
     } else {
         LOG_ERROR("READ_MEMORY: Error al leer desde dirección %u", physical_address);
-        send_confirmation_package(socket, -1);
+        send_confirmation_package(socket, 1);
     }
     
     free(buffer);
@@ -335,7 +344,7 @@ void dump_memory_request_handler(int socket, t_package* package) {
     process_info* proc = process_manager_find_process(pid);
     if (proc == NULL) {
         LOG_ERROR("DUMP_MEMORY: Proceso PID %u no encontrado", pid);
-        send_confirmation_package(socket, -1);
+        send_confirmation_package(socket, 1);
         return;
     }
     
@@ -347,7 +356,7 @@ void dump_memory_request_handler(int socket, t_package* package) {
     if (!process_still_exists) {
         LOG_ERROR("DUMP_MEMORY: Proceso PID %u fue eliminado durante el dump", pid);
         unlock_process_list();
-        send_confirmation_package(socket, -1);
+        send_confirmation_package(socket, 1);
         return;
     }
     
@@ -379,7 +388,7 @@ void dump_memory_request_handler(int socket, t_package* package) {
     FILE* dump_file = fopen(dump_filename, "wb");
     if (dump_file == NULL) {
         LOG_ERROR("DUMP_MEMORY: No se pudo crear archivo de dump para PID %u en %s", pid, dump_filename);
-        send_confirmation_package(socket, -1);
+        send_confirmation_package(socket, 1);
         return;
     }
     
@@ -424,7 +433,7 @@ void dump_memory_request_handler(int socket, t_package* package) {
     } else {
         LOG_ERROR("DUMP_MEMORY: Error durante dump para PID %u", pid);
         unlink(dump_filename);
-        send_confirmation_package(socket, -1);
+        send_confirmation_package(socket, 1);
     }
 }
 
@@ -433,7 +442,7 @@ void unsuspend_process_request_handler(int client_fd, t_package* package) {
     process_info* proc = process_manager_find_process(pid);
     if (proc == NULL) {
         LOG_ERROR("UNSUSPEND_PROCESS: Proceso PID %u no encontrado.", pid);
-        send_confirmation_package(client_fd, -1);
+        send_confirmation_package(client_fd, 1);
         return;
     }
     
@@ -445,7 +454,7 @@ void unsuspend_process_request_handler(int client_fd, t_package* package) {
     
     if (proc->swap_pages_info == NULL) {
         LOG_ERROR("UNSUSPEND_PROCESS: Proceso PID %u no tiene información de swap.", pid);
-        send_confirmation_package(client_fd, -1);
+        send_confirmation_package(client_fd, 1);
         return;
     }
     
@@ -455,14 +464,14 @@ void unsuspend_process_request_handler(int client_fd, t_package* package) {
     if (frame_get_free_count() < pages_needed) {
         LOG_ERROR("UNSUSPEND_PROCESS: No hay suficientes frames libres para PID %u (necesita %u, hay %u)", 
                   pid, pages_needed, frame_get_free_count());
-        send_confirmation_package(client_fd, -1);
+        send_confirmation_package(client_fd, 1);
         return;
     }
     
     t_list* new_frames = frame_allocate_frames(pages_needed);
     if (new_frames == NULL || list_size(new_frames) != pages_needed) {
         LOG_ERROR("UNSUSPEND_PROCESS: Error asignando frames para PID %u", pid);
-        send_confirmation_package(client_fd, -1);
+        send_confirmation_package(client_fd, 1);
         return;
     }
     
@@ -472,7 +481,7 @@ void unsuspend_process_request_handler(int client_fd, t_package* package) {
         LOG_ERROR("UNSUSPEND_PROCESS: Error asignando memoria temporal para PID %u", pid);
         frame_free_frames(new_frames);
         list_destroy(new_frames);
-        send_confirmation_package(client_fd, -1);
+        send_confirmation_package(client_fd, 1);
         return;
     }
     
@@ -503,7 +512,7 @@ void unsuspend_process_request_handler(int client_fd, t_package* package) {
                 frame_free_frames(new_frames);
                 list_destroy(new_frames);
                 free(process_memory);
-                send_confirmation_package(client_fd, -1);
+                send_confirmation_package(client_fd, 1);
                 return;
             }
             
@@ -525,13 +534,13 @@ void unsuspend_process_request_handler(int client_fd, t_package* package) {
             frame_free_frames(new_frames);
             list_destroy(new_frames);
             LOG_ERROR("UNSUSPEND_PROCESS: Error escribiendo páginas a memoria para PID %u", pid);
-            send_confirmation_package(client_fd, -1);
+            send_confirmation_package(client_fd, 1);
         }
     } else {
         frame_free_frames(new_frames);
         list_destroy(new_frames);
         LOG_ERROR("UNSUSPEND_PROCESS: Error leyendo páginas desde swap para PID %u", pid);
-        send_confirmation_package(client_fd, -1);
+        send_confirmation_package(client_fd, 1);
     }
     
     free(process_memory);
@@ -544,7 +553,7 @@ void swap_request_handler(int client_fd, t_package* package) {
     process_info* proc = process_manager_find_process(pid);
     if (proc == NULL) {
         LOG_ERROR("SWAP: Proceso PID %u no encontrado", pid);
-        send_confirmation_package(client_fd, -1);
+        send_confirmation_package(client_fd, 1);
         return;
     }
     
@@ -560,7 +569,7 @@ void swap_request_handler(int client_fd, t_package* package) {
     t_list* swap_pages_info = swap_allocate_pages(pid, total_pages);
     if (swap_pages_info == NULL) {
         LOG_ERROR("SWAP: No se pudo asignar espacio en swapfile.bin para PID %u", pid);
-        send_confirmation_package(client_fd, -1);
+        send_confirmation_package(client_fd, 1);
         return;
     }
     
@@ -570,7 +579,7 @@ void swap_request_handler(int client_fd, t_package* package) {
         LOG_ERROR("SWAP: Error asignando memoria temporal para PID %u", pid);
         list_destroy_and_destroy_elements(swap_pages_info, free);
         list_destroy(swap_pages_info);
-        send_confirmation_package(client_fd, -1);
+        send_confirmation_package(client_fd, 1);
         return;
     }
     
@@ -612,12 +621,12 @@ void swap_request_handler(int client_fd, t_package* package) {
         } else {
             LOG_ERROR("SWAP: Error escribiendo páginas al archivo de swap para PID %u", pid);
             swap_free_pages(pid);
-            send_confirmation_package(client_fd, -1);
+            send_confirmation_package(client_fd, 1);
         }
     } else {
         LOG_ERROR("SWAP: Error leyendo memoria del proceso PID %u", pid);
         swap_free_pages(pid);
-        send_confirmation_package(client_fd, -1);
+        send_confirmation_package(client_fd, 1);
     }
     
     free(process_memory);
@@ -636,7 +645,7 @@ void get_page_entry_request_handler(int socket, t_package* package) {
     process_info* proc = process_manager_find_process(pid);
     if (proc == NULL) {
         LOG_ERROR("GET_PAGE_ENTRY: PID %u no encontrado", pid);
-        send_page_entry_response_package(socket, 0xFFFFFFFF, false);
+        send_page_entry_response_package(socket, 0xFFFFFFFF, true);
         return;
     }
     
@@ -652,7 +661,7 @@ void get_page_entry_request_handler(int socket, t_package* package) {
     if (current_table == NULL) {
         LOG_ERROR("GET_PAGE_ENTRY: Tabla no encontrada para PID %u, Level %u", pid, table_level);
         unlock_page_table();
-        send_page_entry_response_package(socket, 0xFFFFFFFF, 1);
+        send_page_entry_response_package(socket, 0xFFFFFFFF, true);
         return;
     }
 
@@ -660,7 +669,7 @@ void get_page_entry_request_handler(int socket, t_package* package) {
     if (entry == NULL) {
         LOG_ERROR("GET_PAGE_ENTRY: Entrada no encontrada en índice %u para PID %u", entry_index, pid);
         unlock_page_table();
-        send_page_entry_response_package(socket, 0xFFFFFFFF, 1);
+        send_page_entry_response_package(socket, 0xFFFFFFFF, true);
         return;
     }
 
@@ -678,5 +687,5 @@ void get_page_entry_request_handler(int socket, t_package* package) {
     
     unlock_page_table();
 
-    send_page_entry_response_package(socket, return_value, is_last_level == true ? 0 : 1);
+    send_page_entry_response_package(socket, return_value, is_last_level);
 }

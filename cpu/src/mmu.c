@@ -84,6 +84,23 @@ void mmu_request_page_write_to_memory(int memory_socket, uint32_t physic_addr, v
   uint32_t content_size = g_mmu_config->page_size;
   t_memory_write_request *request = create_memory_write_request(physic_addr, content_size, content);
   send_memory_write_request(memory_socket, request);
+  
+  // Wait for confirmation
+  t_package* response = recv_package(memory_socket);
+  if (response != NULL) {
+    if (response->opcode == CONFIRMATION) {
+      bool success = read_confirmation_package(response);
+      if (!success) {
+        LOG_ERROR("[MEM-REQUEST] Write to physical address %u failed", physic_addr);
+      }
+    } else {
+      LOG_ERROR("[MEM-REQUEST] Unexpected response opcode: %d", response->opcode);
+    }
+    destroy_package(response);
+  } else {
+    LOG_ERROR("[MEM-REQUEST] No response received for write to physical address %u", physic_addr);
+  }
+  
   destroy_memory_write_request(request);
 }
 
@@ -253,8 +270,26 @@ void mmu_process_cleanup(int memory_socket)
       CacheEntry *entry = (CacheEntry *)element;
       if (entry->is_valid && entry->modified_bit)
       {
-
-        mmu_request_page_write_to_memory(memory_socket, entry->page, entry->content);
+        // Calculate physical address for the dirty page
+        uint32_t page_number = entry->page;
+        uint32_t physic_addr;
+        
+        if (g_tlb_config->entry_count > 0) {
+          // Use TLB to get frame number
+          TLBEntry* tlb_entry = tlb_find_entry(page_number);
+          if (tlb_entry) {
+            physic_addr = tlb_entry->frame * g_mmu_config->page_size;
+          } else {
+            // TLB miss, do page walk (use PID 0 as default for cleanup)
+            uint32_t frame_number = mmu_perform_page_walk(memory_socket, page_number, 0);
+            physic_addr = frame_number * g_mmu_config->page_size;
+          }
+        } else {
+          // No TLB, do page walk directly (use PID 0 as default for cleanup)
+          uint32_t frame_number = mmu_perform_page_walk(memory_socket, page_number, 0);
+          physic_addr = frame_number * g_mmu_config->page_size;
+        }
+        mmu_request_page_write_to_memory(memory_socket, physic_addr, entry->content);
       }
       entry->is_valid = false; // Invalidate all entries
     }
@@ -332,6 +367,7 @@ int cache_find_victim_clock()
 
 int cache_find_victim_clock_m()
 {
+  // First pass: look for (use=0, modified=0) - best victim
   for (int i = 0; i < g_cache_config->entry_count * 2; i++)
   {
     CacheEntry *entry = list_get(g_cache, g_cache_clock_pointer);
@@ -345,6 +381,8 @@ int cache_find_victim_clock_m()
     }
     g_cache_clock_pointer = (g_cache_clock_pointer + 1) % g_cache_config->entry_count;
   }
+  
+  // Second pass: look for (use=0, modified=1) - need writeback
   for (int i = 0; i < g_cache_config->entry_count * 2; i++)
   {
     CacheEntry *entry = list_get(g_cache, g_cache_clock_pointer);
@@ -354,9 +392,11 @@ int cache_find_victim_clock_m()
       g_cache_clock_pointer = (g_cache_clock_pointer + 1) % g_cache_config->entry_count;
       return victim_index;
     }
-    entry->use_bit = false;
+    entry->use_bit = false; // Give second chance
     g_cache_clock_pointer = (g_cache_clock_pointer + 1) % g_cache_config->entry_count;
   }
+  
+  // If we get here, fall back to regular CLOCK algorithm
   return cache_find_victim_clock();
 }
 
@@ -375,23 +415,32 @@ CacheEntry* select_victim_entry(int memory_socket, uint32_t logic_dir, uint32_t 
 
   CacheEntry *victim_entry = list_get(g_cache, victim_index);
 
-  uint32_t physic_addr = 0; 
+ 
   
   if (victim_entry->is_valid && victim_entry->modified_bit)
   {
     LOG_INFO("[Cache] Victim (page %u) is dirty. Writing back to memory.", victim_entry->page);
+    // Calculate physical address for the victim page
+    uint32_t victim_page_number = victim_entry->page;
+    uint32_t physic_addr;
+    
     if (g_tlb_config->entry_count > 0){
-      physic_addr = mmu_translate_address(memory_socket, logic_dir, pid);
-      uint32_t frame_number = (physic_addr) / g_mmu_config->page_size;
-      LOG_OBLIGATORIO("PID: %u - Memory Update - Página: %u - Frame: %u", pid, victim_entry->page, frame_number);
+      // Use TLB to get frame number for victim page
+      TLBEntry* tlb_entry = tlb_find_entry(victim_page_number);
+      if (tlb_entry) {
+        physic_addr = tlb_entry->frame * g_mmu_config->page_size;
+      } else {
+        // TLB miss for victim page, do page walk
+        uint32_t frame_number = mmu_perform_page_walk(memory_socket, victim_page_number, pid);
+        physic_addr = frame_number * g_mmu_config->page_size;
+      }
+    } else {
+      // No TLB, do page walk directly
+      uint32_t frame_number = mmu_perform_page_walk(memory_socket, victim_page_number, pid);
+      physic_addr = frame_number * g_mmu_config->page_size;
     }
-    else{
-      uint32_t page_number = floor(logic_dir / g_mmu_config->page_size);
-      uint32_t offset = logic_dir % g_mmu_config->page_size;
-      uint32_t frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
-      physic_addr = (frame_number * g_mmu_config->page_size) + offset;
-      LOG_OBLIGATORIO("PID: %u - Memory Update - Página: %u - Frame: %u", pid, victim_entry->page, frame_number);
-    }
+    uint32_t frame_number = physic_addr / g_mmu_config->page_size;
+    LOG_OBLIGATORIO("PID: %u - Memory Update - Página: %u - Frame: %u", pid, victim_entry->page, frame_number);
     mmu_request_page_write_to_memory(memory_socket, physic_addr, victim_entry->content);
   }
   return victim_entry;
@@ -401,21 +450,24 @@ CacheEntry* cache_load_page(uint32_t logic_dir, int memory_socket, CacheEntry *v
 {
 
   LOG_DEBUG("[Cache] Replacing victim entry (frame %u) with new page.", victim_entry->page);
-  uint32_t frame_number;
-  uint32_t page_number = floor(logic_dir / g_mmu_config->page_size);
-  uint32_t offset = logic_dir % g_mmu_config->page_size;
-  uint32_t physic_dir = 0;
+  uint32_t page_number = logic_dir / g_mmu_config->page_size;
+  uint32_t physic_dir;
+  
+  // Use MMU translation to get physical address
   if (g_tlb_config->entry_count > 0)
   {
-    physic_dir = mmu_translate_address(memory_socket, logic_dir,pid);
-    frame_number = (physic_dir - offset) / g_mmu_config->page_size;
+    // Use TLB translation
+    physic_dir = mmu_translate_address(memory_socket, logic_dir, pid);
+    // Convert to page-aligned address
+    physic_dir = (physic_dir / g_mmu_config->page_size) * g_mmu_config->page_size;
   }
   else
   {
-    frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
-    physic_dir = (frame_number * g_mmu_config->page_size) + offset;
+    // No TLB, do page walk directly
+    uint32_t frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
+    physic_dir = frame_number * g_mmu_config->page_size;
   }
-
+  
   mmu_request_page_read_from_memory(memory_socket, physic_dir, victim_entry->content);
 
   victim_entry->is_valid = true;
