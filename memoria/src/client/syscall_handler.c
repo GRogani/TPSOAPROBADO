@@ -45,11 +45,12 @@ static t_page_table_entry* get_pte_at_level(t_page_table* current_table, uint32_
             LOG_ERROR("Error: Entrada de nivel %d marca como ultimo nivel pero se esperaban mas niveles.", current_level);
             return NULL;
         }
-        t_page_table next_level_table_mock;
-        next_level_table_mock.entries = entry->next_level;
-        next_level_table_mock.num_entries = list_size(entry->next_level);
-
-        return get_pte_at_level(&next_level_table_mock, virtual_address, current_level + 1, total_levels, metrics);
+        if (entry->next_table != NULL) {
+            return get_pte_at_level(entry->next_table, virtual_address, current_level + 1, total_levels, metrics);
+        } else {
+            LOG_ERROR("Error: Entrada de nivel %d no tiene tabla siguiente.", current_level);
+            return NULL;
+        }
     } else {
         if (!entry->is_last_level) {
             LOG_ERROR("Error: Entrada de ultimo nivel %d no marca como ultimo nivel.", current_level);
@@ -604,14 +605,21 @@ void get_page_entry_request_handler(int socket, t_package* package) {
     lock_page_table();
     
     t_page_table* current_table = NULL;
-    t_page_table table_mock;
 
     if (table_ptr == 0) {
         current_table = proc->page_table;
     } else {
-        table_mock.entries = (t_list*)(uintptr_t)table_ptr;
-        table_mock.num_entries = list_size(table_mock.entries);
-        current_table = &table_mock;
+        // For now, we'll use a simple approach: table_ptr represents the entry index in the root table
+        // This is a temporary solution - we should implement proper table traversal
+        if (proc->page_table != NULL && proc->page_table->entries != NULL) {
+            int root_index = (int)table_ptr;
+            if (root_index >= 0 && root_index < list_size(proc->page_table->entries)) {
+                t_page_table_entry* root_entry = list_get(proc->page_table->entries, root_index);
+                if (root_entry != NULL && !root_entry->is_last_level && root_entry->next_table != NULL) {
+                    current_table = root_entry->next_table;
+                }
+            }
+        }
     }
     
     if (current_table == NULL) {
@@ -636,7 +644,9 @@ void get_page_entry_request_handler(int socket, t_package* package) {
         return_value = entry->frame_number;
         LOG_INFO("GET_PAGE_ENTRY: Devolviendo frame_number %u para PID %u", return_value, pid);
     } else {
-        return_value = (uint32_t)(uintptr_t)(entry->next_level);
+        // For now, we'll return the index of this entry in the parent table
+        // This is a temporary solution - we should implement proper table traversal
+        return_value = entry_index; // Return the current entry index as the "table pointer"
         LOG_INFO("GET_PAGE_ENTRY: Devolviendo table_ptr %u para PID %u", return_value, pid);
     }
     

@@ -7,13 +7,13 @@
 #include "enums/Eopcodes.h"
 
 typedef struct fetch_package_data {
-    uint32_t pid;
-    uint32_t pc;
+    int32_t pid;
+    int32_t pc;
 } fetch_package_data;
 
-t_package* create_fetch_package(uint32_t pid, uint32_t pc);
+t_package* create_fetch_package(int32_t pid, int32_t pc);
 
-void send_fetch_package(int socket, uint32_t pid, uint32_t pc);
+void send_fetch_package(int32_t socket, int32_t pid, int32_t pc);
 
 fetch_package_data read_fetch_package(t_package* package);
 
