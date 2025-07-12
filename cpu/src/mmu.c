@@ -201,7 +201,7 @@ uint32_t mmu_perform_page_walk(int memory_socket, uint32_t page_number, uint32_t
 uint32_t mmu_translate_address(int memory_socket, uint32_t logical_address, uint32_t pid)
 {
 
-  uint32_t page_number = logical_address / g_mmu_config->page_size; // floor() is implicit with integer division
+  uint32_t page_number = floor(logical_address / g_mmu_config->page_size);
   uint32_t offset = logical_address % g_mmu_config->page_size;
 
   LOG_INFO("--- Translating Logical Address %u ---", logical_address);
