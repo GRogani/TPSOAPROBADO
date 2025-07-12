@@ -11,6 +11,48 @@
 extern t_memoria_config memoria_config;
 
 /**
+ * @brief Obtiene la tabla de páginas en un nivel específico de la jerarquía
+ * @param root_table Tabla raíz del proceso
+ * @param target_level Nivel objetivo a obtener
+ * @param total_levels Total de niveles en la jerarquía
+ * @return Puntero a la tabla en el nivel especificado, o NULL si no se encuentra
+ */
+static t_page_table* get_table_at_level(t_page_table* root_table, uint32_t target_level, int total_levels) {
+    if (root_table == NULL || target_level < 1 || target_level > total_levels) {
+        return NULL;
+    }
+    
+    // Si queremos el nivel 1 (raíz), lo devolvemos directamente
+    if (target_level == 1) {
+        return root_table;
+    }
+    
+    // Para niveles más profundos, necesitamos navegar por la jerarquía
+    t_page_table* current_table = root_table;
+    
+    for (uint32_t level = 1; level < target_level; level++) {
+        // Buscar la primera entrada no-nula en el nivel actual
+        bool found_next_level = false;
+        
+        for (int i = 0; i < current_table->num_entries; i++) {
+            t_page_table_entry* entry = get_page_table_entry(current_table, i);
+            if (entry != NULL && !entry->is_last_level && entry->next_table != NULL) {
+                current_table = entry->next_table;
+                found_next_level = true;
+                break;
+            }
+        }
+        
+        if (!found_next_level) {
+            LOG_ERROR("get_table_at_level: No se pudo encontrar tabla en nivel %u", level + 1);
+            return NULL;
+        }
+    }
+    
+    return current_table;
+}
+
+/**
  * @brief Navega por un nivel específico de la tabla de páginas
  * @param current_table Tabla de páginas actual
  * @param virtual_address Dirección virtual a traducir
@@ -586,10 +628,10 @@ void get_page_entry_request_handler(int socket, t_package* package) {
     
     page_entry_request_data request = read_page_entry_request_package(package);
     uint32_t pid = request.pid;
-    uint32_t table_ptr = request.table_ptr;
+    uint32_t table_level = request.table_level;
     uint32_t entry_index = request.entry_index;
     
-    LOG_INFO("GET_PAGE_ENTRY: PID: %u, Table PTR: %u, Entry Index: %u", pid, table_ptr, entry_index);
+    LOG_INFO("GET_PAGE_ENTRY: PID: %u, Table Level: %u, Entry Index: %u", pid, table_level, entry_index);
     
     process_info* proc = process_manager_find_process(pid);
     if (proc == NULL) {
@@ -604,26 +646,11 @@ void get_page_entry_request_handler(int socket, t_package* package) {
     
     lock_page_table();
     
-    t_page_table* current_table = NULL;
-
-    if (table_ptr == 0) {
-        current_table = proc->page_table;
-    } else {
-        // For now, we'll use a simple approach: table_ptr represents the entry index in the root table
-        // This is a temporary solution - we should implement proper table traversal
-        if (proc->page_table != NULL && proc->page_table->entries != NULL) {
-            int root_index = (int)table_ptr;
-            if (root_index >= 0 && root_index < list_size(proc->page_table->entries)) {
-                t_page_table_entry* root_entry = list_get(proc->page_table->entries, root_index);
-                if (root_entry != NULL && !root_entry->is_last_level && root_entry->next_table != NULL) {
-                    current_table = root_entry->next_table;
-                }
-            }
-        }
-    }
+    // Get the table at the specified level
+    t_page_table* current_table = get_table_at_level(proc->page_table, table_level, memoria_config.CANTIDAD_NIVELES);
     
     if (current_table == NULL) {
-        LOG_ERROR("GET_PAGE_ENTRY: Tabla no encontrada para PID %u, Table PTR %u", pid, table_ptr);
+        LOG_ERROR("GET_PAGE_ENTRY: Tabla no encontrada para PID %u, Level %u", pid, table_level);
         unlock_page_table();
         send_page_entry_response_package(socket, 0xFFFFFFFF, 1);
         return;
@@ -644,10 +671,9 @@ void get_page_entry_request_handler(int socket, t_package* package) {
         return_value = entry->frame_number;
         LOG_INFO("GET_PAGE_ENTRY: Devolviendo frame_number %u para PID %u", return_value, pid);
     } else {
-        // For now, we'll return the index of this entry in the parent table
-        // This is a temporary solution - we should implement proper table traversal
-        return_value = entry_index; // Return the current entry index as the "table pointer"
-        LOG_INFO("GET_PAGE_ENTRY: Devolviendo table_ptr %u para PID %u", return_value, pid);
+        // Return the next level number for table traversal
+        return_value = table_level + 1;
+        LOG_INFO("GET_PAGE_ENTRY: Devolviendo next_level %u para PID %u", return_value, pid);
     }
     
     unlock_page_table();

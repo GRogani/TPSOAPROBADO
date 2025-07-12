@@ -8,7 +8,7 @@
 
 typedef struct page_entry_request_data {
     uint32_t pid;
-    uint32_t table_ptr;
+    uint32_t table_level;  // Level in the page table hierarchy (1 = root, 2 = second level, etc.)
     uint32_t entry_index;
 } page_entry_request_data;
 
@@ -17,9 +17,9 @@ typedef struct page_entry_response_data {
     bool is_last_level;
 } page_entry_response_data;
 
-t_package* create_page_entry_request_package(uint32_t pid, uint32_t table_ptr, uint32_t entry_index);
+t_package* create_page_entry_request_package(uint32_t pid, uint32_t table_level, uint32_t entry_index);
 
-void send_page_entry_request_package(int socket, uint32_t pid, uint32_t table_ptr, uint32_t entry_index);
+void send_page_entry_request_package(int socket, uint32_t pid, uint32_t table_level, uint32_t entry_index);
 
 page_entry_request_data read_page_entry_request_package(t_package* package);
 
