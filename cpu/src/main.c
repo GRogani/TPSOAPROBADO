@@ -3,12 +3,18 @@
 int main(int argc, char *argv[])
 {
     init_list_and_mutex();
-    t_config *config_file = init_config("cpu.config");
+
+    if (argc < 2)
+    {
+        argv[1] = "cpu.config";
+    }
+
+    t_config *config_file = init_config(argv[1]);
     t_cpu_config config_cpu = init_cpu_config(config_file);
     init_logger("cpu.log", "CPU", config_cpu.LOG_LEVEL);
 
-    MMUConfig mmu_config = load_mmu_config();
-    TLBConfig tlb_config = load_tlb_config();
+    MMUConfig mmu_config = load_mmu_config(argv);
+    TLBConfig tlb_config = load_tlb_config(argv);
     CacheConfig cache_config = load_cache_config(config_file);
     mmu_init(&mmu_config, &tlb_config, &cache_config);
 
@@ -22,7 +28,7 @@ int main(int argc, char *argv[])
     uint32_t pid, pc;
 
     interrupt_args_t thread_args = {kernel_interrupt_socket, &pid, &pc, memory_socket};
-    
+
     pthread_t interrupt_listener_thread;
     pthread_create(&interrupt_listener_thread, NULL, interrupt_listener, &thread_args);
 
@@ -78,10 +84,10 @@ int main(int argc, char *argv[])
 
     // Señalar al thread de interrupciones que debe terminar
     signal_interrupt_thread_exit();
-    
+
     // Cerrar el socket de interrupciones para forzar que recv_package retorne NULL
     close(kernel_interrupt_socket);
-    
+
     // Esperar a que el thread termine
     pthread_join(interrupt_listener_thread, NULL);
     LOG_INFO("Interrupt listener thread joined successfully");

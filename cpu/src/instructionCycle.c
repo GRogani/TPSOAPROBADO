@@ -44,7 +44,7 @@ void parse_instruction(char *instruction_string, t_instruction *instruction)
 
     switch (instruction->instruction_code)
     {
-    case DUMP_PROCESS:
+    case DUMP_MEMORY:
     case EXIT:
     case NOOP:
         break;
@@ -310,12 +310,12 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
             }
             break;
         }
-    case DUMP_PROCESS:
-        LOG_OBLIGATORIO("## PID: %d - Ejecutando: DUMP_PROCESS -", *pid);
+    case DUMP_MEMORY:
+        LOG_OBLIGATORIO("## PID: %d - Ejecutando: DUMP_MEMORY -", *pid);
         {
             (*PC)++;
             syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
-            syscall_req->syscall_type = SYSCALL_DUMP_PROCESS;
+            syscall_req->syscall_type = SYSCALL_DUMP_MEMORY;
             syscall_req->pid = *pid;
             syscall_req->pc = *PC;
             send_syscall_package(socket_dispatch, syscall_req);

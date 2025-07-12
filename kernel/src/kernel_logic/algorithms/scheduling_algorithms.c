@@ -42,17 +42,16 @@ t_pcb* get_next_process_to_dispatch(void)
     
 }
 
-bool preepmtion_is_enabled(void) 
+bool preemption_is_enabled(void) 
 {
     return preemption_enabled;
 }
 
-bool should_preempt_executing_process(t_pcb* pcb_ready, t_pcb *pid_executing)
+bool should_preempt_executing_process(t_pcb *pcb_ready, int32_t pid_executing)
 {
-    if (!preepmtion_is_enabled())
-        return false;
-    else
-        return compare_cpu_bursts( (void*)pcb_ready, (void*)pid_executing);
+    lock_exec_list();
+    t_pcb *pcb_executing = find_pcb_in_exec(pid_executing);
+    return compare_cpu_bursts((void *)pcb_ready, (void *)pcb_executing);
 }
 
 void configure_scheduling_algorithms() 

@@ -21,9 +21,16 @@ void* client_listener(void* arg) {
         int client_fd = accept_connection("MEMORY SERVER", server_fd);
         if (client_fd < 0) continue;
 
+        int* client_fd_ptr = malloc(sizeof(int));
+        if (client_fd_ptr == NULL) {
+            LOG_ERROR("Failed to allocate memory for client socket descriptor.");
+            close(client_fd);
+            continue;
+        }
+        *client_fd_ptr = client_fd;
 
         pthread_t handler_thread;
-        pthread_create(&handler_thread, NULL, client_handler, (void*)&client_fd);
+        pthread_create(&handler_thread, NULL, client_handler, (void*)client_fd_ptr);
         pthread_detach(handler_thread);
     }
 
@@ -32,6 +39,7 @@ void* client_listener(void* arg) {
 
 void* client_handler(void* client_fd_ptr) {
     int client_fd = *(int*)client_fd_ptr;
+    free(client_fd_ptr); // Liberar la memoria asignada
 
     t_package* package;
     bool kernel_logged = false;
@@ -52,6 +60,7 @@ void* client_handler(void* client_fd_ptr) {
                 case UNSUSPEND_PROCESS:
                 case SWAP:
                 case GET_FREE_SPACE:
+                case C_DUMP_MEMORY:
                     LOG_OBLIGATORIO("## Kernel Conectado - FD del socket: %d", client_fd);
                     kernel_logged = true;
                     break;
@@ -101,7 +110,7 @@ void* client_handler(void* client_fd_ptr) {
                 get_page_entry_request_handler(client_fd, package);
                 break;
 
-            case DUMP_MEMORY:
+            case C_DUMP_MEMORY:
                 dump_memory_request_handler(client_fd, package);
                 break;
 

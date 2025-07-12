@@ -8,14 +8,15 @@
 #define INSTRUCTION_CODE_ENUM_SIZE 8
 
 typedef uint32_t INSTRUCTION_CODE;
-enum{
+enum
+{
     NOOP,
     WRITE,
     READ,
     GOTO,
     IO,
     INIT_PROC,
-    DUMP_PROCESS,
+    DUMP_MEMORY,
     EXIT,
     UNKNOWN = -1
 };

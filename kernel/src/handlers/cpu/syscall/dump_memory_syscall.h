@@ -9,6 +9,7 @@
 #include "kernel_logic/scheduler/short_scheduler.h"
 #include "repository/pcb/pcb.h"
 #include "handlers/memory/client/memory_client.h"
+#include "handlers/cpu/syscall/exit_syscall.h"
 
 void dump_memory_syscall(uint32_t pid);
 

@@ -14,7 +14,9 @@ void run_medium_scheduler(uint32_t  pid){
 
     LOG_INFO("Tiempo de espera de %d milisegundos para PID %u", kernel_config.sleep_time, pid);
     usleep(kernel_config.sleep_time * 1000); // Conversión milisegundos -> macrosegundos de la función usleep
+    
     lock_blocked_list();
+
     t_pcb* blocked_pid_found = find_pcb_in_blocked(pid);
     if(!blocked_pid_found) {
         unlock_blocked_list();

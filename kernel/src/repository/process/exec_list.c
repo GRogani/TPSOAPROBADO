@@ -15,10 +15,12 @@ void destroy_repository_exec() {
 
 void lock_exec_list() {
     sem_wait(&sem_exec);
+    LOG_INFO("Lockeada lista EXEC");
 }
 
 void unlock_exec_list() {
     sem_post(&sem_exec);
+    LOG_INFO("DES-Lockeada lista EXEC");
 }
 
 void* find_pcb_in_exec(uint32_t pid) {

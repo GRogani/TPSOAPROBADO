@@ -16,8 +16,8 @@ char *instruction_code_to_string(INSTRUCTION_CODE code)
         return "IO";
     case INIT_PROC:
         return "INIT_PROC";
-    case DUMP_PROCESS:
-        return "DUMP_PROCESS";
+    case DUMP_MEMORY:
+        return "DUMP_MEMORY";
     case EXIT:
         return "EXIT";
     default:
@@ -31,7 +31,7 @@ static char *instruction_code_names[8] = {"NOOP",
                                           "GOTO",
                                           "IO",
                                           "INIT_PROC",
-                                          "DUMP_PROCESS",
+                                          "DUMP_MEMORY",
                                           "EXIT"};
 INSTRUCTION_CODE string_to_instruction_code(char *instruction_code)
 {

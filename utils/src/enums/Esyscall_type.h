@@ -4,14 +4,12 @@
 
 
 typedef uint32_t SYSCALL_TYPE;
-enum 
+enum
 {
     SYSCALL_INIT_PROC,
     SYSCALL_IO,
-    SYSCALL_DUMP_PROCESS,
+    SYSCALL_DUMP_MEMORY,
     SYSCALL_EXIT
 };
-
-
 
 #endif

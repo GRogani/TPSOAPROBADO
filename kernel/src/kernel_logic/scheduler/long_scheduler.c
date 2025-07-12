@@ -20,8 +20,11 @@ bool run_long_scheduler(void)
   LOG_INFO("Procesando lista SUSP_READY");
 
   lock_ready_list();
+  LOG_INFO("Lista READY lockeada");
 
   lock_susp_ready_list();
+  LOG_INFO("Lista susp-READY lockeada");
+
   while (!list_is_empty(get_susp_ready_list()))
   {
     // Obtener siguiente proceso de SUSP_READY usando algoritmo configurado
@@ -37,29 +40,32 @@ bool run_long_scheduler(void)
       LOG_WARNING("No se pudo des-suspender proceso con PID %d", pcb->pid);
       LOG_WARNING("Fallo de SWAP o memoria sin espacio suficiente");
       add_pcb_to_susp_ready(pcb);
-      unlock_susp_ready_list();
       destroy_package(response);
       break;
     }
+
     // Éxito: mover de SUSP_READY a READY
-    unlock_susp_ready_list();
     LOG_INFO("Proceso con PID %d des-suspendido correctamente", pcb->pid);
+    
     add_pcb_to_ready(pcb);
     processes_initialized = true;
+    
     LOG_INFO("Proceso con PID %d movido a READY", pcb->pid);
     destroy_package(response);
     
-    lock_susp_ready_list();
   }
-  unlock_susp_ready_list();
+
   LOG_INFO("No hay mas procesos en SUSP_READY");
+
+  unlock_susp_ready_list();
+  LOG_INFO("Lista susp-READY deslockeada");
 
   // Fase 2: Procesar procesos nuevos (NEW)
   LOG_INFO("Procesando lista NEW");
-
   lock_new_list();
+  LOG_INFO("Lista NEW lockeada");
 
-  while (true)
+  while (!list_is_empty(get_new_list()))
   {
     // Obtener siguiente proceso de NEW usando algoritmo configurado
     t_pcb *pcb = get_next_process_to_initialize_from_new();
@@ -93,7 +99,9 @@ bool run_long_scheduler(void)
     }
   }
 
+  
   unlock_new_list();
+  LOG_INFO("Lista NEW des-lockeada");
   unlock_ready_list();
 
   // Cerrar conexión con memoria
