@@ -20,10 +20,10 @@ static int g_tlb_fifo_pointer = 0;
 static uint64_t g_lru_timestamp_counter = 0;
 static int g_cache_clock_pointer = 0;
 
-uint32_t mmu_request_pagetable_entry_from_memory(int memory_socket, uint32_t table_id, uint32_t entry_index, uint32_t pid)
+uint32_t mmu_request_pagetable_entry_from_memory(int memory_socket, uint32_t table_level, uint32_t entry_index, uint32_t pid)
 {
-  LOG_DEBUG("[MEM-REQUEST] Requesting page table entry from memory. PID: %u, Table ID: %u, Entry Index: %u", pid, table_id, entry_index);
-  send_page_entry_request_package(memory_socket, pid, table_id, entry_index);
+  LOG_DEBUG("[MEM-REQUEST] Requesting page table entry from memory. PID: %u, Table Level: %u, Entry Index: %u", pid, table_level, entry_index);
+  send_page_entry_request_package(memory_socket, pid, table_level, entry_index);
 
   // Wait for response from memory
   t_package *response_package = recv_package(memory_socket);
@@ -177,7 +177,7 @@ uint32_t mmu_perform_page_walk(int memory_socket, uint32_t page_number, uint32_t
     LOG_DEBUG("  - Level %d: Power %d, Divisor %u -> table entry %u",
               level, power, divisor, entry_index);
 
-    next_table_id = mmu_request_pagetable_entry_from_memory(memory_socket, next_table_id, entry_index, pid);
+    next_table_id = mmu_request_pagetable_entry_from_memory(memory_socket, level, entry_index, pid);
 
     LOG_DEBUG("    Next table/frame ID: %u", next_table_id);
   }
