@@ -85,6 +85,17 @@ void mmu_request_page_write_to_memory(int memory_socket, uint32_t physic_addr, v
   t_memory_write_request *request = create_memory_write_request(physic_addr, content_size, content);
   send_memory_write_request(memory_socket, request);
   destroy_memory_write_request(request);
+  t_package *package = recv_package(memory_socket);
+  if (package->opcode != CONFIRMATION)
+  {
+    LOG_ERROR("Failed to receive confirmation package from memory");
+  }
+  bool success = read_confirmation_package(package);
+  if (!success)
+  {
+    LOG_ERROR("Failed to write cache in memory");
+    destroy_package(package);
+  }
 }
 
 void tlb_entry_destroy(void *element)
@@ -172,7 +183,7 @@ uint32_t mmu_perform_page_walk(int memory_socket, uint32_t page_number, uint32_t
 
     int power = g_mmu_config->page_table_levels - level;
     uint32_t divisor = (uint32_t)pow(g_mmu_config->entries_per_table, power);
-    uint32_t entry_index = (page_number / divisor) % g_mmu_config->entries_per_table;
+    uint32_t entry_index = (uint32_t)floor(page_number / divisor) % g_mmu_config->entries_per_table;
 
     LOG_DEBUG("  - Level %d: Power %d, Divisor %u -> table entry %u",
               level, power, divisor, entry_index);
@@ -360,7 +371,7 @@ int cache_find_victim_clock_m()
   return cache_find_victim_clock();
 }
 
-CacheEntry* select_victim_entry(int memory_socket, uint32_t logic_dir, uint32_t pid)
+CacheEntry *select_victim_entry(int memory_socket, uint32_t logic_dir, uint32_t pid)
 {
   LOG_INFO("[Cache] Loading page for logical address %u", logic_dir);
   int victim_index;
@@ -375,17 +386,19 @@ CacheEntry* select_victim_entry(int memory_socket, uint32_t logic_dir, uint32_t 
 
   CacheEntry *victim_entry = list_get(g_cache, victim_index);
 
-  uint32_t physic_addr = 0; 
-  
+  uint32_t physic_addr = 0;
+
   if (victim_entry->is_valid && victim_entry->modified_bit)
   {
     LOG_INFO("[Cache] Victim (page %u) is dirty. Writing back to memory.", victim_entry->page);
-    if (g_tlb_config->entry_count > 0){
+    if (g_tlb_config->entry_count > 0)
+    {
       physic_addr = mmu_translate_address(memory_socket, logic_dir, pid);
       uint32_t frame_number = (physic_addr) / g_mmu_config->page_size;
       LOG_OBLIGATORIO("PID: %u - Memory Update - Página: %u - Frame: %u", pid, victim_entry->page, frame_number);
     }
-    else{
+    else
+    {
       uint32_t page_number = floor(logic_dir / g_mmu_config->page_size);
       uint32_t offset = logic_dir % g_mmu_config->page_size;
       uint32_t frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
@@ -397,7 +410,7 @@ CacheEntry* select_victim_entry(int memory_socket, uint32_t logic_dir, uint32_t 
   return victim_entry;
 }
 
-CacheEntry* cache_load_page(uint32_t logic_dir, int memory_socket, CacheEntry *victim_entry, uint32_t pid)
+CacheEntry *cache_load_page(uint32_t logic_dir, int memory_socket, CacheEntry *victim_entry, uint32_t pid)
 {
 
   LOG_DEBUG("[Cache] Replacing victim entry (frame %u) with new page.", victim_entry->page);
@@ -407,7 +420,7 @@ CacheEntry* cache_load_page(uint32_t logic_dir, int memory_socket, CacheEntry *v
   uint32_t physic_dir = 0;
   if (g_tlb_config->entry_count > 0)
   {
-    physic_dir = mmu_translate_address(memory_socket, logic_dir,pid);
+    physic_dir = mmu_translate_address(memory_socket, logic_dir, pid);
     frame_number = (physic_dir - offset) / g_mmu_config->page_size;
   }
   else

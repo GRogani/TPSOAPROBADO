@@ -314,12 +314,7 @@ void read_memory_request_handler(int socket, t_package* package) {
     
     if (success) {
         LOG_INFO("READ_MEMORY: Lectura exitosa desde dirección %u", physical_address);
-        
-        t_buffer* response_buffer = buffer_create(size);
-        buffer_add_string(response_buffer, size, buffer);
-        t_package* response_package = create_package(READ_MEMORY, response_buffer);
-        send_package(socket, response_package);
-        destroy_package(response_package);
+        send_memory_read_response(socket, buffer, size);
     } else {
         LOG_ERROR("READ_MEMORY: Error al leer desde dirección %u", physical_address);
         send_confirmation_package(socket, -1);
