@@ -36,7 +36,6 @@ void run_medium_scheduler(uint32_t  pid){
 
     // BLOCKED -> SUSPEND_BLOCKED
     t_pcb* pcb = remove_pcb_from_blocked(pid);
-    unlock_blocked_list();
     LOG_INFO("Cambio de estado de BLOCKED a SUSPENDED_BLOCKED para PID %d", pid);
 
     int memory_socket = connect_to_memory(&kernel_config);
@@ -76,7 +75,9 @@ void run_medium_scheduler(uint32_t  pid){
 
     lock_susp_blocked_list();
     add_pcb_to_susp_blocked(pcb);
+    
     unlock_susp_blocked_list();
+    unlock_blocked_list();
 
     // Llamo al Planificador de Largo Plazo
     LOG_INFO("Llamando a planificador de largo plazo para admitir nuevos procesos");
