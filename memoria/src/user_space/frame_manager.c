@@ -8,6 +8,7 @@ static uint32_t MAX_FRAMES = 0;
 
 static char* frame_bitmap = NULL;
 static _Atomic uint32_t free_frames_count = 0;
+static size_t total_frames_count = 0;
 
 //-------------------------Funciones auxiliares---------------------------------------------
 void free_frame_and_uint32(void* element_ptr) {
@@ -62,7 +63,7 @@ void frame_allocation_init() {
     for (size_t i = 0; i < total_frames_count; i++) {
         frame_bitmap[i] = false;
     }
-    current_free_frames_count = total_frames_count;
+    free_frames_count = total_frames_count;
 
     LOG_INFO("Frame Manager: Inicializado con %zu frames disponibles.", total_frames_count);
 }
@@ -75,8 +76,9 @@ t_list* frame_allocate_frames(uint32_t num_frames) {
 
     lock_frame_manager();
 
-    if (current_free_frames_count < num_frames) {
-        LOG_WARNING("Frame Manager: No hay suficientes frames libres para asignar %u frames. Libre: %u.", num_frames, current_free_frames_count);
+    if (free_frames_count < num_frames)
+    {
+        LOG_WARNING("Frame Manager: No hay suficientes frames libres para asignar %u frames. Libre: %u.", num_frames, free_frames_count);
         unlock_frame_manager();
         return NULL;
     }
@@ -99,8 +101,8 @@ t_list* frame_allocate_frames(uint32_t num_frames) {
         }
     }
 
-    current_free_frames_count -= num_frames;
-    LOG_INFO("Frame Manager: Asignados %u frames. Frames libres restantes: %u.", num_frames, current_free_frames_count);
+    free_frames_count -= num_frames;
+    LOG_INFO("Frame Manager: Asignados %u frames. Frames libres restantes: %u.", num_frames, free_frames_count);
     unlock_frame_manager();
     return allocated_list;
 }
@@ -123,15 +125,15 @@ void frame_free_frames(t_list* frame_numbers_list) {
             new_free_count++;
         }
     }
-    current_free_frames_count = new_free_count;
+    free_frames_count = new_free_count;
 
-    LOG_INFO("Frame Manager: Frames liberados. Frames libres restantes: %d.", current_free_frames_count);
+    LOG_INFO("Frame Manager: Frames liberados. Frames libres restantes: %d.", free_frames_count);
     unlock_frame_manager();
 }
 
 
 uint32_t frame_get_free_count() {
-    return current_free_frames_count;
+    return free_frames_count;
     // No lo uso lock porque lo declare Atomic
 }
 

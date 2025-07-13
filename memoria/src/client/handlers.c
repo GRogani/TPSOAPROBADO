@@ -107,7 +107,7 @@ void* client_handler(void* client_fd_ptr) {
                 break;
 
             case GET_PAGE_ENTRY:
-                get_page_entry_request_handler(client_fd, package);
+                handle_page_walk_request(client_fd, package);
                 break;
 
             case C_DUMP_MEMORY:

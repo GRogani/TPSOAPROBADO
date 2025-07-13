@@ -8,7 +8,7 @@
 
 typedef struct page_entry_request_data {
     uint32_t pid;
-    uint32_t table_level;  // Level in the page table hierarchy (1 = root, 2 = second level, etc.)
+    uint32_t table_id;
     uint32_t entry_index;
 } page_entry_request_data;
 

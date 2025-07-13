@@ -4,65 +4,82 @@ static t_list *global_process_list = NULL;
 
 extern t_memoria_config memoria_config;
 
-<<<<<<< Updated upstream
-/**
- * @brief Asigna frames a las entradas de la tabla de páginas de forma recursiva
- * @param current_table Tabla de páginas actual
- * @param allocated_frames_for_process Lista de frames asignados al proceso
- * @param current_frame_index Índice del frame actual
- * @param total_levels Total de niveles en la jerarquía
- * @param current_level Nivel actual siendo procesado
- * @param pages_needed Cantidad de páginas necesarias para el proceso
- * @return true si éxito, false si error
- */
-bool assign_frames_to_page_table(t_page_table *current_table, t_list *allocated_frames_for_process, int *current_frame_index, int total_levels, int current_level, int pages_needed)
+bool assign_frames_to_process(t_page_table *root_table, t_list *frames_for_process, int pages_needed)
 {
-    if (current_table == NULL || allocated_frames_for_process == NULL)
+    // --- Validación Inicial ---
+    if (root_table == NULL || frames_for_process == NULL)
     {
-=======
-bool assign_frames_to_page_table(t_page_table* current_table, t_list* allocated_frames_for_process, int* current_frame_index, int total_levels, int current_level, int pages_needed) {
-    if (current_table == NULL || allocated_frames_for_process == NULL) {
->>>>>>> Stashed changes
-        LOG_ERROR("Error: Tabla actual o lista de frames es NULL en assign_frames_to_page_table.");
+        LOG_ERROR("La tabla raíz o la lista de frames no pueden ser NULL.");
+        return false;
+    }
+    if (pages_needed <= 0)
+    {
+        LOG_INFO("No se necesitan páginas para asignar (pages_needed = %d).", pages_needed);
+        return true; // No es un error, simplemente no hay nada que hacer.
+    }
+    if (list_size(frames_for_process) < pages_needed)
+    {
+        LOG_ERROR("Error: No hay suficientes frames en la lista (%d) para las páginas requeridas (%d).", list_size(frames_for_process), pages_needed);
         return false;
     }
 
-    bool is_last_level_of_hierarchy = (current_level == total_levels);
+    int current_frame_index = 0;
+    return assign_frames_recursive(root_table, frames_for_process, &current_frame_index, pages_needed);
+}
 
-    for (int i = 0; i < current_table->num_entries; i++)
+bool assign_frames_recursive(t_page_table *current_table, t_list *frames, int *current_frame_idx_ptr, int pages_needed)
+{
+    if (current_table == NULL)
     {
-        if (*current_frame_index >= pages_needed)
-            break; // Solo asignar las páginas necesarias
+        LOG_ERROR("Se encontró una tabla de páginas NULL durante la recursión.");
+        return false;
+    }
 
-        t_page_table_entry *entry = get_page_table_entry(current_table, i);
+    // Itera sobre cada entrada de la tabla de páginas actual
+    for (int i = 0; i < list_size(current_table->entries); i++)
+    {
+        // Condición de parada: si ya asignamos todas las páginas necesarias, terminamos.
+        if (*current_frame_idx_ptr >= pages_needed)
+        {
+            return true;
+        }
+
+        t_page_table_entry *entry = (t_page_table_entry *)list_get(current_table->entries, i);
         if (entry == NULL)
         {
-            LOG_ERROR("Error: Entrada de tabla de paginas NULL en indice %d de nivel %d.", i, current_level);
+            LOG_ERROR("Se encontró una entrada de tabla NULL en el índice %d.", i);
             return false;
         }
 
-        if (is_last_level_of_hierarchy)
+        // Si la entrada es de último nivel, le asignamos un frame.
+        if (entry->is_last_level)
         {
-            if (*current_frame_index >= list_size(allocated_frames_for_process))
+            // Obtenemos el puntero al número de frame desde la lista
+            uint32_t *frame_num_ptr = (uint32_t *)list_get(frames, *current_frame_idx_ptr);
+            if (frame_num_ptr == NULL)
             {
-                LOG_ERROR("Error: No hay suficientes frames asignados para todas las entradas de ultimo nivel.");
+                LOG_ERROR("Error al obtener el frame en el índice %d de la lista.", *current_frame_idx_ptr);
                 return false;
             }
-            uint32_t *frame_num_ptr = (uint32_t *)list_get(allocated_frames_for_process, *current_frame_index);
+
+            // Asignamos el frame y avanzamos el índice para la próxima asignación.
             entry->frame_number = *frame_num_ptr;
-            (*current_frame_index)++;
-        } else {
-            if (entry->next_table != NULL) {
-                if (!assign_frames_to_page_table(entry->next_table, allocated_frames_for_process, current_frame_index, total_levels, current_level + 1, pages_needed)) {
-                    return false;
-                }
+            (*current_frame_idx_ptr)++;
+        }
+        // Si no es de último nivel, llamamos recursivamente con la siguiente tabla.
+        else
+        {
+            if (!assign_frames_recursive(entry->next_table, frames, current_frame_idx_ptr, pages_needed))
+            {
+                // Si la llamada recursiva falla, propagamos el error hacia arriba.
+                return false;
             }
         }
     }
-    return true;
+
+    return true; // La iteración de esta tabla terminó exitosamente.
 }
 
-<<<<<<< Updated upstream
 /**
  * @brief Destruye la estructura process_info y libera todos sus recursos
  * @param proc_void_ptr Puntero a la estructura process_info
@@ -72,11 +89,6 @@ void destroy_process_info(void *proc_void_ptr)
     process_info *proc = (process_info *)proc_void_ptr;
     if (proc == NULL)
         return;
-=======
-void destroy_process_info(void* proc_void_ptr) {
-    process_info* proc = (process_info*) proc_void_ptr;
-    if (proc == NULL) return;
->>>>>>> Stashed changes
 
     LOG_INFO("## PID: %u - Liberando recursos del proceso.", proc->pid);
 
@@ -121,16 +133,11 @@ void destroy_process_info(void* proc_void_ptr) {
     free(proc);
 }
 
-<<<<<<< Updated upstream
 /**
  * @brief Inicializa el process manager creando la lista global de procesos
  */
 void process_manager_init()
 {
-=======
-
-void process_manager_init() {
->>>>>>> Stashed changes
     global_process_list = list_create();
     if (global_process_list == NULL)
     {
@@ -140,21 +147,15 @@ void process_manager_init() {
     LOG_INFO("Process Manager: Inicializado.");
 }
 
-<<<<<<< Updated upstream
 /**
  * @brief Destruye el process manager liberando todos los recursos
  */
 void process_manager_destroy()
 {
-=======
-
-void process_manager_destroy() {
->>>>>>> Stashed changes
     list_destroy_and_destroy_elements(global_process_list, destroy_process_info);
     LOG_INFO("Process Manager: Destruido.");
 }
 
-<<<<<<< Updated upstream
 /**
  * @brief Carga las líneas de pseudocódigo desde un archivo
  * @param path Ruta del archivo de pseudocódigo
@@ -162,10 +163,6 @@ void process_manager_destroy() {
  */
 t_list *process_manager_load_script_lines(char *path)
 {
-=======
-
-t_list* process_manager_load_script_lines(char* path) {
->>>>>>> Stashed changes
     char full_path[512];
     snprintf(full_path, sizeof(full_path), "%s%s", memoria_config.PATH_INSTRUCCIONES, path);
 
@@ -204,7 +201,6 @@ t_list* process_manager_load_script_lines(char* path) {
     return list;
 }
 
-<<<<<<< Updated upstream
 /**
  * @brief Crea un nuevo proceso con todos sus recursos
  * @param pid ID del proceso
@@ -215,11 +211,6 @@ t_list* process_manager_load_script_lines(char* path) {
 int process_manager_create_process(uint32_t pid, uint32_t size, char *script_path)
 {
     process_info *proc = safe_malloc(sizeof(process_info));
-=======
-
-int process_manager_create_process(uint32_t pid, uint32_t size, char* script_path) {
-    process_info* proc = safe_malloc(sizeof(process_info));
->>>>>>> Stashed changes
 
     proc->pid = pid;
     proc->process_size = size;
@@ -269,8 +260,7 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char* script_pat
             return -1;
         }
 
-        int current_frame_idx = 0;
-        if (!assign_frames_to_page_table(proc->page_table, proc->allocated_frames, &current_frame_idx, memoria_config.CANTIDAD_NIVELES, 1, pages_needed))
+        if (!assign_frames_to_process(proc->page_table, proc->allocated_frames, pages_needed))
         {
             LOG_ERROR("## PID: %u - Error al asignar frames a las entradas de la tabla de paginas.", pid);
             if (proc->instructions)
@@ -305,7 +295,6 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char* script_pat
     return 0;
 }
 
-<<<<<<< Updated upstream
 /**
  * @brief Busca un proceso por PID en la lista global
  * @param pid ID del proceso a buscar
@@ -314,11 +303,6 @@ int process_manager_create_process(uint32_t pid, uint32_t size, char* script_pat
 process_info *process_manager_find_process(uint32_t pid)
 {
     process_info *found_proc = NULL;
-=======
-
-process_info* process_manager_find_process(uint32_t pid) {
-    process_info* found_proc = NULL;
->>>>>>> Stashed changes
     lock_process_list();
     for (int i = 0; i < list_size(global_process_list); i++)
     {
@@ -333,7 +317,6 @@ process_info* process_manager_find_process(uint32_t pid) {
     return found_proc;
 }
 
-<<<<<<< Updated upstream
 /**
  * @brief Actualiza la tabla de páginas de un proceso con nuevos frames
  * @param proc Proceso a actualizar
@@ -344,11 +327,6 @@ bool update_process_page_table(process_info *proc, t_list *new_frames)
 {
     if (proc == NULL || new_frames == NULL)
     {
-=======
-
-bool update_process_page_table(process_info* proc, t_list* new_frames) {
-    if (proc == NULL || new_frames == NULL) {
->>>>>>> Stashed changes
         LOG_ERROR("Error: Proceso o lista de frames es NULL en update_process_page_table.");
         return false;
     }
@@ -363,8 +341,7 @@ bool update_process_page_table(process_info* proc, t_list* new_frames) {
         return false;
     }
 
-    int current_frame_idx = 0;
-    bool assign_success = assign_frames_to_page_table(proc->page_table, new_frames, &current_frame_idx, memoria_config.CANTIDAD_NIVELES, 1, list_size(new_frames));
+    bool assign_success = assign_frames_to_process(proc->page_table, new_frames, list_size(new_frames));
 
     unlock_page_table();
 
@@ -378,7 +355,6 @@ bool update_process_page_table(process_info* proc, t_list* new_frames) {
     return true;
 }
 
-<<<<<<< Updated upstream
 /**
  * @brief Elimina un proceso y libera todos sus recursos
  * @param pid ID del proceso a eliminar
@@ -386,10 +362,6 @@ bool update_process_page_table(process_info* proc, t_list* new_frames) {
  */
 int process_manager_delete_process(uint32_t pid)
 {
-=======
-
-int process_manager_delete_process(uint32_t pid) {
->>>>>>> Stashed changes
     int result = -1;
     lock_process_list();
     int found_index = -1;
@@ -417,18 +389,8 @@ int process_manager_delete_process(uint32_t pid) {
     return result;
 }
 
-<<<<<<< Updated upstream
-/**
- * @brief Verifica si un proceso existe en la lista global
- * @param pid ID del proceso a verificar
- * @return true si existe, false en caso contrario
- */
-bool process_manager_process_exists(uint32_t pid)
-{
-=======
 
 bool process_manager_process_exists(uint32_t pid) {
->>>>>>> Stashed changes
     bool exists = false;
     lock_process_list();
     for (int i = 0; i < list_size(global_process_list); i++)
@@ -442,4 +404,13 @@ bool process_manager_process_exists(uint32_t pid) {
     }
     unlock_process_list();
     return exists;
+}
+
+/**
+ * @brief Devuelve la lista global de procesos (para depuración y casos especiales)
+ * @return Puntero a la lista global de procesos
+ */
+t_list *process_manager_get_process_list()
+{
+    return global_process_list;
 }

@@ -56,4 +56,11 @@ bool update_process_page_table(process_info* proc, t_list* new_frames);
 // Checks if a process with the given PID exists
 bool process_manager_process_exists(uint32_t pid);
 
+// Get the global list of processes (for debugging and special cases)
+t_list* process_manager_get_process_list();
+
+bool assign_frames_to_process(t_page_table *root_table, t_list *frames_for_process, int pages_needed);
+
+bool assign_frames_recursive(t_page_table *current_table, t_list *frames, int *current_frame_idx_ptr, int pages_needed);
+
 #endif

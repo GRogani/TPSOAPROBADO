@@ -9,6 +9,7 @@
 
 // Page Table structure (definir primero)
 typedef struct page_table {
+    uint32_t table_id; // Unique identifier for the page table
     t_list* entries;
     size_t num_entries;
 } t_page_table;
@@ -17,9 +18,10 @@ typedef struct page_table {
 typedef struct page_table_entry
 {
     bool is_last_level;
+    uint32_t next_table_id;    // ID de la siguiente tabla (si is_last_level == false)
     union {
-        int32_t frame_number;  // Cambiar a int32_t para permitir valores negativos
-        t_page_table* next_table;  // Store the actual table structure, not just the entries list
+        int32_t frame_number;  // Número de frame (si is_last_level == true)
+        t_page_table* next_table;  // Puntero a la siguiente tabla (si is_last_level == false)
     };
 } t_page_table_entry;
 

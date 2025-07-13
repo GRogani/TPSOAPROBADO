@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "src/swap_space/swap_manager.h"
-#include "src/utils.h"
+#include "../utils/utils.h"
 
 // Configuración de prueba
 t_memoria_config test_config = {
@@ -37,8 +37,7 @@ void test_swap_basic() {
     char* test_data = calloc(num_pages, test_config.TAM_PAGINA);
     if (test_data == NULL) {
         printf("ERROR: No se pudo asignar memoria de prueba\n");
-        list_destroy_and_destroy_elements(pages, free);
-        list_destroy(pages);
+        list_destroy(pages); // No necesitamos destroy_elements ya que swap_manager lo gestionará
         swap_manager_destroy();
         return;
     }
@@ -106,7 +105,6 @@ void test_swap_basic() {
     // Limpiar memoria
     free(read_data);
     free(test_data);
-    list_destroy_and_destroy_elements(pages, free);
     list_destroy(pages);
     
     // Destruir swap manager
@@ -136,7 +134,6 @@ void test_swap_multiple_processes() {
             // Limpiar procesos anteriores
             for (int j = 0; j < i; j++) {
                 swap_free_pages(pids[j]);
-                list_destroy_and_destroy_elements(pages_list[j], free);
                 list_destroy(pages_list[j]);
             }
             swap_manager_destroy();
@@ -148,7 +145,6 @@ void test_swap_multiple_processes() {
     // Liberar procesos en orden inverso
     for (int i = 2; i >= 0; i--) {
         swap_free_pages(pids[i]);
-        list_destroy_and_destroy_elements(pages_list[i], free);
         list_destroy(pages_list[i]);
         printf("✓ PID %u: páginas liberadas\n", pids[i]);
     }

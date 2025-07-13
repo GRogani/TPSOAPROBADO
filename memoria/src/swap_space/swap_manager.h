@@ -3,12 +3,17 @@
 
 #define INITIAL_SWAP_SIZE (1024 * 1024)
 
-#include "../utils.h"
+#include "../../../utils/utils.h"
 #include "../semaphores.h"
 #include "swap_structures.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
 
 
 /**
@@ -16,7 +21,7 @@
  * @param config Puntero a la configuración global de la memoria.
  * @return true si la inicialización fue exitosa, false en caso contrario.
  */
-void swap_manager_init(const t_memoria_config* config);
+bool swap_manager_init(const t_memoria_config* config);
 
 /**
  * @brief Destruye el sistema de gestión de SWAP, cerrando el archivo y liberando todos los recursos.
@@ -61,5 +66,17 @@ void swap_free_pages(uint32_t pid);
  * @return La cantidad de páginas libres.
  */
 size_t swap_get_free_pages_count(void);
+
+/**
+ * @brief Libera memoria asociada a una estructura de información de proceso en swap
+ * @param element Puntero a la estructura a liberar
+ */
+void free_swap_process_info(void* element);
+
+/**
+ * @brief Obtiene el estado actual del sistema de SWAP con sus métricas
+ * @return Estructura con las métricas actuales del sistema SWAP
+ */
+t_swap_status swap_get_status(void);
 
 #endif // SWAP_SPACE_SWAP_MANAGER_H
