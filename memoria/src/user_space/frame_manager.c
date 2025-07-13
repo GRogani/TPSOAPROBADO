@@ -1,12 +1,13 @@
 #include "frame_manager.h"
 
-// Variables locales -> Por si acaso el static, no tendiran que llamarlas en otro lado
 static void* user_memory_space = NULL;
-static size_t MEMORY_SIZE = 0;
-static int PAGE_SIZE = 0;
-static bool* frame_bitmap = NULL;
-static size_t total_frames_count = 0;
-static _Atomic uint32_t current_free_frames_count = 0;
+
+static uint32_t MEMORY_SIZE = 0;
+static uint32_t BLOCK_SIZE = 0;
+static uint32_t MAX_FRAMES = 0;
+
+static char* frame_bitmap = NULL;
+static _Atomic uint32_t free_frames_count = 0;
 
 //-------------------------Funciones auxiliares---------------------------------------------
 void free_frame_and_uint32(void* element_ptr) {
@@ -22,35 +23,36 @@ void free_frame_and_uint32(void* element_ptr) {
 
 //----------------------------------------------------------------------------------------
 
-bool init_user_memory(const t_memoria_config* config) {
+void init_user_memory(const t_memoria_config* config) {
     if (config == NULL) {
         LOG_ERROR("Frame Manger: Configuración de memoria es NULL.");
-        return false;
+        exit(1);
     }
 
     MEMORY_SIZE = config->TAM_MEMORIA;
-    PAGE_SIZE = config->TAM_PAGINA;
+    BLOCK_SIZE = config->TAM_PAGINA;
+    MAX_FRAMES = MEMORY_SIZE / BLOCK_SIZE;
 
-    user_memory_space = malloc(MEMORY_SIZE);
-    if (user_memory_space == NULL) {
-        LOG_ERROR("Frame Manger: Error al asignar memoria de usuario de tamaño %zu.", MEMORY_SIZE);
-        return false;
+    frame_bitmap = (char*)safe_calloc(MAX_FRAMES, sizeof(char));
+
+    if (MEMORY_SIZE == 0 || BLOCK_SIZE == 0 || MAX_FRAMES == 0) {
+        LOG_ERROR("Frame Manger: Tamaño de memoria o tamaño de página inválido. Memoria: %zu, Página: %d, Máximo Frames: %d", MEMORY_SIZE, BLOCK_SIZE, MAX_FRAMES);
+        exit(1);
     }
 
-    memset(user_memory_space, 0, MEMORY_SIZE);
+    user_memory_space = safe_calloc(MEMORY_SIZE, 1);
 
-    LOG_INFO("Memoria de usuario inicializada con tamaño %zu bytes y tamaño de página %d bytes.", MEMORY_SIZE, PAGE_SIZE);
+    LOG_INFO("Memoria de usuario inicializada con tamaño %zu bytes y tamaño de página %d bytes.", MEMORY_SIZE, BLOCK_SIZE);
 
-    return true;
 }
 
 void frame_allocation_init() {
-    if (PAGE_SIZE == 0) {
+    if (BLOCK_SIZE == 0) {
         LOG_ERROR("Frame Manager: PAGE_SIZE no inicializado. Llama a init_user_memory primero.");
         return;
     }
 
-    total_frames_count = (size_t)ceil((double)MEMORY_SIZE / PAGE_SIZE);
+    total_frames_count = (size_t)ceil((double)MEMORY_SIZE / BLOCK_SIZE);
     frame_bitmap = (bool*)malloc(sizeof(bool) * total_frames_count);
     if (frame_bitmap == NULL) {
         LOG_ERROR("Frame Manager: Error al asignar bitmap de frames.");
@@ -164,27 +166,27 @@ bool write_memory(uint32_t physical_address, const void* data, size_t size) {
 }
 
 bool read_full_page(uint32_t physical_address, void* buffer) {
-    if (PAGE_SIZE == 0) {
+    if (BLOCK_SIZE == 0) {
         LOG_ERROR("Tamaño de página no inicializado para lectura de página completa.");
         return false;
     }
-    if (physical_address % PAGE_SIZE != 0) {
-        LOG_ERROR("Dirección física %u no alineada a página para lectura completa. Tamaño página: %d", physical_address, PAGE_SIZE);
+    if (physical_address % BLOCK_SIZE != 0) {
+        LOG_ERROR("Dirección física %u no alineada a página para lectura completa. Tamaño página: %d", physical_address, BLOCK_SIZE);
         return false;
     }
-    return read_memory(physical_address, buffer, PAGE_SIZE);
+    return read_memory(physical_address, buffer, BLOCK_SIZE);
 }
 
 bool update_full_page(uint32_t physical_address, const void* data) {
-    if (PAGE_SIZE == 0) {
+    if (BLOCK_SIZE == 0) {
         LOG_ERROR("Tamaño de página no inicializado para actualización de página completa.");
         return false;
     }
-    if (physical_address % PAGE_SIZE != 0) {
-        LOG_ERROR("Dirección física %u no alineada a página para actualización completa. Tamaño página: %d", physical_address, PAGE_SIZE);
+    if (physical_address % BLOCK_SIZE != 0) {
+        LOG_ERROR("Dirección física %u no alineada a página para actualización completa. Tamaño página: %d", physical_address, BLOCK_SIZE);
         return false;
     }
-    return write_memory(physical_address, data, PAGE_SIZE);
+    return write_memory(physical_address, data, BLOCK_SIZE);
 }
 
 void memory_manager_destroy() {

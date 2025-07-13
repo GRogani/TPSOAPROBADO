@@ -20,7 +20,7 @@ typedef struct {
     uint32_t pid;                 /** @brief ID del proceso. */
     uint32_t start_offset;        /** @brief Offset de inicio del bloque en el archivo. */
     uint32_t num_pages;           /** @brief Número de páginas que ocupa el proceso. */
-    bool is_used;                 /** @brief Si el bloque está ocupado o libre. */
+    char is_used;                 /** @brief Si el bloque está ocupado o libre. */
 } t_swap_process_info;
 
 #endif
