@@ -38,6 +38,9 @@
         "io_syscall.h": "c",
         "eopcodes.h": "c",
         "config_loader.h": "c",
-        "exit_syscall.h": "c"
+        "exit_syscall.h": "c",
+        "frame_manager.h": "c",
+        "cerrno": "c",
+        "dump_memory_syscall.h": "c"
     }
 }

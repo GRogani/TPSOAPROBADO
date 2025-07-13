@@ -72,7 +72,7 @@ void handle_cpu_syscall(t_package *package, int socket)
     break;
     case SYSCALL_DUMP_MEMORY:
       LOG_OBLIGATORIO("## (%d) - Solicitó syscall: DUMP_MEMORY", syscall->pid);
-      dump_memory_syscall(syscall->pid);
+      dump_memory_syscall(syscall->pid, syscall->pc);
     break;
     case SYSCALL_EXIT:
       LOG_OBLIGATORIO("## (%d) - Solicitó syscall: EXIT", syscall->pid);

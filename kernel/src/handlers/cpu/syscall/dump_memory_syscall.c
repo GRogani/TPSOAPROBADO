@@ -1,6 +1,6 @@
 #include "dump_memory_syscall.h"
 
-void dump_memory_syscall(uint32_t pid)
+void dump_memory_syscall(uint32_t pid, uint32_t pc)
 {
     LOG_INFO("Dump memory syscall called for PID %d", pid);
 
@@ -15,19 +15,19 @@ void dump_memory_syscall(uint32_t pid)
         unlock_blocked_list();
         return;
     }
-
+    pcb->pc = pc;
     remove_pcb_from_exec(pid);
     add_pcb_to_blocked(pcb);
 
     unlock_blocked_list();
     unlock_exec_list();
 
-    int confirmation = dump_memory_routine(pid);
+    bool confirmation = dump_memory_routine(pid);
 
     lock_ready_list();
     lock_blocked_list();
 
-    if (confirmation == 0)
+    if (confirmation)
     {
         
         remove_pcb_from_blocked(pcb->pid);
