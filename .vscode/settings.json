@@ -56,6 +56,7 @@
         "stdlib.h": "c",
         "stdint.h": "c",
         "test_utils.h": "c",
-        "test_page_table_functions.h": "c"
+        "test_page_table_functions.h": "c",
+        "get-page-entry.h": "c"
     }
 }
