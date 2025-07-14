@@ -1,7 +1,7 @@
 #ifndef READ_MEMORY_H
 #define READ_MEMORY_H
 
-#include "../../utils.h"
+#include "../utils.h"
 
 /**
  * @brief Handles read memory requests from clients.

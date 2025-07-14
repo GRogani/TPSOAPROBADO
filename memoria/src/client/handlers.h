@@ -11,6 +11,8 @@
 #include "./get-page-entry/get-page-entry.h"
 #include "./read-memory/read-memory.h"
 #include "./write-memory/write-memory.h"
+#include "./swap/swap.h"
+#include "./unsuspend-process/unsuspend-process.h"
 
 int create_server_thread(pthread_t* listener_thread);
 

@@ -31,14 +31,17 @@ void release_frames(t_list *frame_list)
 {
     pthread_mutex_lock(&frames_mutex);
     
-    for (int i = 0; i < list_size(frame_list); i++)
+    // Guardamos el tamaño de la lista antes de modificarla
+    int frames_released = list_size(frame_list);
+    
+    for (int i = 0; i < frames_released; i++)
     {
         uint32_t *frame_num = list_get(frame_list, i);
         bitarray_clean_bit(frames_bitmap, *frame_num);
         free(frame_num);
     }
 
-    frames_free_count += list_size(frame_list);
+    frames_free_count += frames_released;
     
     pthread_mutex_unlock(&frames_mutex);
 

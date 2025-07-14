@@ -57,6 +57,9 @@
         "stdint.h": "c",
         "test_utils.h": "c",
         "test_page_table_functions.h": "c",
-        "get-page-entry.h": "c"
+        "get-page-entry.h": "c",
+        "user_space_memory.h": "c",
+        "swap_manager.h": "c",
+        "swap_out.h": "c"
     }
 }

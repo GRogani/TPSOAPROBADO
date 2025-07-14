@@ -1,20 +1,206 @@
 #include "swap_manager.h"
 
-// aca necesitamos armar el manager para swapear procesos
-// este manager debe:
+extern t_memoria_config memoria_config;
+
+static FILE *swap_file = NULL;
+static t_bitarray *swap_frames_bitmap = NULL;
+static size_t swap_frames_total = 0;
+static _Atomic uint32_t swap_frames_free_count = 0;
+static pthread_mutex_t swap_frames_mutex;
+static pthread_mutex_t swap_file_mutex;
+
+t_list *swap_allocate_frames(uint32_t pages_needed)
+{
+  pthread_mutex_lock(&swap_frames_mutex);
+
+  if (pages_needed > swap_frames_free_count)
+  {
+    pthread_mutex_unlock(&swap_frames_mutex);
+    return NULL;
+  }
+
+  t_list *allocated_frames = list_create();
+  uint32_t frames_allocated = 0;
+
+  for (uint32_t frame_index = 0; frame_index < swap_frames_total && frames_allocated < pages_needed; frame_index++)
+  {
+    if (!bitarray_test_bit(swap_frames_bitmap, frame_index))
+    {
+      bitarray_set_bit(swap_frames_bitmap, frame_index);
+
+      uint32_t *frame_num = malloc(sizeof(uint32_t));
+      *frame_num = frame_index;
+      list_add(allocated_frames, frame_num);
+
+      frames_allocated++;
+    }
+  }
+
+  swap_frames_free_count -= frames_allocated;
+
+  pthread_mutex_unlock(&swap_frames_mutex);
+
+  LOG_INFO("Swap: Allocated %d frames in swap space", frames_allocated);
+  return allocated_frames;
+}
+
+int swap_write_frame(uint32_t frame_num, void *data, uint32_t size)
+{
+  if (swap_file == NULL)
+  {
+    LOG_ERROR("Swap: Swap file not initialized");
+    return -1;
+  }
+
+  pthread_mutex_lock(&swap_file_mutex);
+
+  // Calculate position (physic dir) in swap file
+  long position = frame_num * memoria_config.TAM_PAGINA;
+
+  int result = 0;
+
+  if (fseek(swap_file, position, SEEK_SET) != 0)
+  {
+    LOG_ERROR("Swap: Error seeking to position %ld in swap file", position);
+    result = -1;
+  }
+  else
+  {
+    size_t written = fwrite(data, 1, size, swap_file);
+    if (written != size)
+    {
+      LOG_ERROR("Swap: Error writing to swap file. Expected to write %u bytes, wrote %zu", size, written);
+      result = -1;
+    }
+    else
+    {
+      fflush(swap_file);
+      LOG_DEBUG("Swap: Written %u bytes to frame %u at position %ld", size, frame_num, position);
+    }
+  }
+
+  pthread_mutex_unlock(&swap_file_mutex);
+
+  return result;
+}
+
+void swap_manager_init()
+{
+  pthread_mutex_init(&swap_frames_mutex, NULL);
+  pthread_mutex_init(&swap_file_mutex, NULL);
+
+  swap_file = fopen(memoria_config.PATH_SWAPFILE, "wb+");
+  if (swap_file == NULL)
+  {
+    LOG_ERROR("Swap: Failed to create swap file at %s", memoria_config.PATH_SWAPFILE);
+    exit(EXIT_FAILURE);
+  }
+
+  swap_frames_total = 1024; // TODO: cambiarlo a que sea más grande, el maximo tamaño del disco
+  swap_frames_free_count = swap_frames_total;
+
+  size_t bitmap_size = swap_frames_total / 8;
+  if (swap_frames_total % 8 != 0)
+  {
+    bitmap_size += 1;
+  }
+
+  char *bitmap_data = calloc(bitmap_size, 1); // Initialize all bits to 0 (free)
+  swap_frames_bitmap = bitarray_create_with_mode(bitmap_data, bitmap_size, LSB_FIRST);
+
+  LOG_INFO("Swap: Manager initialized. Swap file: %s, Initial frames: %zu", memoria_config.PATH_SWAPFILE, swap_frames_total);
+}
+
+void swap_manager_destroy()
+{
+  if (swap_file != NULL)
+  {
+    fclose(swap_file);
+    swap_file = NULL;
+  }
+
+  if (swap_frames_bitmap != NULL)
+  {
+    free(swap_frames_bitmap->bitarray);
+    bitarray_destroy(swap_frames_bitmap);
+    swap_frames_bitmap = NULL;
+  }
+
+  pthread_mutex_destroy(&swap_frames_mutex);
+  pthread_mutex_destroy(&swap_file_mutex);
+
+  LOG_INFO("Swap: Manager destroyed");
+}
+
 /**
- * 1. swapear un proceso especifico, esto significa, para ese proceso:
- *  - dentro de la lista de frames allocados, obtener todos y por cada uno de ellos calcular la direccion fisica a la que corresponde esa pagina en espacio de usuario (user_space)
- *  - por cada una de esas paginas, liberarla en espacio de usuario (user_space)
- *  - una vez liberada de espacio de usuario, deberá agregarla a swap (que será un archivo, pero que se deberia tratar similar a user_space, es decir, espacio contiguo en memoria)
- *  - es decir, es como mapear de un user_space hacia otro, pero con otros frames numbers.
- *  - cuando tengamos que agregar a swap el proceso, obtenemos el bitmap de frames del bitmap libres
- *  - por cada frame libre del swap, asignar al proceso. basicamente deberiamos limpiar la lista de frames asignados en un principio y sobreescribirla con los nuevos frames asignados dentro de swap
- *  - cuando se hace el unswap, se hace el proceso inverso, es decir, sacar los frames de swap y meterlos en user_space.
- * 
- * hay que imaginarse el user_space y swap, los dos similares en funcionamiento, como espacios de memoria contiguos.
- * el swap file no tiene un tamaño maximo
- * tanto el swap como el user_space tienen un bitmap de frames libres, que se van asignando y liberando.
- * tanto el swap como el user_space se manejan con frames, que son bloques de memoria de un tamaño fijo (por ejemplo, 32 bytes).
- *
+ * Read data from a specific frame in swap space
  */
+int swap_read_frame(uint32_t frame_num, void *buffer, uint32_t size)
+{
+  if (swap_file == NULL)
+  {
+    LOG_ERROR("Swap: Swap file not initialized");
+    return -1;
+  }
+
+  pthread_mutex_lock(&swap_file_mutex);
+
+  // Calculate position (physic dir) in swap file
+  long position = frame_num * memoria_config.TAM_PAGINA;
+
+  int result = 0;
+
+  if (fseek(swap_file, position, SEEK_SET) != 0)
+  {
+    LOG_ERROR("Swap: Error seeking to position %ld in swap file", position);
+    result = -1;
+  }
+  else
+  {
+    size_t read_bytes = fread(buffer, 1, size, swap_file);
+    if (read_bytes != size)
+    {
+      LOG_ERROR("Swap: Error reading from swap file. Expected to read %u bytes, read %zu", size, read_bytes);
+      result = -1;
+    }
+    else
+    {
+      LOG_DEBUG("Swap: Read %u bytes from frame %u at position %ld", size, frame_num, position);
+    }
+  }
+
+  pthread_mutex_unlock(&swap_file_mutex);
+
+  return result;
+}
+
+/**
+ * Release allocated frames in swap space
+ */
+void swap_release_frames(t_list *frame_list)
+{
+  if (frame_list == NULL)
+  {
+    return;
+  }
+
+  pthread_mutex_lock(&swap_frames_mutex);
+  
+  // Guardamos el tamaño de la lista antes de modificarla
+  int frames_released = list_size(frame_list);
+
+  for (int i = 0; i < frames_released; i++)
+  {
+    uint32_t *frame_num = list_get(frame_list, i);
+    bitarray_clean_bit(swap_frames_bitmap, *frame_num);
+    free(frame_num);
+  }
+
+  swap_frames_free_count += frames_released;
+
+  pthread_mutex_unlock(&swap_frames_mutex);
+
+  list_destroy(frame_list);
+
+  LOG_INFO("Swap: Released %d frames in swap space", frames_released);
+}

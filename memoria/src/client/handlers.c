@@ -90,11 +90,11 @@ void *client_handler(void *client_fd_ptr)
             break;
 
         case UNSUSPEND_PROCESS:
-            // unsuspend_process_request_handler(client_fd, package);
+            unsuspend_process_request_handler(client_fd, package);
             break;
 
         case SWAP:
-            // swap_request_handler(client_fd, package);
+            swap_request_handler(client_fd, package);
             break;
 
         case C_DUMP_MEMORY:

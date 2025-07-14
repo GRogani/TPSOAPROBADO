@@ -1,6 +1,6 @@
 #include "page_table.h"
 
-_Atomic uint32_t next_table_id = 0;
+_Atomic uint32_t next_table_id = 1;
 
 static t_page_table_entry *init_page_table_entry(bool is_last_level)
 {
