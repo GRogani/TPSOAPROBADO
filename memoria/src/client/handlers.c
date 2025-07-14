@@ -74,24 +74,16 @@ void* client_handler(void* client_fd_ptr) {
                 get_instruction_request_handler(client_fd, package);
                 break;
 
-            case LIST_INSTRUCTIONS:
-                get_instruction_request_handler(client_fd, package); // cambiar
-                break;
-
-            case GET_FREE_SPACE:
-                get_free_space_request_handler(client_fd);
-                break;
-
             case INIT_PROCESS:
                 init_process_request_handler(client_fd, package);
                 break;
 
             case UNSUSPEND_PROCESS:
-                unsuspend_process_request_handler(client_fd, package);
+                // unsuspend_process_request_handler(client_fd, package);
                 break;
 
             case SWAP:
-                swap_request_handler(client_fd, package);
+                // swap_request_handler(client_fd, package);
                 break;
 
             case KILL_PROCESS:
@@ -99,19 +91,19 @@ void* client_handler(void* client_fd_ptr) {
                 break;
 
             case WRITE_MEMORY:
-                write_memory_request_handler(client_fd, package);
+                // write_memory_request_handler(client_fd, package);
                 break;
 
             case READ_MEMORY:
-                read_memory_request_handler(client_fd, package);
+                // read_memory_request_handler(client_fd, package);
                 break;
 
             case GET_PAGE_ENTRY:
-                handle_page_walk_request(client_fd, package);
+                // handle_page_walk_request(client_fd, package);
                 break;
 
             case C_DUMP_MEMORY:
-                dump_memory_request_handler(client_fd, package);
+                // dump_memory_request_handler(client_fd, package);
                 break;
 
             default:

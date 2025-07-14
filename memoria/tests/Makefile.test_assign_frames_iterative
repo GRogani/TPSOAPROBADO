@@ -1,0 +1,21 @@
+# Makefile para test_assign_frames_iterative.c
+CC=gcc
+CFLAGS=-Wall -Wextra -I../src
+LIBS=-lm
+
+# Target para compilar el test
+test_assign_frames_iterative: test_assign_frames_iterative.c
+	$(CC) $(CFLAGS) -o test_assign_frames_iterative test_assign_frames_iterative.c $(LIBS)
+
+# Target para ejecutar el test
+run: test_assign_frames_iterative
+	./test_assign_frames_iterative
+
+# Target para limpiar archivos compilados
+clean:
+	rm -f test_assign_frames_iterative
+
+# Target por defecto
+all: test_assign_frames_iterative
+
+.PHONY: run clean all

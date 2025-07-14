@@ -9,9 +9,7 @@ int main(int argc, char *argv[])
     memoria_config = init_memoria_config(config_file);
     init_logger("memoria.log", "Memoria", memoria_config.LOG_LEVEL);
     initialize_memory_semaphores();
-    init_user_memory(&memoria_config);
     process_manager_init();
-    swap_manager_init(&memoria_config);
     frame_allocation_init();
 
     pthread_t server_thread;

@@ -3,9 +3,11 @@
 
 #include <pthread.h>
 #include "../utils.h"
-#include "syscall_handler.h"
 #include "kernel_space/process_manager.h"
 #include "swap_space/swap_manager.h"
+#include "./init-process/init-process.h"
+#include "./fetch-instruction/fetch-instruction.h"
+#include "./kill-process/kill-process.h"
 
 /// @brief Crea el hilo principal del servidor que escucha conexiones entrantes.
 /// @param listener_thread Puntero al identificador del hilo creado.
