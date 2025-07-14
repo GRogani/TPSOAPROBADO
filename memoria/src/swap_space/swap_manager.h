@@ -1,65 +1,38 @@
 #ifndef SWAP_SPACE_SWAP_MANAGER_H
 #define SWAP_SPACE_SWAP_MANAGER_H
 
-#define INITIAL_SWAP_SIZE (1024 * 1024)
-
-#include "../utils.h"
-#include "../semaphores.h"
-#include "swap_structures.h"
+#include <commons/collections/list.h>
+#include <commons/bitarray.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <pthread.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "../kernel_space/process_manager.h"
+#include "../user_space/user_space_memory.h"
+#include "../user_space/frame_manager.h"
 
+void swap_manager_init();
 
-/**
- * @brief Inicializa el sistema de gestión de SWAP simplificado.
- * @param config Puntero a la configuración global de la memoria.
- * @return true si la inicialización fue exitosa, false en caso contrario.
- */
-void swap_manager_init(const t_memoria_config* config);
+void swap_manager_destroy();
 
 /**
- * @brief Destruye el sistema de gestión de SWAP, cerrando el archivo y liberando todos los recursos.
+ * @brief Allocate frames in the swap space.
  */
-void swap_manager_destroy(void);
+t_list *swap_allocate_frames(uint32_t pages_needed);
 
 /**
- * @brief Asigna páginas en el archivo de swap para un proceso completo.
- * Busca espacio libre al inicio del archivo, si no encuentra va al final.
- * @param pid ID del proceso
- * @param num_pages Número de páginas a asignar
- * @return Lista con información de páginas asignadas o NULL si error
+ * @brief Write data to a specific frame in swap space.
  */
-t_list* swap_allocate_pages(uint32_t pid, uint32_t num_pages);
+int swap_write_frame(uint32_t frame_num, void *data, uint32_t size);
 
 /**
- * @brief Escribe todas las páginas de un proceso al archivo de swap.
- * @param pages Lista con información de páginas del proceso
- * @param process_memory Puntero a la memoria del proceso
- * @param page_size Tamaño de cada página
- * @return true si éxito, false si error
+ * @brief Read data from a specific frame in swap space.
  */
-bool swap_write_pages(t_list* pages, void* process_memory, uint32_t page_size);
+int swap_read_frame(uint32_t frame_num, void *buffer, uint32_t size);
 
 /**
- * @brief Lee todas las páginas de un proceso desde el archivo de swap.
- * @param pages Lista con información de páginas del proceso
- * @param process_memory Puntero a la memoria del proceso
- * @param page_size Tamaño de cada página
- * @return true si éxito, false si error
+ * @brief Release allocated frames in swap space.
  */
-bool swap_read_pages(t_list* pages, void* process_memory, uint32_t page_size);
+void swap_release_frames(t_list *frame_list);
 
-/**
- * @brief Libera las páginas de un proceso en el archivo de swap (marca como libre).
- * @param pid ID del proceso a liberar
- */
-void swap_free_pages(uint32_t pid);
-
-/**
- * @brief Obtiene la cantidad actual de páginas libres en el archivo de swap.
- * @return La cantidad de páginas libres.
- */
-size_t swap_get_free_pages_count(void);
-
-#endif // SWAP_SPACE_SWAP_MANAGER_H
+#endif

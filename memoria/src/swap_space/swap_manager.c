@@ -1,392 +1,206 @@
 #include "swap_manager.h"
 
-extern INITIAL_SWAP_SIZE;
+extern t_memoria_config memoria_config;
 
-static FILE* swap_file = NULL;
-static char* swap_file_path = NULL;
+static FILE *swap_file = NULL;
+static t_bitarray *swap_frames_bitmap = NULL;
+static size_t swap_frames_total = 0;
+static _Atomic uint32_t swap_frames_free_count = 0;
+static pthread_mutex_t swap_frames_mutex;
+static pthread_mutex_t swap_file_mutex;
 
-static uint32_t BLOCK_SIZE = 0;
-static uint32_t MAX_BLOCKS = 0;
-
-static char* blocks_bitmap = NULL;
-static _Atomic uint32_t bitmap_size = 0;
-
-
-static t_list* process_in_swap = NULL;
-
-
-bool swap_manager_init(const t_memoria_config *config)
+t_list *swap_allocate_frames(uint32_t pages_needed)
 {
-    if (!config || config->TAM_PAGINA == 0 || !config->PATH_SWAPFILE) {
-        LOG_ERROR("Swap Manager: configuración inválida");
-        return false;
-    }
+  pthread_mutex_lock(&swap_frames_mutex);
 
-    BLOCK_SIZE = config->TAM_PAGINA;
+  if (pages_needed > swap_frames_free_count)
+  {
+    pthread_mutex_unlock(&swap_frames_mutex);
+    return NULL;
+  }
 
-    swap_file_path = strdup(config->PATH_SWAPFILE);
-    if (!swap_file_path) {
-        LOG_ERROR("Swap Manager: strdup(PATH_SWAPFILE) falló");
-        return false;
-    }
+  t_list *allocated_frames = list_create();
+  uint32_t frames_allocated = 0;
 
-    
-    swap_file = fopen(swap_file_path, "w+b");
-    if (!swap_file) {
-        LOG_ERROR("Swap Manager: no se pudo abrir %s", swap_file_path);
-        free(swap_file_path);
-        return false;
-    }
-
-    if (ftruncate(fileno(swap_file), INITIAL_SWAP_SIZE) != 0) {
-        LOG_ERROR("Swap Manager: ftruncate(1MiB) falló: %s", strerror(errno));
-        fclose(swap_file);
-        free(swap_file_path);
-        return false;
-    }
-
-    MAX_BLOCKS = INITIAL_SWAP_SIZE / BLOCK_SIZE;
-    bitmap_size = MAX_BLOCKS;
-    blocks_bitmap = (char*)safe_calloc(bitmap_size, sizeof(char));
-    if (!blocks_bitmap) {
-        LOG_ERROR("Swap Manager: calloc(bitmap) %u falló", bitmap_size);
-        fclose(swap_file);
-        free(swap_file_path);
-        exit(1);
-    }
-
-    process_in_swap = list_create();
-    if (!process_in_swap) {
-        LOG_ERROR("Swap Manager: list_create() falló");
-        free(blocks_bitmap);
-        fclose(swap_file);
-        free(swap_file_path);
-        exit(1);
-    }
-
-    LOG_INFO("Swap  inicializado con %zuB (%u bloques de %uB)", (size_t)INITIAL_SWAP_SIZE, MAX_BLOCKS, BLOCK_SIZE);
-    
-}
-
-void swap_manager_destroy() 
-{
-    if (swap_file != NULL) {
-        fclose(swap_file);
-        swap_file = NULL;
-    }
-    if (swap_file_path != NULL) {
-        free(swap_file_path);
-        swap_file_path = NULL;
-    }
-    if (process_in_swap != NULL) {
-        list_destroy_and_destroy_elements(process_in_swap, free_swap_process_info);
-        process_in_swap = NULL;
-    }
-    if (blocks_bitmap != NULL) {
-        free(blocks_bitmap);
-        blocks_bitmap = NULL;
-    }
-    bitmap_size = 0;
-    MAX_BLOCKS = 0;
-    BLOCK_SIZE = 0;
-    
-    LOG_INFO("Swap Manager: Destruido y archivo SWAP cerrado");
-}
-
-
-bool compare_by_offset(void* a, void* b) {
-    if (a == NULL || b == NULL) return false;
-    t_swap_process_info* block_a = (t_swap_process_info*)a;
-    t_swap_process_info* block_b = (t_swap_process_info*)b;
-    return block_a->start_offset < block_b->start_offset;
-}
-
-
-void free_swap_process_info(void* element) {
-    if (element != NULL) {
-        t_swap_process_info* info = (t_swap_process_info*)element;
-        free(info);
-    }
-}
-
-
-long find_free_space_with_bitmap(uint32_t blocks_needed) 
-{
-    if (blocks_bitmap == NULL) 
+  for (uint32_t frame_index = 0; frame_index < swap_frames_total && frames_allocated < pages_needed; frame_index++)
+  {
+    if (!bitarray_test_bit(swap_frames_bitmap, frame_index))
     {
-        LOG_ERROR("FATAL: Bitmap no inicializado o bloques necesarios cero");
-        exit(1);
+      bitarray_set_bit(swap_frames_bitmap, frame_index);
+
+      uint32_t *frame_num = malloc(sizeof(uint32_t));
+      *frame_num = frame_index;
+      list_add(allocated_frames, frame_num);
+
+      frames_allocated++;
     }
+  }
 
-    uint32_t consecutive_free = 0;
-    uint32_t start_index = 0;
+  swap_frames_free_count -= frames_allocated;
 
-    for (uint32_t i = 0; i < bitmap_size; i++) {
-        if (blocks_bitmap[i] == 0) {
-            if (consecutive_free == 0) {
-                start_index = i;
-            }
-            consecutive_free++;
+  pthread_mutex_unlock(&swap_frames_mutex);
 
-            if (consecutive_free == blocks_needed) {
-                return start_index;
-            }
-        } else {
-            consecutive_free = 0;
-        }
-    }
+  LOG_INFO("Swap: Allocated %d frames in swap space", frames_allocated);
+  return allocated_frames;
+}
 
+int swap_write_frame(uint32_t frame_num, void *data, uint32_t size)
+{
+  if (swap_file == NULL)
+  {
+    LOG_ERROR("Swap: Swap file not initialized");
     return -1;
+  }
+
+  pthread_mutex_lock(&swap_file_mutex);
+
+  // Calculate position (physic dir) in swap file
+  long position = frame_num * memoria_config.TAM_PAGINA;
+
+  int result = 0;
+
+  if (fseek(swap_file, position, SEEK_SET) != 0)
+  {
+    LOG_ERROR("Swap: Error seeking to position %ld in swap file", position);
+    result = -1;
+  }
+  else
+  {
+    size_t written = fwrite(data, 1, size, swap_file);
+    if (written != size)
+    {
+      LOG_ERROR("Swap: Error writing to swap file. Expected to write %u bytes, wrote %zu", size, written);
+      result = -1;
+    }
+    else
+    {
+      fflush(swap_file);
+      LOG_DEBUG("Swap: Written %u bytes to frame %u at position %ld", size, frame_num, position);
+    }
+  }
+
+  pthread_mutex_unlock(&swap_file_mutex);
+
+  return result;
 }
 
-
-
-void mark_pages_in_use(uint32_t start_page, uint32_t num_pages) 
+void swap_manager_init()
 {
-    for (uint32_t i = 0; i < num_pages && (start_page + i) < bitmap_size; i++) {
-        blocks_bitmap[start_page + i] = false;
-    }
+  pthread_mutex_init(&swap_frames_mutex, NULL);
+  pthread_mutex_init(&swap_file_mutex, NULL);
+
+  swap_file = fopen(memoria_config.PATH_SWAPFILE, "wb+");
+  if (swap_file == NULL)
+  {
+    LOG_ERROR("Swap: Failed to create swap file at %s", memoria_config.PATH_SWAPFILE);
+    exit(EXIT_FAILURE);
+  }
+
+  swap_frames_total = 1024; // TODO: cambiarlo a que sea más grande, el maximo tamaño del disco
+  swap_frames_free_count = swap_frames_total;
+
+  size_t bitmap_size = swap_frames_total / 8;
+  if (swap_frames_total % 8 != 0)
+  {
+    bitmap_size += 1;
+  }
+
+  char *bitmap_data = calloc(bitmap_size, 1); // Initialize all bits to 0 (free)
+  swap_frames_bitmap = bitarray_create_with_mode(bitmap_data, bitmap_size, LSB_FIRST);
+
+  LOG_INFO("Swap: Manager initialized. Swap file: %s, Initial frames: %zu", memoria_config.PATH_SWAPFILE, swap_frames_total);
 }
 
-
-void mark_pages_as_free(uint32_t start_page, uint32_t num_pages) {
-    if (blocks_bitmap == NULL || num_pages == 0) {
-        return;
-    }
-    
-    for (uint32_t i = 0; i < num_pages && (start_page + i) < bitmap_size; i++) {
-        blocks_bitmap[start_page + i] = true;
-    }
-}
-
-bool extend_bitmap(uint32_t blocks_needed) 
+void swap_manager_destroy()
 {
-    uint32_t new_bitmap_size = bitmap_size + blocks_needed;
+  if (swap_file != NULL)
+  {
+    fclose(swap_file);
+    swap_file = NULL;
+  }
 
-    char* new_bitmap = safe_realloc(blocks_bitmap, new_bitmap_size * sizeof(char));
-    
-    blocks_bitmap = new_bitmap;
+  if (swap_frames_bitmap != NULL)
+  {
+    free(swap_frames_bitmap->bitarray);
+    bitarray_destroy(swap_frames_bitmap);
+    swap_frames_bitmap = NULL;
+  }
 
-    for (uint32_t i = bitmap_size; i < new_bitmap_size; i++) {
-        blocks_bitmap[i] = true;
-    }
-    bitmap_size = new_bitmap_size;
-    return true;
+  pthread_mutex_destroy(&swap_frames_mutex);
+  pthread_mutex_destroy(&swap_file_mutex);
+
+  LOG_INFO("Swap: Manager destroyed");
 }
 
-t_list* swap_allocate_pages(uint32_t pid, uint32_t num_pages) {
-    if (num_pages == 0) {
-        return NULL
+/**
+ * Read data from a specific frame in swap space
+ */
+int swap_read_frame(uint32_t frame_num, void *buffer, uint32_t size)
+{
+  if (swap_file == NULL)
+  {
+    LOG_ERROR("Swap: Swap file not initialized");
+    return -1;
+  }
+
+  pthread_mutex_lock(&swap_file_mutex);
+
+  // Calculate position (physic dir) in swap file
+  long position = frame_num * memoria_config.TAM_PAGINA;
+
+  int result = 0;
+
+  if (fseek(swap_file, position, SEEK_SET) != 0)
+  {
+    LOG_ERROR("Swap: Error seeking to position %ld in swap file", position);
+    result = -1;
+  }
+  else
+  {
+    size_t read_bytes = fread(buffer, 1, size, swap_file);
+    if (read_bytes != size)
+    {
+      LOG_ERROR("Swap: Error reading from swap file. Expected to read %u bytes, read %zu", size, read_bytes);
+      result = -1;
     }
-
-    if (swap_file == NULL) {
-        LOG_ERROR("Swap Manager: Archivo de swap no inicializado");
-        return NULL;
+    else
+    {
+      LOG_DEBUG("Swap: Read %u bytes from frame %u at position %ld", size, frame_num, position);
     }
+  }
 
-    lock_swap_file();
+  pthread_mutex_unlock(&swap_file_mutex);
 
-    t_list* pages = list_create();
-    if (pages == NULL) {
-        LOG_ERROR("Swap Manager: Error al crear lista de paginas");
-        unlock_swap_file();
-        return NULL;
-    }
-
-    uint32_t start_offset;
-    uint32_t start_page;
-    
-    // Intentar encontrar espacio libre usando bitmap
-    start_offset = find_free_space_with_bitmap(num_pages);
-
-    if (start_offset == (uint32_t)-1) {
-
-        start_page = bitmap_size;
-
-        if (!extend_bitmap(num_pages)) {
-            LOG_ERROR("Swap Manager: Error extendiendo bitmap");
-            list_destroy(pages);
-            unlock_swap_file();
-            return NULL;
-        }
-        
-        if (bitmap_size < start_page + num_pages) {
-            LOG_ERROR("Swap Manager: Error en extensión del bitmap");
-            list_destroy(pages);
-            unlock_swap_file();
-            return NULL;
-        }
-        
-        next_free_offset += num_pages * BLOCK_SIZE;
-        MAX_BLOCKS = bit;art_page = start_offset / BLOCK_SIZE;
-    }
-    
-
-    // Marcar páginas como ocupadas en el bitmap
-    mark_pages_in_use(start_page, num_pages);
-
-    // Crear información del bloque de proceso
-    t_swap_process_info* process_block = malloc(sizeof(t_swap_process_info));
-    if (process_block == NULL) {
-        LOG_ERROR("Swap Manager: Error al asignar memoria para bloque de proceso");
-        mark_pages_as_free(start_page, num_pages); // Rollback
-        list_destroy(pages);
-        unlock_swap_file();
-        return NULL;
-    }
-    
-    process_block->pid = pid;
-    process_block->start_offset = start_offset;
-    process_block->num_pages = num_pages;
-    process_block->is_used = true;
-    list_add(process_in_swap, process_block);
-
-    // Crear información de cada página
-    for (uint32_t i = 0; i < num_pages; i++) {
-        t_swap_page_info* page = malloc(sizeof(t_swap_page_info));
-        if (page == NULL) {
-            LOG_ERROR("Swap Manager: Error al asignar memoria para pagina %u", i);
-            // Limpiar páginas ya creadas
-            list_destroy_and_destroy_elements(pages, free);
-            list_destroy(pages);
-            mark_pages_as_free(start_page, num_pages); // Rollback
-            unlock_swap_file();
-            return NULL;
-        }
-        
-        page->pid = pid;
-        page->virtual_page_number = i;
-        page->swap_offset = start_offset + (i * BLOCK_SIZE);
-        list_add(pages, page);
-    }
-
-    LOG_OBLIGATORIO("## SWAP - PID: %u - Asignadas %u páginas en offset %u (página %u)", pid, num_pages, start_offset, start_page);
-    
-    unlock_swap_file();
-    return pages;
+  return result;
 }
 
-bool swap_write_pages(t_list* pages, void* process_memory, uint32_t BLOCK_SIZE_param) {
-    if (swap_file == NULL || pages == NULL || process_memory == NULL || BLOCK_SIZE_param == 0) {
-        LOG_ERROR("Swap Manager: Parametros invalidos para escritura");
-        return false;
-    }
+/**
+ * Release allocated frames in swap space
+ */
+void swap_release_frames(t_list *frame_list)
+{
+  if (frame_list == NULL)
+  {
+    return;
+  }
 
-    lock_swap_file();
+  pthread_mutex_lock(&swap_frames_mutex);
+  
+  // Guardamos el tamaño de la lista antes de modificarla
+  int frames_released = list_size(frame_list);
 
-    for (int i = 0; i < list_size(pages); i++) {
-        t_swap_page_info* page = list_get(pages, i);
-        if (page == NULL) {
-            LOG_ERROR("Swap Manager: Página NULL en índice %d", i);
-            unlock_swap_file();
-            return false;
-        }
-        
-        void* page_content = (char*)process_memory + (page->virtual_page_number * BLOCK_SIZE_param);
-        
-        if (fseek(swap_file, page->swap_offset, SEEK_SET) != 0) {
-            LOG_ERROR("Swap Manager: Error posicionando en offset %u", page->swap_offset);
-            unlock_swap_file();
-            return false;
-        }
-        
-        size_t written = fwrite(page_content, 1, BLOCK_SIZE_param, swap_file);
-        if (written != BLOCK_SIZE_param) {
-            LOG_ERROR("Swap Manager: Error escribiendo pagina %u en offset %u (escrito %zu de %u bytes)", 
-                     page->virtual_page_number, page->swap_offset, written, BLOCK_SIZE_param);
-            unlock_swap_file();
-            return false;
-        }
-    }
+  for (int i = 0; i < frames_released; i++)
+  {
+    uint32_t *frame_num = list_get(frame_list, i);
+    bitarray_clean_bit(swap_frames_bitmap, *frame_num);
+    free(frame_num);
+  }
 
-    LOG_OBLIGATORIO("## SWAP - PID: %u - Escritura de %d páginas en swap", ((t_swap_page_info*)list_get(pages,0))->pid, list_size(pages));
-    
-    unlock_swap_file();
-    return true;
-}
+  swap_frames_free_count += frames_released;
 
-bool swap_read_pages(t_list* pages, void* process_memory, uint32_t BLOCK_SIZE_param) {
-    if (swap_file == NULL || pages == NULL || process_memory == NULL || BLOCK_SIZE_param == 0) {
-        LOG_ERROR("Swap Manager: Parametros invalidos para lectura");
-        return false;
-    }
+  pthread_mutex_unlock(&swap_frames_mutex);
 
-    lock_swap_file();
+  list_destroy(frame_list);
 
-    for (int i = 0; i < list_size(pages); i++) {
-        t_swap_page_info* page = list_get(pages, i);
-        if (page == NULL) {
-            LOG_ERROR("Swap Manager: Página NULL en índice %d", i);
-            unlock_swap_file();
-            return false;
-        }
-        
-        void* page_content = (char*)process_memory + (page->virtual_page_number * BLOCK_SIZE_param);
-        
-        if (fseek(swap_file, page->swap_offset, SEEK_SET) != 0) {
-            LOG_ERROR("Swap Manager: Error posicionando en offset %u", page->swap_offset);
-            unlock_swap_file();
-            return false;
-        }
-        
-        size_t read = fread(page_content, 1, BLOCK_SIZE_param, swap_file);
-        if (read != BLOCK_SIZE_param) {
-            LOG_ERROR("Swap Manager: Error leyendo pagina %u desde offset %u (leido %zu de %u bytes)", 
-                     page->virtual_page_number, page->swap_offset, read, BLOCK_SIZE_param);
-            unlock_swap_file();
-            return false;
-        }
-    }
-
-    LOG_OBLIGATORIO("## SWAP - PID: %u - Lectura de %d páginas desde swap", ((t_swap_page_info*)list_get(pages,0))->pid, list_size(pages));
-    
-    unlock_swap_file();
-    return true;
-}
-
-void swap_free_pages(uint32_t pid) {
-    if (process_in_swap == NULL) {
-        return;
-    }
-
-    lock_swap_file();
-
-    // Buscar el bloque del proceso
-    for (int i = 0; i < list_size(process_in_swap); i++) {
-        t_swap_process_info* block = list_get(process_in_swap, i);
-        if (block == NULL) {
-            continue;
-        }
-        
-        if (block->pid == pid && block->is_used) {
-            // Marcar páginas como libres en el bitmap
-            uint32_t start_page = block->start_offset / BLOCK_SIZE;
-            mark_pages_as_free(start_page, block->num_pages);
-            
-            // Marcar como libre (no eliminar, para poder reutilizar)
-            block->is_used = false;
-            LOG_OBLIGATORIO("## SWAP - PID: %u - Liberadas %u páginas en offset %u (páginas %u-%u)", pid, block->num_pages, block->start_offset, start_page, start_page + block->num_pages - 1);
-            break;
-        }
-    }
-
-    unlock_swap_file();
-}
-
-size_t swap_get_free_pages_count() {
-    if (blocks_bitmap == NULL) {
-        return 0;
-    }
-
-    lock_swap_file();
-    
-    size_t free_pages = 0;
-    for (uint32_t i = 0; i < bitmap_size; i++) {
-        if (blocks_bitmap[i]) {
-            free_pages++;
-        }
-    }
-    
-    unlock_swap_file();
-    return free_pages;
+  LOG_INFO("Swap: Released %d frames in swap space", frames_released);
 }

@@ -3,7 +3,7 @@
 
 #include <semaphore.h>
 #include <stdint.h>
-#include "../utils.h"
+#include "../../utils/utils.h"
 
 void initialize_memory_semaphores();
 void destroy_memory_semaphores();
