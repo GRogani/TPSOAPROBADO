@@ -22,10 +22,12 @@ void exit_process_syscall(uint32_t pid)
 bool exit_routine(t_pcb* pcb) {
   bool memory_space_free = false;
   lock_exit_list();
+  LOG_INFO("Lockeada lista EXIT");
 
   add_pcb_to_exit(pcb); // lo pasamos a EXIT
 
   int mem_response = kill_process_in_memory(pcb->pid);
+  LOG_INFO("KILL PROCESS IN MEMORY EXECUTED");
 
   if (mem_response == 0)
   {
@@ -39,23 +41,24 @@ bool exit_routine(t_pcb* pcb) {
     pcb->MT.exec_time_ms = get_current_time_ms();
   }
 
+  LOG_INFO("LOGEANDO METRICAS...");
   log_process_metrics(pcb->pid, pcb->ME, pcb->MT);
 
   unlock_exit_list();
+  LOG_INFO("EXIT DESLOCKEADO");
 
   return memory_space_free;
 }
 
 void log_process_metrics(uint32_t pid, t_state_metrics state_metrics, t_time_metrics time_metrics)
 {
-  LOG_OBLIGATORIO("## (%d) - Metricas de estado: NEW (%d) (%ldms), READY (%d) (%ldms),  SUSPEND REDY (%d) (%ldms), EXEC (%d) (%ldms), BLOCK (%d) (%ldms), SUSPEND BLOCK (%d) (%ldms), EXIT (%d) (%ldms)", 
-          pid, 
-          state_metrics.new_count          , time_metrics.new_time_ms, 
-          state_metrics.ready_count        , time_metrics.ready_time_ms,
-          state_metrics.susp_ready_count   , time_metrics.susp_ready_time_ms,
-          state_metrics.exec_count         , time_metrics.exec_time_ms, 
-          state_metrics.blocked_count        , time_metrics.blocked_time_ms, 
-          state_metrics.susp_blocked_count , time_metrics.susp_blocked_time_ms,
-          state_metrics.exit_count         , time_metrics.exit_time_ms
-        );
+  LOG_OBLIGATORIO("## (%d) - Metricas de estado: \nNEW (%d) (%ldms), \nREADY (%d) (%ldms), \nSUSPEND REDY (%d) (%ldms), \nEXEC (%d) (%ldms), \nBLOCK (%d) (%ldms), \nSUSPEND BLOCK (%d) (%ldms), \nEXIT (%d) (%ldms)",
+                  pid,
+                  state_metrics.new_count, time_metrics.new_time_ms,
+                  state_metrics.ready_count, time_metrics.ready_time_ms,
+                  state_metrics.susp_ready_count, time_metrics.susp_ready_time_ms,
+                  state_metrics.exec_count, time_metrics.exec_time_ms,
+                  state_metrics.blocked_count, time_metrics.blocked_time_ms,
+                  state_metrics.susp_blocked_count, time_metrics.susp_blocked_time_ms,
+                  state_metrics.exit_count, time_metrics.exit_time_ms);
 }

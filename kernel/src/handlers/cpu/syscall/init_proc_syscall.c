@@ -11,18 +11,21 @@ void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc,
              caller_pid, new_process_memory_space, new_process_pseudocode_file ? new_process_pseudocode_file : "NULL");
 
     // 1. Actualizar PC del proceso actual que está en EXEC
+    lock_new_list();
     lock_exec_list();
+
     t_pcb *current_pcb = find_pcb_in_exec(caller_pid);
     if (current_pcb == NULL)
     {
         LOG_ERROR("init_proc_syscall: Proceso caller con PID %d NO está en EXEC, no se puede actualizar el PC", caller_pid);
         unlock_exec_list();
-        send_confirmation_package(response_socket, 1); // 1 = error
+        unlock_new_list();
         return;
     }
+
+    current_pcb->MT.last_cpu_burst_ms = now();
     
     current_pcb->pc = caller_pc;
-    unlock_exec_list();
 
     // 2. Crear PCB del nuevo proceso
     // uint32_t new_pid = generate_new_pid();
@@ -33,33 +36,38 @@ void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc,
     {
         LOG_ERROR("init_proc_syscall: Error al crear PCB para nuevo proceso PID %d", new_pid);
         
-        // Enviar respuesta de error
-        send_confirmation_package(response_socket, 1); // 1 = error
         return;
     }
-
-    // 3. Agregar PCB a la lista NEW
-    lock_new_list();
     
     // Verificar si el proceso ya existe antes de agregarlo (aunque no debería pasar con PIDs únicos)
     if (find_pcb_in_new(new_pid))
     {
         unlock_new_list();
+        unlock_exec_list();
         pcb_destroy(new_pcb);
         LOG_ERROR("init_proc_syscall: Proceso con PID %d ya existe en lista NEW", new_pid);
         
-        // Enviar respuesta de error
-        send_confirmation_package(response_socket, 1); // 1 = error
         return;
     }
 
     add_pcb_to_new(new_pcb);
+
     unlock_new_list();
+    unlock_exec_list();
 
     send_confirmation_package(response_socket, 0); // 0 = success
-
     LOG_INFO("init_proc_syscall: Respuesta de confirmación enviada a CPU.");
 
+    // mandamos a un thread asi evitamos que se quede trabada la cpu porque no le vamos a poder contestar desde el kernel si entra otra syscall (porque el corto plazo se queda esperando la respuesta de la interrupcion)
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, process_schedulers, NULL) != 0)
+    {
+        LOG_ERROR("INIT_PROC syscall: Failure pthread_create");
+    }
+    pthread_detach(thread);
+}
+
+void process_schedulers() {
     // 5. Correr largo plazo para intentar inicializar
     LOG_INFO("init_proc_syscall: Ejecutando planificador de largo plazo");
     run_long_scheduler();

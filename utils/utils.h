@@ -21,6 +21,9 @@
 #include "src/utils/config/config.h"
 #include "src/utils/config/t_configs.h"
 
+// Time Utils
+#include "src/utils/time_utils.h"
+
 // Serialization
 #include "src/utils/serialization/buffer.h"
 #include "src/utils/serialization/package.h"
@@ -54,12 +57,10 @@
 #include "src/utils/DTPs/kill_process_package.h"
 #include "src/utils/DTPs/swap_package.h"
 
-#include "src/utils/DTPs/mmu_request_page_read_from_memory.h"
 #include "src/utils/DTPs/mmu_request_page_read_response.h"
-#include "src/utils/DTPs/mmu_request_page_write_to_memory.h"
 #include "src/utils/DTPs/memory_write_request.h"
 #include "src/utils/DTPs/memory_read_response.h"
 #include "src/utils/DTPs/memory_read_request.h"
 #include "src/utils/DTPs/page_entry_package.h"
 
-#endif 
+#endif

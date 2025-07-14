@@ -10,7 +10,7 @@ char* opcode_to_string(OPCODE opcode)
         case INIT_PROCESS: return "INIT_PROCESS";
         case WRITE_MEMORY: return "WRITE_MEMORY";
         case READ_MEMORY: return "READ_MEMORY";
-        case DUMP_MEMORY: return "DUMP_MEMORY";
+        case C_DUMP_MEMORY: return "C_DUMP_MEMORY";
 
 
         case NEW_IO: return "NEW_IO";

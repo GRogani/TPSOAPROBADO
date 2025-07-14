@@ -22,7 +22,7 @@ void run_short_scheduler(void);
  * @param pcb_ready_out Puntero al PCB en READY
  * @param pcb_exec_out Puntero al PCB en EXEC
  */
-void get_short_scheduler_context(t_cpu_connection** cpu_out, t_pcb** pcb_ready_out, t_pcb** pcb_exec_out);
+void get_short_scheduler_context(t_cpu_connection** cpu_out, t_pcb** pcb_ready_out);
 
 /**
  * @brief Obtiene una CPU libre del pool de conexiones

@@ -43,4 +43,6 @@ void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc,
  */
 uint32_t generate_new_pid(void);
 
+void process_schedulers();
+
 #endif

@@ -31,9 +31,9 @@ typedef struct {
     CacheReplacementAlgorithm replacement_algo;
 } CacheConfig;
 
-MMUConfig load_mmu_config();
+MMUConfig load_mmu_config(char *argv[]);
 
-TLBConfig load_tlb_config();
+TLBConfig load_tlb_config(char *argv[]);
 
 CacheConfig load_cache_config(t_config* config);
 

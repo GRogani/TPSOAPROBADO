@@ -35,6 +35,9 @@
         "medium_scheduler.h": "c",
         "collections.h": "c",
         "long_scheduler.h": "c",
-        "io_syscall.h": "c"
+        "io_syscall.h": "c",
+        "eopcodes.h": "c",
+        "config_loader.h": "c",
+        "exit_syscall.h": "c"
     }
 }

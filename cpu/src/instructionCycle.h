@@ -7,7 +7,9 @@
 #include <commons/collections/list.h>
 #include "../utils.h"
 #include "cpuProtocol.h"
+#include "mmu.h"
 #include "lists_and_mutex.h"
+#include <pthread.h>
 
 typedef struct t_instruction
 {

@@ -26,8 +26,6 @@ void* io_completion(void *thread_args)
 
     // 2. Actualizar current_processing de la conexión a -1 (liberar dispositivo)
     connection->current_process_executing = -1;
-    
-    unlock_io_connections();
 
     // 3. Procesar solicitudes pendientes de IO ANTES de los schedulers
     t_pending_io_thread_args *pending_args = safe_malloc(sizeof(t_pending_io_thread_args));
@@ -77,6 +75,7 @@ void* io_completion(void *thread_args)
     unlock_susp_blocked_list();
     unlock_blocked_list();
     unlock_ready_list();
+    unlock_io_connections();
 
     // 5. Ejecutar schedulers según corresponda
     if (found_in_blocked) {

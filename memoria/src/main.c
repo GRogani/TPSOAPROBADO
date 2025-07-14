@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     destroy_memory_semaphores();
     LOG_INFO("Memory semaphores destroyed");
 
-    process_manager_destroy(); // cleanup for process manager and its process list
+    process_manager_destroy();
     shutdown_memoria(memoria_config, config_file);
 
     return 0;

@@ -70,8 +70,8 @@ void handle_cpu_syscall(t_package *package, int socket)
                                 syscall->params.io.sleep_time,
                                 syscall->params.io.device_name);
     break;
-    case SYSCALL_DUMP_PROCESS:
-      LOG_OBLIGATORIO("## (%d) - Solicitó syscall: DUMP_PROCESS", syscall->pid);
+    case SYSCALL_DUMP_MEMORY:
+      LOG_OBLIGATORIO("## (%d) - Solicitó syscall: DUMP_MEMORY", syscall->pid);
       dump_memory_syscall(syscall->pid);
     break;
     case SYSCALL_EXIT:

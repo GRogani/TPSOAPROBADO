@@ -21,7 +21,7 @@ t_package *create_syscall_package(syscall_package_data *syscall)
         buffer_add_uint32(buffer, syscall->params.io.sleep_time);
         break;
     }
-    case SYSCALL_DUMP_PROCESS:
+    case SYSCALL_DUMP_MEMORY:
     case SYSCALL_EXIT:
         // No additional parameters
         break;
@@ -64,7 +64,7 @@ syscall_package_data *read_syscall_package(t_package *package)
         syscall->params.io.sleep_time = buffer_read_uint32(package->buffer);
         break;
     }
-    case SYSCALL_DUMP_PROCESS:
+    case SYSCALL_DUMP_MEMORY:
     case SYSCALL_EXIT:
         // No additional parameters
         break;

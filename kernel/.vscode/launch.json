@@ -6,7 +6,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-      "args": ["process0", "1000"],
+      "args": ["PLANI_CORTO_PLAZO", "500"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

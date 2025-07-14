@@ -53,6 +53,6 @@ t_pcb* get_next_pcb_from_ready() {
     if (list_size(get_ready_list()) == 0) {
         return NULL;
     }
-    
-    return list_remove(get_ready_list(), 0); // Remueve y retorna el primer elemento
+
+    return list_get(get_ready_list(), 0); // retorna el primer elemento SIN REMOVERLO. LO REMUEVE LUEGO DE SABER SI LO TIENE QUE MANDAR A DESPACHAR.
 }

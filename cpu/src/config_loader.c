@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-MMUConfig load_mmu_config()
+MMUConfig load_mmu_config(char *argv[])
 {
-  t_config *config = init_config("memoria.config");
+  t_config *config = init_config(argv[1]);
   MMUConfig mmu_config;
   mmu_config.page_size = config_get_int_value(config, "TAM_PAGINA");
   mmu_config.page_table_levels = config_get_int_value(config, "CANTIDAD_NIVELES");
@@ -15,9 +15,9 @@ MMUConfig load_mmu_config()
   return mmu_config;
 }
 
-TLBConfig load_tlb_config()
+TLBConfig load_tlb_config(char *argv[])
 {
-  t_config *config = init_config("cpu.config");
+  t_config *config = init_config(argv[1]);
   TLBConfig tlb_config;
   tlb_config.entry_count = config_get_int_value(config, "ENTRADAS_TLB");
   char *algo_str = config_get_string_value(config, "REEMPLAZO_TLB");

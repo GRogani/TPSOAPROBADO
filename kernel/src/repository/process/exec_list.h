@@ -21,8 +21,8 @@ void destroy_repository_exec();
 void lock_exec_list();
 void unlock_exec_list();
 
-void* find_pcb_in_exec(uint32_t pid);
-void add_pcb_to_exec(t_pcb* pcb);
+void *find_pcb_in_exec(uint32_t pid); 
+void add_pcb_to_exec(t_pcb *pcb);
 t_pcb* remove_pcb_from_exec(uint32_t pid);
 
 #endif

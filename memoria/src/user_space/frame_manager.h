@@ -12,7 +12,7 @@
  * @param config Configuracion de memoria que contiene el tamanio de memoria y tamanio de pagina.
  * @return true si la memoria se inicializo correctamente, false en caso contrario.
  */
-bool init_user_memory(const t_memoria_config* config);
+void init_user_memory(const t_memoria_config* config);
 
 /**
  * @brief Inicializa el Frame Manager, creando un bitmap de frames libres.

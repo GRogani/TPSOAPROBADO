@@ -6,7 +6,7 @@ t_package *create_dump_memory_package(uint32_t pid)
     
     buffer_add_uint32(buffer, pid);
 
-    return create_package(DUMP_MEMORY, buffer);
+    return create_package(C_DUMP_MEMORY, buffer);
 }
 
 int send_dump_memory_package(int socket, uint32_t pid)

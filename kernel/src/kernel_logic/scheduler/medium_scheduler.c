@@ -14,7 +14,9 @@ void run_medium_scheduler(uint32_t  pid){
 
     LOG_INFO("Tiempo de espera de %d milisegundos para PID %u", kernel_config.sleep_time, pid);
     usleep(kernel_config.sleep_time * 1000); // Conversión milisegundos -> macrosegundos de la función usleep
+    
     lock_blocked_list();
+
     t_pcb* blocked_pid_found = find_pcb_in_blocked(pid);
     if(!blocked_pid_found) {
         unlock_blocked_list();
@@ -34,7 +36,6 @@ void run_medium_scheduler(uint32_t  pid){
 
     // BLOCKED -> SUSPEND_BLOCKED
     t_pcb* pcb = remove_pcb_from_blocked(pid);
-    unlock_blocked_list();
     LOG_INFO("Cambio de estado de BLOCKED a SUSPENDED_BLOCKED para PID %d", pid);
 
     int memory_socket = connect_to_memory(&kernel_config);
@@ -74,7 +75,9 @@ void run_medium_scheduler(uint32_t  pid){
 
     lock_susp_blocked_list();
     add_pcb_to_susp_blocked(pcb);
+    
     unlock_susp_blocked_list();
+    unlock_blocked_list();
 
     // Llamo al Planificador de Largo Plazo
     LOG_INFO("Llamando a planificador de largo plazo para admitir nuevos procesos");

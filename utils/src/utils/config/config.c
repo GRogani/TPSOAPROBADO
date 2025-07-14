@@ -43,8 +43,9 @@ t_kernel_config init_kernel_config(t_config* config) {
     conf.io_port = config_get_string_value(config, "IO_PORT");
 
     conf.cpu_quantity = config_get_int_value(config, "CPU_QUANTITY");
+    conf.default_estimated_cpu_burst_ms = config_get_int_value(config, "ESTIMACION_INICIAL");
 
-    return conf;
+        return conf;
 }
 
 t_memoria_config init_memoria_config(t_config* config) {

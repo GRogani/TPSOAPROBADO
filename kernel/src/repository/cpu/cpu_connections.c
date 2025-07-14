@@ -4,6 +4,8 @@ static sem_t sem_cpu_connections;
 
 unsigned int id_generator = 0;
 
+_Atomic unsigned int cpu_id_generator = 1;
+
 void initialize_repository_cpu_connections()
 {
   if (sem_init(&sem_cpu_connections, 0, 1) != 0)
@@ -50,13 +52,14 @@ char * create_cpu_connection(int socket_interrupt, int socket_dispatch)
   cpu_connection->interrupt_socket_id = socket_interrupt;
   cpu_connection->current_process_executing = -1;
   
-  // Generar un ID random, se libera solo cuando eliminamos el elemento del diccionario.
-  char* id = safe_malloc(16);
-  snprintf(id, 16, "%d-%ld", socket_dispatch, random());
-
+  char* id = string_itoa(cpu_id_generator);
+  cpu_connection->id = cpu_id_generator;
+  
   initialize_repository_cpu(&cpu_connection->cpu_exec_sem);
-
+  
   dictionary_put(get_cpu_connections_dict(), id, cpu_connection);
+  
+  cpu_id_generator++;
 
   return id;
 }

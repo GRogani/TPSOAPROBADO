@@ -16,7 +16,7 @@ enum
     SWAP,              // kernel -> memoria
     WRITE_MEMORY,      // kernel -> memoria
     READ_MEMORY,       // kernel -> memoria
-    DUMP_MEMORY,       // kernel -> memoria
+    C_DUMP_MEMORY,       // kernel -> memoria
     GET_PAGE_ENTRY,
 
     CONFIRMATION, // server -> client
@@ -30,9 +30,6 @@ enum
     CPU_CONTEXT, // cpu -> kernel
 
     IO_OPERATION, // cpu -> kernel
-
-    MMU_PAGE_READ_REQUEST,
-    MMU_PAGE_WRITE_REQUEST,
 };
 
 /**

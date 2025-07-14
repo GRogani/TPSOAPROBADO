@@ -36,7 +36,7 @@ t_cpu_connection* get_cpu_by_algorithm(t_list *cpus);
  * @return true si se debe hacer preemption, false caso contrario
  * @note Inicialmente false (FIFO), pero se puede habilitar para SJF con preemption
  */
-bool preepmtion_is_enabled(void);
+bool preemption_is_enabled(void);
 
 
 /**
@@ -47,7 +47,7 @@ bool preepmtion_is_enabled(void);
  * @note Utiliza la función `compare_cpu_bursts` para comparar los procesos
  * y la función `preemtion_is_enabled` para verificar si el desalojamiento está habilitado.
  */
-bool should_preempt_executing_process(t_pcb* pcb_ready, t_pcb *pid_executing);
+bool should_preempt_executing_process(t_pcb *pcb_ready, int32_t pid_executing);
 
 /**
  * @brief Configura los algoritmos de planificación basado en la configuración

@@ -1,16 +1,22 @@
 #ifndef SWAP_SPACE_SWAP_MANAGER_H
 #define SWAP_SPACE_SWAP_MANAGER_H
 
+#define INITIAL_SWAP_SIZE (1024 * 1024)
+
 #include "../utils.h"
 #include "../semaphores.h"
 #include "swap_structures.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 /**
  * @brief Inicializa el sistema de gestión de SWAP simplificado.
  * @param config Puntero a la configuración global de la memoria.
  * @return true si la inicialización fue exitosa, false en caso contrario.
  */
-bool swap_manager_init(const t_memoria_config* config);
+void swap_manager_init(const t_memoria_config* config);
 
 /**
  * @brief Destruye el sistema de gestión de SWAP, cerrando el archivo y liberando todos los recursos.

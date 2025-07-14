@@ -314,12 +314,7 @@ void read_memory_request_handler(int socket, t_package* package) {
     
     if (success) {
         LOG_INFO("READ_MEMORY: Lectura exitosa desde dirección %u", physical_address);
-        
-        t_buffer* response_buffer = buffer_create(size);
-        buffer_add_string(response_buffer, size, buffer);
-        t_package* response_package = create_package(READ_MEMORY, response_buffer);
-        send_package(socket, response_package);
-        destroy_package(response_package);
+        send_memory_read_response(socket, buffer, size);
     } else {
         LOG_ERROR("READ_MEMORY: Error al leer desde dirección %u", physical_address);
         send_confirmation_package(socket, -1);
@@ -339,19 +334,14 @@ void dump_memory_request_handler(int socket, t_package* package) {
         return;
     }
     
-    lock_process_list();
-    
     uint32_t process_size = proc->process_size;
     bool process_still_exists = process_manager_process_exists(pid);
     
     if (!process_still_exists) {
         LOG_ERROR("DUMP_MEMORY: Proceso PID %u fue eliminado durante el dump", pid);
-        unlock_process_list();
         send_confirmation_package(socket, -1);
         return;
     }
-    
-    unlock_process_list();
     
     LOG_INFO("DUMP_MEMORY: Iniciando dump de memoria para PID %u", pid);
     
@@ -538,6 +528,8 @@ void unsuspend_process_request_handler(int client_fd, t_package* package) {
 }
 
 void swap_request_handler(int client_fd, t_package* package) {
+    usleep(memoria_config.RETARDO_SWAP * 1000);
+    
     uint32_t pid = read_swap_package(package);
     LOG_INFO("SWAP: Iniciando swap out para PID %u", pid);
     

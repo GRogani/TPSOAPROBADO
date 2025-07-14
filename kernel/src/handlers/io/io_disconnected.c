@@ -44,9 +44,15 @@ void handle_found_process(t_io_connection *io_connection)
   pcb = remove_pcb_from_susp_blocked(io_connection->current_process_executing);
   if (pcb != NULL)
   {
-    // fué removido con exito, corremos rutina final
     exit_routine(pcb);
     unlock_susp_blocked_list();
+
+    // se liberó la memoria, corremos el largo plazo
+    if(run_long_scheduler()) {
+      LOG_INFO("Long scheduler executed successfully after IO disconnection.");
+      run_short_scheduler();
+    }
+
     return;
   }
   // Si no existe en ninguna de las listas, loggeamos un error.
