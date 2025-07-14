@@ -13,6 +13,7 @@
 #include "./write-memory/write-memory.h"
 #include "./swap/swap.h"
 #include "./unsuspend-process/unsuspend-process.h"
+#include "./dump-memory/dump-memory.h"
 
 int create_server_thread(pthread_t* listener_thread);
 

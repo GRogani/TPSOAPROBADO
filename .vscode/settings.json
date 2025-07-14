@@ -60,6 +60,7 @@
         "get-page-entry.h": "c",
         "user_space_memory.h": "c",
         "swap_manager.h": "c",
-        "swap_out.h": "c"
+        "swap_out.h": "c",
+        "dump-memory.h": "c"
     }
 }

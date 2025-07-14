@@ -98,7 +98,7 @@ void *client_handler(void *client_fd_ptr)
             break;
 
         case C_DUMP_MEMORY:
-            // dump_memory_request_handler(client_fd, package);
+            dump_memory_request_handler(client_fd, package);
             break;
 
         case KILL_PROCESS:

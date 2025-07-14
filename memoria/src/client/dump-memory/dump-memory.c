@@ -1,7 +1,112 @@
-/**
- * el dump tiene como finalidad, bajar a un archivo, el contenido de los frames de un proceso especifico
- * el dump lo que deberá hacer es:
- * 1. obtener los frames del proceso, utilizando la lista de frames asignados.
- * 2. por cada frame, obtener el contenido de la memoria física, haciendo un read al user_space con el tamaño de una pagina
- * 3. el contenido que devuelve cada lectura, debe escribirse en el archivo especifico con el siguiente formato: <PID>-<TIMESTAMP>.dmp
- */
+#include "dump-memory.h"
+
+void dump_memory_request_handler(int client_socket, t_package *package)
+{
+  uint32_t pid = read_dump_memory_package(package);
+  LOG_OBLIGATORIO("## PID: %u - Memory Dump solicitado", pid);
+
+  process_info *proc = process_manager_find_process(pid);
+  if (proc == NULL)
+  {
+    LOG_ERROR("DUMP_MEMORY: Proceso PID %u no encontrado", pid);
+    send_confirmation_package(client_socket, -1);
+    return;
+  }
+
+  t_list *frames = proc->allocated_frames;
+  if (frames == NULL || list_size(frames) == 0)
+  {
+    LOG_ERROR("DUMP_MEMORY: Proceso PID %u no tiene frames asignados", pid);
+    send_confirmation_package(client_socket, -1);
+    return;
+  }
+
+  LOG_INFO("DUMP_MEMORY: Proceso PID %u tiene %d frames asignados", pid, list_size(frames));
+
+  FILE *dump_file = create_dump_file(proc->pid);
+  if (dump_file == NULL)
+  {
+    LOG_ERROR("DUMP_MEMORY: Error al crear el archivo de dump para el PID %d", proc->pid);
+    send_confirmation_package(client_socket, -1);
+    return;
+  }
+
+  LOG_INFO("DUMP_MEMORY: Creando archivo de dump para el PID %d", proc->pid);
+
+  void *buffer = malloc(memoria_config.TAM_PAGINA);
+  if (buffer == NULL)
+  {
+    LOG_ERROR("DUMP_MEMORY: Error al alocar buffer para lectura de páginas");
+    fclose(dump_file);
+    send_confirmation_package(client_socket, -1);
+    return;
+  }
+
+  bool dump_success = true;
+  uint32_t total_bytes_dumped = 0;
+
+  for (int i = 0; i < list_size(frames); i++)
+  {
+    uint32_t *frame_number = list_get(frames, i);
+    if (frame_number == NULL)
+    {
+      LOG_ERROR("DUMP_MEMORY: Frame número %d es NULL", i);
+      continue;
+    }
+
+    uint32_t physical_address = (*frame_number) * memoria_config.TAM_PAGINA;
+    read_from_user_space(physical_address, buffer, memoria_config.TAM_PAGINA);
+
+    if (fwrite(buffer, 1, memoria_config.TAM_PAGINA, dump_file) != memoria_config.TAM_PAGINA)
+    {
+      LOG_ERROR("DUMP_MEMORY: Error al escribir contenido del frame %u en el archivo", *frame_number);
+      dump_success = false;
+      break;
+    }
+
+    total_bytes_dumped += memoria_config.TAM_PAGINA;
+    LOG_DEBUG("DUMP_MEMORY: Frame %u (dirección física %u) volcado correctamente", *frame_number, physical_address);
+  }
+
+  free(buffer);
+  fclose(dump_file);
+
+  if (dump_success)
+  {
+    LOG_OBLIGATORIO("## PID: %u - Memory Dump completado. %u",
+                    pid, total_bytes_dumped);
+    send_confirmation_package(client_socket, 0);
+  }
+  else
+  {
+    LOG_ERROR("DUMP_MEMORY: Error durante el dump de memoria para el PID %u", pid);
+    send_confirmation_package(client_socket, -1);
+  }
+}
+
+FILE *create_dump_file(uint32_t pid)
+{
+  time_t now = time(NULL);
+  struct tm *local_time = localtime(&now);
+  char filename[512];
+
+  if (memoria_config.DUMP_PATH != NULL)
+  {
+    char mkdir_cmd[512];
+    snprintf(mkdir_cmd, sizeof(mkdir_cmd), "mkdir -p %s", memoria_config.DUMP_PATH);
+    system(mkdir_cmd);
+
+    snprintf(filename, sizeof(filename), "%s/%u-%04d%02d%02d_%02d%02d%02d.dmp",
+             memoria_config.DUMP_PATH, pid,
+             local_time->tm_year + 1900, local_time->tm_mon + 1, local_time->tm_mday,
+             local_time->tm_hour, local_time->tm_min, local_time->tm_sec);
+  }
+  else
+  {
+    snprintf(filename, sizeof(filename), "%u-%04d%02d%02d_%02d%02d%02d.dmp",
+             pid, local_time->tm_year + 1900, local_time->tm_mon + 1, local_time->tm_mday,
+             local_time->tm_hour, local_time->tm_min, local_time->tm_sec);
+  }
+
+  return fopen(filename, "wb");
+}
