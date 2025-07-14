@@ -78,7 +78,7 @@ int kill_process_in_memory(uint32_t pid)
         return -1;
 }
 
-int dump_memory_routine(uint32_t pid)
+bool dump_memory_routine(uint32_t pid)
 {
     extern t_kernel_config kernel_config; // en globals.h
 
@@ -94,13 +94,13 @@ int dump_memory_routine(uint32_t pid)
 
     if (response->opcode == CONFIRMATION)
     {
-        int status = read_confirmation_package(response);
+        bool status = read_confirmation_package(response);
         destroy_package(response);
         return status;
     }
 
     destroy_package(response);
-    return -1;
+    return false;
 
 }
 

@@ -1,6 +1,5 @@
 #include "main.h"
 
-//Globals
 t_memoria_config memoria_config;
 
 int main(int argc, char *argv[])
@@ -9,10 +8,10 @@ int main(int argc, char *argv[])
     memoria_config = init_memoria_config(config_file);
     init_logger("memoria.log", "Memoria", memoria_config.LOG_LEVEL);
     initialize_memory_semaphores();
-    init_user_memory(&memoria_config);
     process_manager_init();
-    swap_manager_init(&memoria_config);
     frame_allocation_init();
+    swap_manager_init();
+    init_user_space(memoria_config.TAM_MEMORIA);
 
     pthread_t server_thread;
     create_server_thread(&server_thread);

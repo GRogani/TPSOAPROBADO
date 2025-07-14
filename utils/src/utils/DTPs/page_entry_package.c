@@ -1,17 +1,17 @@
 #include "page_entry_package.h"
 
-t_package* create_page_entry_request_package(uint32_t pid, uint32_t table_level, uint32_t entry_index)
+t_package* create_page_entry_request_package(uint32_t pid, uint32_t table_id, uint32_t entry_index)
 {
     t_buffer* buffer = buffer_create(sizeof(uint32_t) * 3);
     buffer_add_uint32(buffer, pid);
-    buffer_add_uint32(buffer, table_level);
+    buffer_add_uint32(buffer, table_id);
     buffer_add_uint32(buffer, entry_index);
     return create_package(GET_PAGE_ENTRY, buffer);
 }
 
-void send_page_entry_request_package(int socket, uint32_t pid, uint32_t table_level, uint32_t entry_index)
+void send_page_entry_request_package(int socket, uint32_t pid, uint32_t table_id, uint32_t entry_index)
 {
-    t_package* package = create_page_entry_request_package(pid, table_level, entry_index);
+    t_package* package = create_page_entry_request_package(pid, table_id, entry_index);
     send_package(socket, package);
     destroy_package(package);
 }
@@ -21,7 +21,7 @@ page_entry_request_data read_page_entry_request_package(t_package* package)
     page_entry_request_data data;
     package->buffer->offset = 0;
     data.pid = buffer_read_uint32(package->buffer);
-    data.table_level = buffer_read_uint32(package->buffer);
+    data.table_id = buffer_read_uint32(package->buffer);
     data.entry_index = buffer_read_uint32(package->buffer);
     
     return data;
