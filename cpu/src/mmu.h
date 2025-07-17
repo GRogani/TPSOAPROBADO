@@ -24,9 +24,12 @@ typedef struct {
 typedef struct {
     bool is_valid;
     uint32_t page;
+    uint32_t pid;
     void* content;
     bool use_bit;
     bool modified_bit;
+    uint32_t modified_start; // Start offset of modified region
+    uint32_t modified_end;   // End offset of modified region (exclusive)
  } CacheEntry;
 
 // MMU Administrativos
@@ -48,11 +51,11 @@ void tlb_add_entry(uint32_t page_number, uint32_t frame_number);
 uint32_t mmu_perform_page_walk(int memory_socket, uint32_t page_number, uint32_t pid);
 
 // Cache Functions
-CacheEntry* cache_find_entry(uint32_t page_number, uint32_t pid);
+CacheEntry *cache_find_entry(uint32_t page_number, uint32_t pid);
 int cache_find_victim_clock(void);
 int cache_find_victim_clock_m(void);
 CacheEntry* cache_load_page(uint32_t logic_dir, int memory_socket, CacheEntry *victim_entry, uint32_t pid);
-CacheEntry* select_victim_entry(int memory_socket, uint32_t logic_dir, uint32_t pid);
+CacheEntry* select_victim_entry(int memory_socket, uint32_t pid);
 
 // Utility Functions
 void tlb_entry_destroy(void* element);

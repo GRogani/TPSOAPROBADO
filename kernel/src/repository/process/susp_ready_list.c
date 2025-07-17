@@ -54,5 +54,5 @@ t_pcb* get_next_pcb_from_susp_ready() {
         return NULL;
     }
     
-    return list_remove(get_susp_ready_list(), 0); // Remueve y retorna el primer elemento
+    return list_get(get_susp_ready_list(), 0); // Remueve y retorna el primer elemento
 }

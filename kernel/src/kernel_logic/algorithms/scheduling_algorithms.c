@@ -6,15 +6,15 @@ static bool preemption_enabled;
 
 t_pcb* get_next_process_to_initialize_from_new(void) 
 {
-    if (long_term_algorithm == SJF)
-            sort_new_list_by_SSF();
+    if (long_term_algorithm == PMCP)
+        sort_new_list_by_SSF();
 
     return get_next_pcb_from_new();
 }
 
 t_pcb* get_next_process_to_initialize_from_susp_ready(void) 
 {
-    if (long_term_algorithm == SJF)
+    if (long_term_algorithm == PMCP)
         sort_susp_ready_list_by_SSF();
 
     return get_next_pcb_from_susp_ready();

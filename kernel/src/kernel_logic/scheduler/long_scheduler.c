@@ -39,15 +39,14 @@ bool run_long_scheduler(void)
       // Error: devolver proceso a SUSP_READY y terminar
       LOG_WARNING("No se pudo des-suspender proceso con PID %d", pcb->pid);
       LOG_WARNING("Fallo de SWAP o memoria sin espacio suficiente");
-      add_pcb_to_susp_ready(pcb);
       destroy_package(response);
       break;
     }
 
     // Éxito: mover de SUSP_READY a READY
     LOG_INFO("Proceso con PID %d des-suspendido correctamente", pcb->pid);
-    
-    add_pcb_to_ready(pcb);
+    t_pcb *pcb_pop = remove_pcb_from_susp_ready(pcb->pid);
+    add_pcb_to_ready(pcb_pop);
     processes_initialized = true;
     
     LOG_INFO("Proceso con PID %d movido a READY", pcb->pid);
@@ -85,7 +84,9 @@ bool run_long_scheduler(void)
       // Éxito: mover de NEW a READY
       LOG_INFO("Proceso con PID %d inicializado correctamente", pcb->pid);
 
-      add_pcb_to_ready(pcb);
+      t_pcb* pcb_pop = remove_pcb_from_new(pcb->pid);
+      add_pcb_to_ready(pcb_pop);
+
       processes_initialized = true;
 
       LOG_INFO("Proceso con PID %d movido a READY", pcb->pid);
@@ -94,7 +95,6 @@ bool run_long_scheduler(void)
     {
       // Error: devolver proceso a NEW y terminar
       LOG_WARNING("No se pudo inicializar proceso con PID %d, memoria sin espacio suficiente", pcb->pid);
-      add_pcb_to_new(pcb);
       break;
     }
   }
