@@ -411,7 +411,9 @@ int cache_find_victim_clock_m()
       if (!entry->is_valid)
       {
         // Se encontró un espacio libre, es la mejor víctima.
-        return g_cache_clock_pointer;
+        uint32_t victim_index = g_cache_clock_pointer;
+        g_cache_clock_pointer = (g_cache_clock_pointer + 1) % g_cache_config->entry_count;
+        return victim_index;
       }
       if (!entry->use_bit && !entry->modified_bit)
       {
