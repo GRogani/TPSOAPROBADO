@@ -402,32 +402,44 @@ int cache_find_victim_clock()
 
 int cache_find_victim_clock_m()
 {
-  for (int i = 0; i < g_cache_config->entry_count * 2; i++)
+  while (true)
   {
-    CacheEntry *entry = list_get(g_cache, g_cache_clock_pointer);
-    if (!entry->is_valid)
-      return g_cache_clock_pointer;
-    if (!entry->use_bit && !entry->modified_bit)
+    // Paso 1: Buscar (uso=0, modificado=0).
+    for (int i = 0; i < g_cache_config->entry_count; i++)
     {
-      int victim_index = g_cache_clock_pointer;
+      CacheEntry *entry = list_get(g_cache, g_cache_clock_pointer);
+      if (!entry->is_valid)
+      {
+        // Se encontró un espacio libre, es la mejor víctima.
+        return g_cache_clock_pointer;
+      }
+      if (!entry->use_bit && !entry->modified_bit)
+      {
+        int victim_index = g_cache_clock_pointer;
+        g_cache_clock_pointer = (g_cache_clock_pointer + 1) % g_cache_config->entry_count;
+        return victim_index;
+      }
       g_cache_clock_pointer = (g_cache_clock_pointer + 1) % g_cache_config->entry_count;
-      return victim_index;
     }
-    g_cache_clock_pointer = (g_cache_clock_pointer + 1) % g_cache_config->entry_count;
-  }
-  for (int i = 0; i < g_cache_config->entry_count * 2; i++)
-  {
-    CacheEntry *entry = list_get(g_cache, g_cache_clock_pointer);
-    if (!entry->use_bit && entry->modified_bit)
+
+    // Paso 2: Buscar (uso=0, modificado=1) y poner bit de uso en 0.
+    for (int i = 0; i < g_cache_config->entry_count; i++)
     {
-      int victim_index = g_cache_clock_pointer;
+      CacheEntry *entry = list_get(g_cache, g_cache_clock_pointer);
+      if (entry->is_valid)
+      {
+        if (!entry->use_bit && entry->modified_bit)
+        {
+          int victim_index = g_cache_clock_pointer;
+          g_cache_clock_pointer = (g_cache_clock_pointer + 1) % g_cache_config->entry_count;
+          return victim_index;
+        }
+        entry->use_bit = false;
+      }
       g_cache_clock_pointer = (g_cache_clock_pointer + 1) % g_cache_config->entry_count;
-      return victim_index;
     }
-    entry->use_bit = false;
-    g_cache_clock_pointer = (g_cache_clock_pointer + 1) % g_cache_config->entry_count;
+    // El ciclo se repite, garantizando encontrar una víctima en la siguiente vuelta.
   }
-  return cache_find_victim_clock();
 }
 
 CacheEntry *select_victim_entry(int memory_socket, uint32_t pid)
