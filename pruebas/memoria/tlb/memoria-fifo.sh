@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Directorio base del proyecto
-BASE_DIR="/home/utnso/Desktop/tp-final-v2"
+BASE_DIR="/home/utnso/so-deploy/tp-2025-1c-Mi-Grupo-1234"
 CONFIG_DIR="config/memoria/tlb/memoria.config"
 CPU_CONFIG_DIR="config/memoria/tlb/memoria-fifo.config"
 
