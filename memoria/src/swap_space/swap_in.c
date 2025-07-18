@@ -2,6 +2,7 @@
 #include "swap_manager.h"
 #include "../user_space/user_space_memory.h"
 #include "../user_space/frame_manager.h"
+#include "../semaphores.h"
 
 /**
  * @brief Resume a process - move its pages from swap space back to user space.
@@ -9,31 +10,38 @@
 int swap_in_process(uint32_t pid) {
     LOG_INFO("## PID: %u - Iniciando reanudación del proceso", pid);
     
+    lock_swap_file();
+    
     process_info *proc = process_manager_find_process(pid);
     if (proc == NULL) {
         LOG_ERROR("## PID: %u - Proceso no encontrado para reanudar", pid);
+        unlock_swap_file();
         return -1;
     }
     
     if (!proc->is_suspended) {
         LOG_WARNING("## PID: %u - El proceso no está suspendido", pid);
+        unlock_swap_file();
         return 0; // Already in memory, nothing to do
     }
     
     if (proc->allocated_frames == NULL || list_is_empty(proc->allocated_frames)) {
         LOG_WARNING("## PID: %u - No hay frames en swap para reanudar", pid);
         proc->is_suspended = false;
+        unlock_swap_file();
         return 0;
     }
 
     t_list *frames_to_unswap = list_create();
-    for (int i = 0; i < list_size(proc->allocated_frames); i++) {
+    uint32_t allocated_frames_length = list_size(proc->allocated_frames);
+    for (int i = 0; i < allocated_frames_length; i++)
+    {
         uint32_t *frame_num = list_get(proc->allocated_frames, i);
         uint32_t *new_frame = malloc(sizeof(uint32_t));
         *new_frame = *frame_num;
         list_add(frames_to_unswap, new_frame);
     }
-    
+
     uint32_t frames_needed = list_size(frames_to_unswap);
     t_list *user_frames = allocate_frames(frames_needed);
     
@@ -43,6 +51,7 @@ int swap_in_process(uint32_t pid) {
         if (user_frames != NULL) {
             list_destroy_and_destroy_elements(user_frames, free);
         }
+        unlock_swap_file();
         return -1;
     }
     
@@ -51,6 +60,7 @@ int swap_in_process(uint32_t pid) {
         LOG_ERROR("## PID: %u - Error al asignar buffer para reanudación", pid);
         list_destroy_and_destroy_elements(frames_to_unswap, free);
         list_destroy_and_destroy_elements(user_frames, free);
+        unlock_swap_file();
         return -1;
     }
     
@@ -80,6 +90,7 @@ int swap_in_process(uint32_t pid) {
         LOG_ERROR("## PID: %u - Fallo en la reanudación del proceso", pid);
         list_destroy_and_destroy_elements(frames_to_unswap, free);
         release_frames(user_frames);
+        unlock_swap_file();
         return -1;
     }
     
@@ -93,5 +104,6 @@ int swap_in_process(uint32_t pid) {
     
     list_destroy_and_destroy_elements(frames_to_unswap, free);
     
+    unlock_swap_file();
     return 0;
 }

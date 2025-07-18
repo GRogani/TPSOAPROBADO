@@ -6,7 +6,9 @@ void init_process_request_handler(int socket, t_package *package)
 
   LOG_OBLIGATORIO("## PID: %u - Solicitud de creacion de Proceso Recibida.", init_process_args->pid);
 
+  lock_process_creation();
   int result = create_process(init_process_args->pid, init_process_args->size, init_process_args->pseudocode_path);
+  unlock_process_creation();
 
   destroy_init_process_package(init_process_args);
 

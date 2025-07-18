@@ -9,9 +9,14 @@ int main(int argc, char *argv[])
         argv[1] = "cpu.config";
     }
 
+    if (argc < 3)
+    {
+        argv[2] = "cpu.log";
+    }
+
     t_config *config_file = init_config(argv[1]);
     t_cpu_config config_cpu = init_cpu_config(config_file);
-    init_logger("cpu.log", "CPU", config_cpu.LOG_LEVEL);
+    init_logger(argv[2], "CPU", config_cpu.LOG_LEVEL);
 
     MMUConfig mmu_config = load_mmu_config(argv);
     TLBConfig tlb_config = load_tlb_config(argv);

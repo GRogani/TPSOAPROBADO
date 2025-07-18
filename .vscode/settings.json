@@ -61,6 +61,8 @@
         "user_space_memory.h": "c",
         "swap_manager.h": "c",
         "swap_out.h": "c",
-        "dump-memory.h": "c"
+        "dump-memory.h": "c",
+        "init_proc_syscall.h": "c",
+        "cpu_connections.h": "c"
     }
 }

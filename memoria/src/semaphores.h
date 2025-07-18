@@ -26,4 +26,7 @@ void unlock_page_table();
 void lock_process_metrics();
 void unlock_process_metrics();
 
+void lock_process_creation();
+void unlock_process_creation();
+
 #endif

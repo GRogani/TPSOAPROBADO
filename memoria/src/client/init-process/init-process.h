@@ -7,6 +7,7 @@
 #include "../../kernel_space/page_table.h"
 #include "../../kernel_space/assign-frames-to-process.h"
 #include "../../user_space/frame_manager.h"
+#include "../../semaphores.h"
 
 extern t_memoria_config memoria_config;
 

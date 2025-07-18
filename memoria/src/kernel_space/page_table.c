@@ -51,7 +51,9 @@ static t_page_table *_create_table(int current_level)
 
 t_page_table *init_page_table()
 {
-    return _create_table(0);
+    t_page_table* table = _create_table(0);
+    next_table_id = 1; // Reset for future processes
+    return table;
 }
 
 void free_page_table(t_page_table *table)
