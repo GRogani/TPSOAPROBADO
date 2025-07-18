@@ -13,6 +13,7 @@ void destroy_package(t_package* package)
     if (package) {
         buffer_destroy(package->buffer);
         free(package);
+        package = NULL;
     } else {
         LOG_WARNING("You tried to destroy NULL package");
     }

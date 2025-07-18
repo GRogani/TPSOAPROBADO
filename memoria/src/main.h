@@ -1,6 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include <signal.h>
 #include <pthread.h>
 #include <commons/config.h>
 #include <commons/log.h>
