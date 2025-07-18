@@ -10,7 +10,7 @@ void init_user_space(size_t size)
 {
     pthread_mutex_init(&user_space_mutex, NULL);
 
-    user_space = safe_calloc(size);
+    user_space = safe_calloc(1, size);
     user_space_size = size;
 
     LOG_INFO("Memoria de usuario inicializada con: %zu bytes", size);

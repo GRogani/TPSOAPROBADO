@@ -8,7 +8,7 @@ t_buffer *buffer_create(uint32_t size){
     buffer->stream_size = size;
 
     if (size !=0)
-        buffer->stream = safe_calloc(1 ,buffer->stream_size);  // Ahi deje el calloc/ reserva 1 buffer inicializado en 0
+        buffer->stream = safe_calloc(1, buffer->stream_size);  // Ahi deje el calloc/ reserva 1 buffer inicializado en 0
     else buffer->stream = NULL;
 
     return buffer;
