@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
     LOG_INFO("Starting up %s connections...", argv[1]);
     
     int kernel_socket;
-    kernel_socket = create_kernel_connection(io_config.PUERTO_KERNEL, io_config.IP_KERNEL);
+    kernel_socket = create_connection(io_config.PUERTO_KERNEL, io_config.IP_KERNEL);
 
     send_new_io_package(kernel_socket, argv[1]);
 
