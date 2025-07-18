@@ -5,10 +5,15 @@
 #include "utils/serialization/buffer.h"
 #include "enums/Eopcodes.h"
 
-t_package* create_io_completion_package (char*);
+typedef struct io_completion_package_data {
+    char* device_name;
+    uint32_t pid;
+} io_completion_package_data;
 
-int send_io_completion_package (int, char*);
+t_package* create_io_completion_package (char*, uint32_t);
 
-char* read_io_completion_package (t_package*);
+int send_io_completion_package (int, char*, uint32_t);
+
+io_completion_package_data* read_io_completion_package (t_package*);
 
 #endif

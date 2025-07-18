@@ -55,13 +55,14 @@ void handle_new_device(t_package* package, int socket) {
 void process_io_completion(t_package *package, int socket)
 {
     LOG_INFO("Processing IO_COMPLETION from IO device");
-    char* device_name = read_io_completion_package(package);
+    io_completion_package_data* completion_data = read_io_completion_package(package);
 
     destroy_package(package);
 
     t_completion_thread_args *thread_args = safe_malloc(sizeof(t_completion_thread_args));
     thread_args->client_socket = socket;
-    thread_args->device_name = device_name;
+    thread_args->device_name = completion_data->device_name;
+    thread_args->pid = completion_data->pid;
 
     pthread_t io_client_thread;
     int err_io_client = pthread_create(&io_client_thread, NULL, io_completion, thread_args);

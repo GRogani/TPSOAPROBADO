@@ -4,9 +4,12 @@ void* io_completion(void *thread_args)
 {
     t_completion_thread_args *args = (t_completion_thread_args *)thread_args;
 
-    LOG_INFO("io_completion: Processing IO completion for device %s", args->device_name);
+    LOG_INFO("io_completion: Processing IO completion for device %s for PID %d", args->device_name, args->pid);
 
-    // 1. Obtener la conexión IO para encontrar el PID del proceso que estaba ejecutando
+    // 1. Usar el PID proporcionado por el módulo IO
+    uint32_t pid = args->pid;
+
+    // Obtener la conexión IO para liberar el dispositivo
     lock_io_connections();
     
     t_io_connection* connection = find_io_connection_by_socket(args->client_socket);
@@ -17,26 +20,16 @@ void* io_completion(void *thread_args)
         goto cleanup;
     }
 
-    uint32_t pid = connection->current_process_executing;
-    if (pid == -1) {
-        LOG_ERROR("No process was executing on device %s, but completion received", args->device_name);
-        unlock_io_connections();
-        goto cleanup;
-    }
-
-    // 2. Actualizar current_processing de la conexión a -1 (liberar dispositivo)
-    connection->current_process_executing = -1;
-
-    // 4. Buscar el proceso siguiendo el orden de locks: ready, blocked, susp_blocked, susp_ready
-    t_pcb* pcb = NULL;
-    bool found_in_blocked = false;
-    bool found_in_susp_blocked = false;
-
     // Primero lockear en orden: ready, blocked, susp_blocked, susp_ready
     lock_ready_list();
     lock_blocked_list();
     lock_susp_blocked_list();
     lock_susp_ready_list();
+
+    // 4. Buscar el proceso siguiendo el orden de locks: ready, blocked, susp_blocked, susp_ready
+    t_pcb *pcb = NULL;
+    bool found_in_blocked = false;
+    bool found_in_susp_blocked = false;
 
     // Buscar en BLOCKED
     pcb = remove_pcb_from_blocked(pid);
@@ -53,6 +46,9 @@ void* io_completion(void *thread_args)
             add_pcb_to_susp_ready(pcb);
         }
     }
+
+    // 2. Actualizar current_processing de la conexión a -1 (liberar dispositivo)
+    connection->current_process_executing = -1;
 
     // Unlock en orden inverso
     unlock_susp_ready_list();
