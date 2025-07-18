@@ -166,6 +166,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
                     destroy_package(package);
                     return true;
                 }
+                destroy_package(package); // Free the package after successful use
                 (*PC)++;
                 break;
             }
@@ -331,6 +332,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         if (package->opcode != CONFIRMATION)
         {
             LOG_ERROR("Failed to receive confirmation package from kernel for PID %d", *pid);
+            destroy_package(package); // Free the package even on failure
             return true; // should preempt due an issue
         }
         bool success = read_confirmation_package(package);
@@ -340,6 +342,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
             destroy_package(package);
             return true;
         }
+        destroy_package(package); // Free the package after successful use
         break;
     }
     case DUMP_MEMORY:

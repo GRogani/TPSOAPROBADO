@@ -29,6 +29,7 @@ typedef struct {
 typedef struct {
     int entry_count;
     CacheReplacementAlgorithm replacement_algo;
+    int retardo_cache;  // Delay in milliseconds for cache access
 } CacheConfig;
 
 MMUConfig load_mmu_config(char *argv[]);

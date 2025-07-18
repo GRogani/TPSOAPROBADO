@@ -3,6 +3,8 @@
 
 #include <collections/collections.h>
 #include "../utils.h"
+#include "repository/process/blocked_list.h"
+#include "repository/process/susp_blocked_list.h"
 
 typedef struct t_pending_io_args
 {

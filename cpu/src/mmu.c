@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include "delay_utils.h"
 #include "utils/safe_alloc.h"
 #include "utils/serialization/package.h"
 #include "utils/DTPs/mmu_request_page_read_response.h"
@@ -288,38 +289,44 @@ void mmu_process_cleanup(int memory_socket)
       if (entry->is_valid && entry->modified_bit)
       {
         uint32_t physic_dir = mmu_translate_address_with_page_number(memory_socket, entry->page, entry->pid);
-        
-        if (entry->modified_start < entry->modified_end) {
+
+        if (entry->modified_start < entry->modified_end)
+        {
           uint32_t modified_region_addr = physic_dir + entry->modified_start;
           uint32_t modified_size = entry->modified_end - entry->modified_start;
-          
-          LOG_INFO("[Cache] Writing modified region to memory during cleanup: page %u, offset %u to %u (size %u bytes)", 
-                  entry->page, entry->modified_start, entry->modified_end, modified_size);
-          
+
+          LOG_INFO("[Cache] Writing modified region to memory during cleanup: page %u, offset %u to %u (size %u bytes)",
+                   entry->page, entry->modified_start, entry->modified_end, modified_size);
+
           t_memory_write_request *request = create_memory_write_request(
               modified_region_addr,
               modified_size,
-              ((char*)entry->content) + entry->modified_start
-          );
-          
+              ((char *)entry->content) + entry->modified_start);
+
           send_memory_write_request(memory_socket, request);
           destroy_memory_write_request(request);
-          
+
           t_package *package = recv_package(memory_socket);
-          if (package->opcode != CONFIRMATION) {
+          if (package->opcode != CONFIRMATION)
+          {
             LOG_ERROR("Failed to receive confirmation for memory write during cleanup");
-          } else {
+          }
+          else
+          {
             bool success = read_confirmation_package(package);
-            if (!success) {
+            if (!success)
+            {
               LOG_ERROR("Memory write operation failed during cleanup");
             }
             destroy_package(package);
           }
-        } else {
+        }
+        else
+        {
           LOG_INFO("[Cache] No specific modified region or invalid tracking for page %u. Skipping memory write during cleanup.", entry->page);
         }
       }
-      
+
       entry->is_valid = false;
       entry->modified_bit = false;
       entry->modified_start = 0;
@@ -353,6 +360,7 @@ void mmu_destroy()
 
 CacheEntry *cache_find_entry(uint32_t page_number, uint32_t pid)
 {
+  delay_cache_access();
 
   bool _is_frame(void *element)
   {
@@ -464,7 +472,7 @@ CacheEntry *select_victim_entry(int memory_socket, uint32_t pid)
   if (victim_entry->is_valid && victim_entry->modified_bit)
   {
     LOG_INFO("[Cache] Victim (page %u) is dirty. Writing back to memory.", victim_entry->page);
-    
+
     if (g_tlb_config->entry_count > 0)
     {
       physic_addr = mmu_translate_address_with_page_number(memory_socket, victim_entry->page, victim_entry->pid);
@@ -477,37 +485,43 @@ CacheEntry *select_victim_entry(int memory_socket, uint32_t pid)
       physic_addr = (frame_number * g_mmu_config->page_size);
       LOG_OBLIGATORIO("PID: %u - Memory Update - Página: %u - Frame: %u", victim_entry->pid, victim_entry->page, frame_number);
     }
-    
-    if (victim_entry->modified_start < victim_entry->modified_end) {
+
+    if (victim_entry->modified_start < victim_entry->modified_end)
+    {
       uint32_t modified_region_addr = physic_addr + victim_entry->modified_start;
       uint32_t modified_size = victim_entry->modified_end - victim_entry->modified_start;
-      
-      LOG_INFO("[Cache] Writing modified region to memory: offset %u to %u (size %u bytes)", 
-              victim_entry->modified_start, victim_entry->modified_end, modified_size);
-      
+
+      LOG_INFO("[Cache] Writing modified region to memory: offset %u to %u (size %u bytes)",
+               victim_entry->modified_start, victim_entry->modified_end, modified_size);
+
       t_memory_write_request *request = create_memory_write_request(
           modified_region_addr,
           modified_size,
-          ((char*)victim_entry->content) + victim_entry->modified_start
-      );
-      
+          ((char *)victim_entry->content) + victim_entry->modified_start);
+
       send_memory_write_request(memory_socket, request);
       destroy_memory_write_request(request);
-      
+
       t_package *package = recv_package(memory_socket);
-      if (package->opcode != CONFIRMATION) {
+      if (package->opcode != CONFIRMATION)
+      {
         LOG_ERROR("Failed to receive confirmation for memory write");
-      } else {
+      }
+      else
+      {
         bool success = read_confirmation_package(package);
-        if (!success) {
+        if (!success)
+        {
           LOG_ERROR("Memory write operation failed");
         }
         destroy_package(package);
       }
-    } else {
+    }
+    else
+    {
       LOG_INFO("[Cache] No specific modified region or invalid tracking. Skipping memory write.");
     }
-    
+
     memset(victim_entry->content, 0, g_mmu_config->page_size);
     victim_entry->modified_start = 0;
     victim_entry->modified_end = 0;
@@ -541,7 +555,7 @@ CacheEntry *cache_load_page(uint32_t logic_dir, int memory_socket, CacheEntry *v
 
   victim_entry->is_valid = true;
   victim_entry->page = page_number;
-  victim_entry->pid = pid;  // Ensure we set the pid
+  victim_entry->pid = pid; // Ensure we set the pid
   victim_entry->use_bit = true;
   victim_entry->modified_bit = false;
   victim_entry->modified_start = 0;

@@ -138,6 +138,7 @@ void swap_manager_destroy()
  */
 int swap_read_frame(uint32_t frame_num, void *buffer, uint32_t size)
 {
+  
   if (swap_file == NULL)
   {
     LOG_ERROR("Swap: Swap file not initialized");

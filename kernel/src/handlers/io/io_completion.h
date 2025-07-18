@@ -16,6 +16,7 @@
 typedef struct t_completion_thread_args {
     char* device_name;
     int client_socket;
+    uint32_t pid;
 } t_completion_thread_args;
 
 typedef struct t_pending_io_thread_args {

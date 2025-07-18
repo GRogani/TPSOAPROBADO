@@ -57,5 +57,12 @@ void processing_operation(io_operation_package_data* io)
     
     LOG_DEBUG("Estoy libre [%s]", io->device_name);
     
-    send_io_completion_package(io->kernel_socket, io->device_name);
+    // RESPONSE
+    send_io_completion_package(io->kernel_socket, io->device_name, io->pid);
+    
+    //Desestimado
+    // pthread_mutex_lock(&busy_mutex);
+    // io_busy = false;
+    // pthread_mutex_unlock(&busy_mutex);
+
 }
