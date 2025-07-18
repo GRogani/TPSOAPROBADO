@@ -20,7 +20,7 @@ void frame_allocation_init(t_memoria_config memoria_config)
         bitmap_size += 1;
     }
 
-    char *bitmap_data = safe_calloc(bitmap_size, 1);
+    char *bitmap_data = safe_calloc(bitmap_size, sizeof(char));
     frames_bitmap = bitarray_create_with_mode(bitmap_data, bitmap_size, LSB_FIRST);
     
     pthread_mutex_init(&frames_mutex, NULL);
