@@ -34,17 +34,6 @@ void waiting_requests(int kernel_socket, char* id_IO)
             LOG_INFO("Kernel disconnected, shutting down I/O device.");
             break;
         }
-        // if (io_busy) 
-        // {
-        //     LOG_INFO(get_logger(), "OJO, estoy ocupado procesando una operación de I/O.");
-        //     destroy_package(package);
-        //     continue;
-        // } else 
-        // {
-        //     pthread_mutex_lock(&busy_mutex);
-        //     io_busy = true;
-        //     pthread_mutex_unlock(&busy_mutex);
-        // }
 
         request = read_io_operation_package(package);
 
@@ -52,8 +41,6 @@ void waiting_requests(int kernel_socket, char* id_IO)
         request->device_name = id_IO;
 
         processing_operation(request);
-        //Chau hilos, por intentar debuguear el kernel
-        //se generan condiciones de carrera
 
         destroy_package(package);
         free(request);
@@ -64,18 +51,11 @@ void processing_operation(io_operation_package_data* io)
 {
     LOG_OBLIGATORIO("## PID: %d - Inicio de IO - Tiempo: %d", io->pid, io->sleep_time);
     
-    usleep(io->sleep_time * 1000); // Convert milliseconds to microseconds
+    usleep(io->sleep_time * 1000); // milliseconds -> microseconds
     
     LOG_OBLIGATORIO("## PID: %d - Fin de IO", io->pid);
     
-    LOG_INFO("Estoy libre [%s]", io->device_name);
+    LOG_DEBUG("Estoy libre [%s]", io->device_name);
     
-    // RESPONSE
     send_io_completion_package(io->kernel_socket, io->device_name);
-    
-    //Desestimado
-    // pthread_mutex_lock(&busy_mutex);
-    // io_busy = false;
-    // pthread_mutex_unlock(&busy_mutex);
-
 }

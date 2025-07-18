@@ -5,7 +5,8 @@
 #include <string.h>
 #include <pthread.h>
 #include <sys/mman.h>
-#include "../../../utils/utils.h"
+#include "../utils.h"
+#include "../semaphores.h"
 
 void init_user_space(size_t size);
 void destroy_user_space(void);

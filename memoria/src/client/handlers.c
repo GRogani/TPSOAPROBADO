@@ -25,7 +25,7 @@ void *client_listener(void *arg)
         if (client_fd < 0)
             continue;
 
-        int *client_fd_ptr = malloc(sizeof(int));
+        int *client_fd_ptr = safe_malloc(sizeof(int));
         if (client_fd_ptr == NULL)
         {
             LOG_ERROR("Failed to allocate memory for client socket descriptor.");
@@ -60,7 +60,7 @@ void *client_handler(void *client_fd_ptr)
             return NULL;
         }
 
-        // Loguear solo si es el Kernel y solo una vez por conexión
+        
         if (!kernel_logged)
         {
             switch (package->opcode)
@@ -118,7 +118,7 @@ void *client_handler(void *client_fd_ptr)
             break;
 
         default:
-            LOG_WARNING("Unknown Opcode received: %d from client %d", package->opcode, client_fd);
+            LOG_WARNING("Unknown Opcode received: %s from client %d",opcode_to_string(package->opcode), client_fd);
             close(client_fd);
             destroy_package(package);
             return NULL;
@@ -126,5 +126,5 @@ void *client_handler(void *client_fd_ptr)
 
         destroy_package(package);
     }
-    return NULL;
+
 }

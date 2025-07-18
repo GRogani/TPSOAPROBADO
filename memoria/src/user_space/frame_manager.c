@@ -9,7 +9,7 @@ int frame_get_free_count() {
     return frames_free_count;
 }
 
-void frame_allocation_init()
+void frame_allocation_init(t_memoria_config memoria_config)
 {
     frames_total = memoria_config.TAM_MEMORIA / memoria_config.TAM_PAGINA;
     frames_free_count = frames_total;
@@ -20,10 +20,9 @@ void frame_allocation_init()
         bitmap_size += 1;
     }
 
-    char *bitmap_data = calloc(bitmap_size, 1); // Initialize all bits to 0 (free)
+    char *bitmap_data = safe_calloc(bitmap_size, sizeof(char));
     frames_bitmap = bitarray_create_with_mode(bitmap_data, bitmap_size, LSB_FIRST);
     
-    // Initialize mutex for bitmap access
     pthread_mutex_init(&frames_mutex, NULL);
 }
 
@@ -38,20 +37,21 @@ void release_frames(t_list *frame_list)
     {
         uint32_t *frame_num = list_get(frame_list, i);
         bitarray_clean_bit(frames_bitmap, *frame_num);
-        free(frame_num);
     }
+
+    list_destroy_and_destroy_elements(frame_list, free);
 
     frames_free_count += frames_released;
     
     pthread_mutex_unlock(&frames_mutex);
 
-    list_destroy(frame_list);
 }
 
 t_list* allocate_frames(uint32_t pages_needed) {
     pthread_mutex_lock(&frames_mutex);
     
     if (pages_needed > frames_free_count) {
+        LOG_WARNING("No hay suficientes frames para asignar %u paginas. Frames disponibles: %u", pages_needed, frames_free_count);
         pthread_mutex_unlock(&frames_mutex);
         return NULL;
     }
@@ -63,7 +63,7 @@ t_list* allocate_frames(uint32_t pages_needed) {
         if (!bitarray_test_bit(frames_bitmap, frame_index)) {
             bitarray_set_bit(frames_bitmap, frame_index);
             
-            uint32_t* frame_num = malloc(sizeof(uint32_t));
+            uint32_t* frame_num = safe_malloc(sizeof(uint32_t));
             *frame_num = frame_index;
             list_add(allocated_frames, frame_num);
 
