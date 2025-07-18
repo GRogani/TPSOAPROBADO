@@ -2,14 +2,14 @@
 
 bool process_pending_io(t_pending_io_args args)
 {
-    LOG_INFO("Processing pending IO for device %s", args.device_name);
+    LOG_INFO("process_pending_io: Processing pending IO for device %s", args.device_name);
 
     lock_io_connections();
 
     t_io_connection_status connection_found = get_io_connection_status_by_device_name(args.device_name);
     if (!connection_found.found)
     {
-        LOG_INFO("There are no existing connections for device %s", args.device_name);
+        LOG_INFO("process_pending_io: There are no existing connections for device %s", args.device_name);
         unlock_io_connections();
         free(args.device_name);
         return false;
@@ -26,8 +26,8 @@ bool process_pending_io(t_pending_io_args args)
 
     lock_io_requests_queue(&request_link->io_requests_queue_semaphore);
 
-    // hay una conexion existente. verificamos si está busy o no.
     if(connection_found.is_busy) {
+        LOG_INFO("process_pending_io: IO device is busy %s", args.device_name);
         goto free_all; // como está busy, dejamos que se mande a ejecutar cuando se libere.
     }
 
@@ -37,7 +37,7 @@ bool process_pending_io(t_pending_io_args args)
     void *request = get_next_request_in_queue(request_link->io_requests_queue);
     if (request == NULL)
     {
-        LOG_INFO("There is no pending requests for device %s", args.device_name);
+        LOG_INFO("process_pending_io: There is no pending requests for device %s", args.device_name);
         goto free_all;
     }
     t_io_request *io_request = (t_io_request *)request;

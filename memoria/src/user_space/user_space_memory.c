@@ -51,7 +51,7 @@ void write_to_user_space(uint32_t physical_address, void *data, uint32_t size)
                   physical_address, size, user_space_size);
         return;
     }
-
+    
     pthread_mutex_lock(&user_space_mutex);
 
     memcpy(&user_space[physical_address], data, size);

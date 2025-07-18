@@ -51,6 +51,10 @@ bool should_preempt_executing_process(t_pcb *pcb_ready, int32_t pid_executing)
 {
     lock_exec_list();
     t_pcb *pcb_executing = find_pcb_in_exec(pid_executing);
+    if(pcb_executing == NULL)  {
+        // aca podria ser que se ejecutó una syscall y el proceso salió de la lista de EXEC. deberiamos hacer el preemption, porque el proceso se libero de la lista EXEC.
+        return true;
+    }
     return compare_cpu_bursts((void *)pcb_ready, (void *)pcb_executing);
 }
 

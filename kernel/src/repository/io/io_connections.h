@@ -19,7 +19,7 @@ typedef struct t_io_connection
 typedef struct
 {
   int socket_id;               // Socket ID of the connection, -1 if not found
-  bool is_busy;                // true if connection is busy (current_process_executing != -1)
+  bool is_busy;                // true if connection is busy (current_process_executing != -1) -> podria pasar que este status esté desactualizado, que hacemos en ese caso?
   bool found;                  // true if connection was found
   t_io_connection *connection; // Pointer to the connection found, NULL if not found
 } t_io_connection_status;

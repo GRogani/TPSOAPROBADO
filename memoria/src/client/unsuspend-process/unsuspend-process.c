@@ -8,6 +8,8 @@ void unsuspend_process_request_handler(int client_fd, t_package *package)
     
     int result = swap_in_process(pid);
     
+    delay_swap_access();
+
     if (result == 0) {
         LOG_INFO("UNSUSPEND exitoso para el proceso PID: %u", pid);
         send_confirmation_package(client_fd, 0); // 0 indicates success

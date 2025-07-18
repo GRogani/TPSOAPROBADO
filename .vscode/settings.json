@@ -63,6 +63,8 @@
         "swap_out.h": "c",
         "dump-memory.h": "c",
         "init_proc_syscall.h": "c",
-        "cpu_connections.h": "c"
+        "cpu_connections.h": "c",
+        "delay_utils.h": "c",
+        "process_pending_io.h": "c"
     }
 }
