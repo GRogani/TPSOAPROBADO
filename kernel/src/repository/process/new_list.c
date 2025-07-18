@@ -50,5 +50,15 @@ t_pcb* get_next_pcb_from_new() {
         return NULL;
     }
     
-    return (t_pcb*) list_remove(get_new_list(), 0);
+    return (t_pcb*) list_get(get_new_list(), 0);
+}
+
+t_pcb* remove_pcb_from_new(uint32_t pid) {
+    bool pid_matches(void* ptr) {
+        t_pcb* pcb = (t_pcb*) ptr;
+        return pcb->pid == pid;
+    };
+
+    t_pcb* removed_pcb = list_remove_by_condition(get_new_list(), pid_matches);
+    return removed_pcb;
 }

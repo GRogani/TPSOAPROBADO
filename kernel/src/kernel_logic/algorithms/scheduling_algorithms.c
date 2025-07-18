@@ -6,15 +6,15 @@ static bool preemption_enabled;
 
 t_pcb* get_next_process_to_initialize_from_new(void) 
 {
-    if (long_term_algorithm == SJF)
-            sort_new_list_by_SSF();
+    if (long_term_algorithm == PMCP)
+        sort_new_list_by_SSF();
 
     return get_next_pcb_from_new();
 }
 
 t_pcb* get_next_process_to_initialize_from_susp_ready(void) 
 {
-    if (long_term_algorithm == SJF)
+    if (long_term_algorithm == PMCP)
         sort_susp_ready_list_by_SSF();
 
     return get_next_pcb_from_susp_ready();
@@ -51,6 +51,10 @@ bool should_preempt_executing_process(t_pcb *pcb_ready, int32_t pid_executing)
 {
     lock_exec_list();
     t_pcb *pcb_executing = find_pcb_in_exec(pid_executing);
+    if(pcb_executing == NULL)  {
+        // aca podria ser que se ejecutó una syscall y el proceso salió de la lista de EXEC. deberiamos hacer el preemption, porque el proceso se libero de la lista EXEC.
+        return true;
+    }
     return compare_cpu_bursts((void *)pcb_ready, (void *)pcb_executing);
 }
 

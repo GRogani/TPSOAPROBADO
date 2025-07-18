@@ -44,8 +44,9 @@ void dump_memory_request_handler(int client_socket, t_package *package)
 
   bool dump_success = true;
   uint32_t total_bytes_dumped = 0;
+  uint32_t allocated_frames_length = list_size(frames);
 
-  for (int i = 0; i < list_size(frames); i++)
+  for (int i = 0; i < allocated_frames_length; i++)
   {
     uint32_t *frame_number = list_get(frames, i);
     if (frame_number == NULL)

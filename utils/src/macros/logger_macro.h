@@ -11,7 +11,7 @@
 // Cambiar a 0 para no logear los debugs
 #define DEBUG_MODE 1
 
-#define SOLO_LOGS_OBLIGATORIOS 0 // 1 para solo obligatorios, 0 para todos
+#define SOLO_LOGS_OBLIGATORIOS 1 // 1 para solo obligatorios, 0 para todos
 
 
 #define LOG_OBLIGATORIO(fmt, ...)                                 \

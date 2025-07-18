@@ -1,5 +1,7 @@
 #include "swap_manager.h"
 
+#define SWAP_INITIAL_FRAMES 4096
+
 extern t_memoria_config memoria_config;
 
 static FILE *swap_file = NULL;
@@ -40,7 +42,7 @@ t_list *swap_allocate_frames(uint32_t pages_needed)
 
   pthread_mutex_unlock(&swap_frames_mutex);
 
-  LOG_INFO("Swap: Allocated %d frames in swap space", frames_allocated);
+  LOG_INFO("Se swapearon %d frames", frames_allocated);
   return allocated_frames;
 }
 
@@ -48,13 +50,12 @@ int swap_write_frame(uint32_t frame_num, void *data, uint32_t size)
 {
   if (swap_file == NULL)
   {
-    LOG_ERROR("Swap: Swap file not initialized");
+    LOG_ERROR("Swap no inicializado");
     return -1;
   }
 
   pthread_mutex_lock(&swap_file_mutex);
 
-  // Calculate position (physic dir) in swap file
   long position = frame_num * memoria_config.TAM_PAGINA;
 
   int result = 0;
@@ -84,7 +85,7 @@ int swap_write_frame(uint32_t frame_num, void *data, uint32_t size)
   return result;
 }
 
-void swap_manager_init()
+void swap_manager_init(t_memoria_config memoria_config)
 {
   pthread_mutex_init(&swap_frames_mutex, NULL);
   pthread_mutex_init(&swap_file_mutex, NULL);
@@ -96,7 +97,7 @@ void swap_manager_init()
     exit(EXIT_FAILURE);
   }
 
-  swap_frames_total = 1024; // TODO: cambiarlo a que sea más grande, el maximo tamaño del disco
+  swap_frames_total = SWAP_INITIAL_FRAMES;
   swap_frames_free_count = swap_frames_total;
 
   size_t bitmap_size = swap_frames_total / 8;
@@ -105,10 +106,10 @@ void swap_manager_init()
     bitmap_size += 1;
   }
 
-  char *bitmap_data = calloc(bitmap_size, 1); // Initialize all bits to 0 (free)
+  char *bitmap_data = safe_calloc(bitmap_size, 1);
   swap_frames_bitmap = bitarray_create_with_mode(bitmap_data, bitmap_size, LSB_FIRST);
 
-  LOG_INFO("Swap: Manager initialized. Swap file: %s, Initial frames: %zu", memoria_config.PATH_SWAPFILE, swap_frames_total);
+  LOG_INFO("Swap Manager inicializado. Swap file: %s, espacio inicial: %zu frames", memoria_config.PATH_SWAPFILE, swap_frames_total);
 }
 
 void swap_manager_destroy()
@@ -137,6 +138,7 @@ void swap_manager_destroy()
  */
 int swap_read_frame(uint32_t frame_num, void *buffer, uint32_t size)
 {
+  
   if (swap_file == NULL)
   {
     LOG_ERROR("Swap: Swap file not initialized");

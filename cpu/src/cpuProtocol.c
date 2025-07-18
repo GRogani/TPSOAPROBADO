@@ -37,8 +37,11 @@ t_package* recv_dispatch (int socket_dispatch_kernel, uint32_t* PID, uint32_t* P
     dispatch_package_data  cpu_dispatch = read_dispatch_package(package);
     *PID = cpu_dispatch.pid;
     *PC = cpu_dispatch.pc;
+    
+    // The package needs to be destroyed after extracting the data
+    destroy_package(package);
 
-    return package;
+    return NULL; // Changed to return NULL since we've extracted the data and freed the package
 }
 
 t_package* receive_instruction(int socket) 

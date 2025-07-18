@@ -81,259 +81,294 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
     switch (instruction->instruction_code)
     {
     case NOOP:
+    {
         LOG_OBLIGATORIO("## PID: %d - Ejecutando: NOOP -", *pid);
-        {
-            // No operation
-            (*PC)++;
-            break;
-        }
+        (*PC)++;
+        break;
+    }
     case WRITE:
+    {
         LOG_OBLIGATORIO("## PID: %d - Ejecutando: WRITE - %d %s", *pid, instruction->operand_numeric1, instruction->operand_string);
+        uint32_t logic_dir_write = instruction->operand_numeric1;
+        char *valor_write = instruction->operand_string;
+        uint32_t page_number = floor(logic_dir_write / g_mmu_config->page_size);
+        uint32_t offset = logic_dir_write % g_mmu_config->page_size;
+        if (g_cache_config->entry_count > 0)
         {
-            uint32_t logic_dir_write = instruction->operand_numeric1;
-            char *valor_write = instruction->operand_string;
-            uint32_t page_number = floor(logic_dir_write / g_mmu_config->page_size);
-            uint32_t offset = logic_dir_write % g_mmu_config->page_size;
-            if (g_cache_config->entry_count > 0)
+            CacheEntry *cache_entry = cache_find_entry(page_number, *pid);
+            if (cache_entry == NULL)
             {
-                // If cache is enabled, we need to write to cache first
-                CacheEntry *cache_entry = cache_find_entry(page_number, *pid);
-                if (cache_entry == NULL)
-                {
-                    cache_entry = select_victim_entry(socket_memory, logic_dir_write, *pid);
-                    cache_entry->is_valid = true;
-                    cache_entry->page = page_number;
-                    cache_entry->use_bit = true;
+                // Cache miss - select a victim entry
+                cache_entry = select_victim_entry(socket_memory, *pid);
+                
+                // Set up the entry for the new page - we don't need to read from memory
+                // since we'll be writing directly to the part we care about
+                cache_entry->is_valid = true;
+                cache_entry->pid = *pid;
+                cache_entry->page = page_number;
+                cache_entry->use_bit = true;
+                
+                // Initialize the modified region to the current write
+                cache_entry->modified_start = offset;
+                cache_entry->modified_end = offset + instruction->operand_string_size;
+                
+                // Clear our page content initially - we'll write to it directly
+                memset(cache_entry->content, 0, g_mmu_config->page_size);
+                
+                LOG_INFO("Cache miss for page %u (PID %u), initialized new entry for writing at offset %u", 
+                         page_number, *pid, offset);
+            }
+            
+            // Update modified region tracking
+            if (!cache_entry->modified_bit) {
+                // First modification to this page
+                cache_entry->modified_start = offset;
+                cache_entry->modified_end = offset + instruction->operand_string_size;
+            } else {
+                // Update the modified range to encompass the new write
+                if (offset < cache_entry->modified_start) {
+                    cache_entry->modified_start = offset;
                 }
-                // Write to cache
-                memcpy(cache_entry->content, valor_write, instruction->operand_string_size);
-                cache_entry->modified_bit = true;
+                if (offset + instruction->operand_string_size > cache_entry->modified_end) {
+                    cache_entry->modified_end = offset + instruction->operand_string_size;
+                }
+            }
+            
+            LOG_INFO("Writing to cache page %u (PID %u) at offset %u, size %u, modified region now %u-%u", 
+                    page_number, *pid, offset, instruction->operand_string_size,
+                    cache_entry->modified_start, cache_entry->modified_end);
+            
+            // Copy the string data
+            memcpy(cache_entry->content + offset, valor_write, instruction->operand_string_size);
+            cache_entry->modified_bit = true;
+            (*PC)++;
+            break;
+        }
+        else
+        {
+            if (g_tlb_config->entry_count > 0)
+            {
+                uint32_t physic_dir_write = mmu_translate_address(socket_memory, logic_dir_write, *pid);
+                t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
+                LOG_OBLIGATORIO("PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %s", *pid, physic_dir_write, valor_write);
+                send_memory_write_request(socket_memory, write_req);
+                destroy_memory_write_request(write_req);
+                t_package *package = recv_package(socket_memory);
+                if (package->opcode != CONFIRMATION)
+                {
+                    LOG_ERROR("Failed to receive confirmation package from memory for PID %d", *pid);
+                    return true; // should preempt due an issue
+                }
+                bool success = read_confirmation_package(package);
+                if (!success)
+                {
+                    LOG_ERROR("Failed to initialize process for PID %d", *pid);
+                    destroy_package(package);
+                    return true;
+                }
+                destroy_package(package); // Free the package after successful use
                 (*PC)++;
                 break;
             }
             else
             {
-                if (g_tlb_config->entry_count > 0)
-                {
-                    uint32_t physic_dir_write = mmu_translate_address(socket_memory, logic_dir_write, *pid);
-                    t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
-                    LOG_OBLIGATORIO("PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %s", *pid, physic_dir_write, valor_write);
-                    send_memory_write_request(socket_memory, write_req);
-                    destroy_memory_write_request(write_req);
-                    t_package *package = recv_package(socket_memory);
-                    if (package->opcode != CONFIRMATION)
-                    {
-                        LOG_ERROR("Failed to receive confirmation package from memory for PID %d", *pid);
-                        return true; // should preempt due an issue
-                    }
-                    bool success = read_confirmation_package(package);
-                    if (!success)
-                    {
-                        LOG_ERROR("Failed to initialize process for PID %d", *pid);
-                        destroy_package(package);
-                        return true;
-                    }
-                    (*PC)++;
-                    break;
-                }
-                else
-                {
-                    uint32_t frame_number = mmu_perform_page_walk(socket_memory, page_number, *pid);
-                    uint32_t physic_dir_write = (frame_number * g_mmu_config->page_size) + offset;
-                    t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
-                    LOG_OBLIGATORIO("PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %s", *pid, physic_dir_write, valor_write);
-                    send_memory_write_request(socket_memory, write_req);
-                    destroy_memory_write_request(write_req);
+                uint32_t frame_number = mmu_perform_page_walk(socket_memory, page_number, *pid);
+                uint32_t physic_dir_write = (frame_number * g_mmu_config->page_size) + offset;
+                t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
+                LOG_OBLIGATORIO("PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %s", *pid, physic_dir_write, valor_write);
+                send_memory_write_request(socket_memory, write_req);
+                destroy_memory_write_request(write_req);
 
-                    t_package *package = recv_package(socket_memory);
-                    if (package->opcode != CONFIRMATION)
-                    {
-                        LOG_ERROR("Failed to receive confirmation package from memory for PID %d", *pid);
-                        return true; // should preempt due an issue
-                    }
-                    bool success = read_confirmation_package(package);
-                    if (!success)
-                    {
-                        LOG_ERROR("Failed to initialize process for PID %d", *pid);
-                        destroy_package(package);
-                        return true;
-                    }
-
-                    (*PC)++;
-                    break;
+                t_package *package = recv_package(socket_memory);
+                if (package->opcode != CONFIRMATION)
+                {
+                    LOG_ERROR("Failed to receive confirmation package from memory for PID %d", *pid);
+                    return true; // should preempt due an issue
                 }
+                bool success = read_confirmation_package(package);
+                if (!success)
+                {
+                    LOG_ERROR("Failed to initialize process for PID %d", *pid);
+                    destroy_package(package);
+                    return true;
+                }
+
+                (*PC)++;
+                break;
             }
         }
+    }
     case READ:
+    {
         LOG_OBLIGATORIO("## PID: %d - Ejecutando: READ - %d %d", *pid, instruction->operand_numeric1, instruction->operand_numeric2);
+        uint32_t logic_dir_read = instruction->operand_numeric1;
+        uint32_t size = instruction->operand_numeric2;
+        uint32_t page_number = floor(logic_dir_read / g_mmu_config->page_size);
+        uint32_t offset = logic_dir_read % g_mmu_config->page_size;
+        if (g_cache_config->entry_count > 0)
         {
-            uint32_t logic_dir_read = instruction->operand_numeric1;
-            uint32_t size = instruction->operand_numeric2;
-            uint32_t page_number = floor(logic_dir_read / g_mmu_config->page_size);
-            uint32_t offset = logic_dir_read % g_mmu_config->page_size;
-            if (g_cache_config->entry_count > 0)
+            CacheEntry *cache_entry = cache_find_entry(page_number, *pid);
+            if (cache_entry == NULL)
             {
-                // If cache is enabled, we need to read from cache first
-                CacheEntry *cache_entry = cache_find_entry(page_number, *pid);
-                if (cache_entry == NULL)
-                {
 
-                    cache_entry = select_victim_entry(socket_memory, logic_dir_read, *pid);
-                    cache_entry = cache_load_page(logic_dir_read, socket_memory, cache_entry, *pid);
+                cache_entry = select_victim_entry(socket_memory, *pid);
+                cache_entry = cache_load_page(logic_dir_read, socket_memory, cache_entry, *pid);
+            }
+            // Read from cache
+            LOG_INFO("Data read from cache: %p", cache_entry->content);
+            (*PC)++;
+            break;
+        }
+        else
+        {
+            LOG_INFO("Cache is disabled, reading directly from memory");
+            if (g_tlb_config->entry_count > 0)
+            {
+                uint32_t physic_dir_read = mmu_translate_address(socket_memory, logic_dir_read, *pid);
+                t_memory_read_request *request = create_memory_read_request(physic_dir_read, size);
+                send_memory_read_request(socket_memory, request);
+                destroy_memory_read_request(request);
+
+                t_package *package = recv_package(socket_memory);
+                if (package == NULL || package->opcode != READ_MEMORY)
+                {
+                    LOG_INFO("Failed to read data from memory");
+                    if (package)
+                        destroy_package(package);
+                    return -1;
                 }
-                // Read from cache
-                LOG_INFO("Data read from cache: %p", cache_entry->content);
+
+                t_memory_read_response *response = read_memory_read_response(package);
+                destroy_package(package);
+
+                if (response->data != NULL)
+                {
+                    LOG_OBLIGATORIO("PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", *pid, physic_dir_read, response->data);
+                    LOG_INFO("Data read from memory: %s", response->data);
+                    destroy_memory_read_response(response);
+                }
+                else
+                {
+                    LOG_INFO("Failed to read data from memory");
+                    destroy_memory_read_response(response);
+                    return -1;
+                }
                 (*PC)++;
                 break;
             }
             else
             {
-                LOG_INFO("Cache is disabled, reading directly from memory");
-                if (g_tlb_config->entry_count > 0)
+                uint32_t frame_number = mmu_perform_page_walk(socket_memory, page_number, *pid);
+                uint32_t physic_dir_read = (frame_number * g_mmu_config->page_size) + offset;
+                t_memory_read_request *request = create_memory_read_request(physic_dir_read, size);
+                send_memory_read_request(socket_memory, request);
+                destroy_memory_read_request(request);
+
+                t_package *package = recv_package(socket_memory);
+                if (package == NULL || package->opcode != READ_MEMORY)
                 {
-                    uint32_t physic_dir_read = mmu_translate_address(socket_memory, logic_dir_read, *pid);
-                    t_memory_read_request *request = create_memory_read_request(physic_dir_read, size);
-                    send_memory_read_request(socket_memory, request);
-                    destroy_memory_read_request(request);
+                    LOG_INFO("Failed to read data from memory");
+                    if (package)
+                        destroy_package(package);
+                    return -1;
+                }
 
-                    t_package *package = recv_package(socket_memory);
-                    if (package == NULL || package->opcode != READ_MEMORY)
-                    {
-                        LOG_INFO("Failed to read data from memory");
-                        if (package)
-                            destroy_package(package);
-                        return -1;
-                    }
+                t_memory_read_response *response = read_memory_read_response(package);
+                destroy_package(package);
 
-                    t_memory_read_response *response = read_memory_read_response(package);
-                    destroy_package(package);
-
-                    if (response->data != NULL)
-                    {
-                        LOG_OBLIGATORIO("PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", *pid, physic_dir_read, response->data);
-                        LOG_INFO("Data read from memory: %s", response->data);
-                        destroy_memory_read_response(response);
-                    }
-                    else
-                    {
-                        LOG_INFO("Failed to read data from memory");
-                        destroy_memory_read_response(response);
-                        return -1;
-                    }
-                    (*PC)++;
-                    break;
+                if (response->data != NULL)
+                {
+                    LOG_OBLIGATORIO("PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", *pid, physic_dir_read, response->data);
+                    LOG_INFO("Data read from memory: %s", response->data);
+                    destroy_memory_read_response(response);
                 }
                 else
                 {
-                    uint32_t frame_number = mmu_perform_page_walk(socket_memory, page_number, *pid);
-                    uint32_t physic_dir_read = (frame_number * g_mmu_config->page_size) + offset;
-                    t_memory_read_request *request = create_memory_read_request(physic_dir_read, size);
-                    send_memory_read_request(socket_memory, request);
-                    destroy_memory_read_request(request);
-
-                    t_package *package = recv_package(socket_memory);
-                    if (package == NULL || package->opcode != READ_MEMORY)
-                    {
-                        LOG_INFO("Failed to read data from memory");
-                        if (package)
-                            destroy_package(package);
-                        return -1;
-                    }
-
-                    t_memory_read_response *response = read_memory_read_response(package);
-                    destroy_package(package);
-
-                    if (response->data != NULL)
-                    {
-                        LOG_OBLIGATORIO("PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", *pid, physic_dir_read, response->data);
-                        LOG_INFO("Data read from memory: %s", response->data);
-                        destroy_memory_read_response(response);
-                    }
-                    else
-                    {
-                        LOG_INFO("Failed to read data from memory");
-                        destroy_memory_read_response(response);
-                        return -1;
-                    }
-                    (*PC)++;
-                    break;
+                    LOG_INFO("Failed to read data from memory");
+                    destroy_memory_read_response(response);
+                    return -1;
                 }
+                (*PC)++;
+                break;
             }
         }
+    }
     case GOTO:
+    {
         LOG_OBLIGATORIO("## PID: %d - Ejecutando: GOTO - %d", *pid, instruction->operand_numeric1);
-        {
-            *PC = instruction->operand_numeric1;
-            break;
-        }
+        *PC = instruction->operand_numeric1;
+        break;
+    }
     case IO:
+    {
         LOG_OBLIGATORIO("## PID: %d - Ejecutando: IO - %s %d", *pid, instruction->operand_string, instruction->operand_numeric1);
-        {
 
-            (*PC)++;
-            syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
-            syscall_req->syscall_type = SYSCALL_IO;
-            syscall_req->pid = *pid;
-            syscall_req->pc = *PC;
-            syscall_req->params.io.device_name = strdup(instruction->operand_string);
-            syscall_req->params.io.sleep_time = instruction->operand_numeric1;
-            send_syscall_package(socket_dispatch, syscall_req);
-            destroy_syscall_package(syscall_req);
-            return true;
-        }
+        (*PC)++;
+        syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
+        syscall_req->syscall_type = SYSCALL_IO;
+        syscall_req->pid = *pid;
+        syscall_req->pc = *PC;
+        syscall_req->params.io.device_name = strdup(instruction->operand_string);
+        syscall_req->params.io.sleep_time = instruction->operand_numeric1;
+        send_syscall_package(socket_dispatch, syscall_req);
+        destroy_syscall_package(syscall_req);
+        return true;
+    }
     case INIT_PROC:
+    {
         LOG_OBLIGATORIO("## PID: %d - Ejecutando: INIT_PROC - %s %d", *pid, instruction->operand_string, instruction->operand_numeric1);
-        {
-            (*PC)++;
-            syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
-            syscall_req->syscall_type = SYSCALL_INIT_PROC;
-            syscall_req->pid = *pid;
-            syscall_req->pc = *PC;
-            syscall_req->params.init_proc.pseudocode_file = strdup(instruction->operand_string);
-            syscall_req->params.init_proc.memory_space = instruction->operand_numeric1;
-            send_syscall_package(socket_dispatch, syscall_req);
-            destroy_syscall_package(syscall_req);
+        (*PC)++;
+        syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
+        syscall_req->syscall_type = SYSCALL_INIT_PROC;
+        syscall_req->pid = *pid;
+        syscall_req->pc = *PC;
+        syscall_req->params.init_proc.pseudocode_file = strdup(instruction->operand_string);
+        syscall_req->params.init_proc.memory_space = instruction->operand_numeric1;
+        send_syscall_package(socket_dispatch, syscall_req);
+        destroy_syscall_package(syscall_req);
 
-            // wait for response from kernel to continue execution
-            t_package *package = recv_package(socket_dispatch);
-            if (package->opcode != CONFIRMATION)
-            {
-                LOG_ERROR("Failed to receive confirmation package from kernel for PID %d", *pid);
-                return true; // should preempt due an issue
-            }
-            bool success = read_confirmation_package(package);
-            if (!success)
-            {
-                LOG_ERROR("Failed to initialize process for PID %d", *pid);
-                destroy_package(package);
-                return true;
-            }
-            break;
+        // wait for response from kernel to continue execution
+        t_package *package = recv_package(socket_dispatch);
+        if (package->opcode != CONFIRMATION)
+        {
+            LOG_ERROR("Failed to receive confirmation package from kernel for PID %d", *pid);
+            destroy_package(package); // Free the package even on failure
+            return true; // should preempt due an issue
         }
+        bool success = read_confirmation_package(package);
+        if (!success)
+        {
+            LOG_ERROR("Failed to initialize process for PID %d", *pid);
+            destroy_package(package);
+            return true;
+        }
+        destroy_package(package); // Free the package after successful use
+        break;
+    }
     case DUMP_MEMORY:
+    {
         LOG_OBLIGATORIO("## PID: %d - Ejecutando: DUMP_MEMORY -", *pid);
-        {
-            (*PC)++;
-            syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
-            syscall_req->syscall_type = SYSCALL_DUMP_MEMORY;
-            syscall_req->pid = *pid;
-            syscall_req->pc = *PC;
-            send_syscall_package(socket_dispatch, syscall_req);
-            destroy_syscall_package(syscall_req);
-            return true;
-        }
+        (*PC)++;
+        syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
+        syscall_req->syscall_type = SYSCALL_DUMP_MEMORY;
+        syscall_req->pid = *pid;
+        syscall_req->pc = *PC;
+        send_syscall_package(socket_dispatch, syscall_req);
+        destroy_syscall_package(syscall_req);
+        return true;
+    }
     case EXIT:
+    {
         LOG_OBLIGATORIO("## PID: %d - Ejecutando: EXIT -", *pid);
-        {
-            (*PC)++;
-            syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
-            syscall_req->syscall_type = SYSCALL_EXIT;
-            syscall_req->pid = *pid;
-            syscall_req->pc = *PC;
-            send_syscall_package(socket_dispatch, syscall_req);
-            destroy_syscall_package(syscall_req);
-            return true;
-        }
+        (*PC)++;
+        syscall_package_data *syscall_req = safe_malloc(sizeof(syscall_package_data));
+        syscall_req->syscall_type = SYSCALL_EXIT;
+        syscall_req->pid = *pid;
+        syscall_req->pc = *PC;
+        send_syscall_package(socket_dispatch, syscall_req);
+        destroy_syscall_package(syscall_req);
+        return true;
+    }
     default:
     {
         LOG_WARNING("Unknown instruction: %d", instruction->instruction_code);

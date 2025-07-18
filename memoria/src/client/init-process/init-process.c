@@ -6,7 +6,9 @@ void init_process_request_handler(int socket, t_package *package)
 
   LOG_OBLIGATORIO("## PID: %u - Solicitud de creacion de Proceso Recibida.", init_process_args->pid);
 
+  lock_process_creation();
   int result = create_process(init_process_args->pid, init_process_args->size, init_process_args->pseudocode_path);
+  unlock_process_creation();
 
   destroy_init_process_package(init_process_args);
 
@@ -37,7 +39,7 @@ int create_process(uint32_t pid, uint32_t size, char *script_path)
 
     if (frame_get_free_count() < pages_needed)
     {
-      LOG_ERROR("## PID: %u - No hay suficientes frames disponibles para crear el proceso. (Necesita %d, Libre %d)", pid, pages_needed, frame_get_free_count());
+      LOG_WARNING("## PID: %u - No hay suficientes frames disponibles para crear el proceso. (Necesita %d, Libre %d)", pid, pages_needed, frame_get_free_count());
       if (proc->instructions)
         list_destroy_and_destroy_elements(proc->instructions, free);
       free(proc);

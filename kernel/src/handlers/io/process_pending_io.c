@@ -2,14 +2,14 @@
 
 bool process_pending_io(t_pending_io_args args)
 {
-    LOG_INFO("Processing pending IO for device %s", args.device_name);
+    LOG_INFO("process_pending_io: Processing pending IO for device %s", args.device_name);
 
     lock_io_connections();
 
     t_io_connection_status connection_found = get_io_connection_status_by_device_name(args.device_name);
     if (!connection_found.found)
     {
-        LOG_INFO("There are no existing connections for device %s", args.device_name);
+        LOG_INFO("process_pending_io: There are no existing connections for device %s", args.device_name);
         unlock_io_connections();
         free(args.device_name);
         return false;
@@ -26,9 +26,31 @@ bool process_pending_io(t_pending_io_args args)
 
     lock_io_requests_queue(&request_link->io_requests_queue_semaphore);
 
-    // hay una conexion existente. verificamos si está busy o no.
-    if(connection_found.is_busy) {
+    // Verificar si el dispositivo está realmente ocupado comprobando si el PID actual 
+    // está en las listas BLOCKED o SUSP_BLOCKED
+    uint32_t current_pid = connection_found.connection->current_process_executing;
+    bool is_truly_busy = false;
+    
+    if (current_pid != -1) {
+        // Necesitamos bloquear las listas para verificar si el proceso está realmente bloqueado
+        lock_blocked_list();
+        lock_susp_blocked_list();
+        
+        void* pcb_in_blocked = find_pcb_in_blocked(current_pid);
+        t_pcb* pcb_in_susp_blocked = find_pcb_in_susp_blocked(current_pid);
+        
+        is_truly_busy = (pcb_in_blocked != NULL || pcb_in_susp_blocked != NULL);
+        
+        unlock_susp_blocked_list();
+        unlock_blocked_list();
+    }
+    
+    if (is_truly_busy) {
+        LOG_INFO("process_pending_io: IO device is truly busy with PID %d for device %s", current_pid, args.device_name);
         goto free_all; // como está busy, dejamos que se mande a ejecutar cuando se libere.
+    } else if (current_pid != -1) {
+        LOG_INFO("process_pending_io: IO device marked as busy but PID %d is not in blocked lists. Marking as available.", current_pid);
+        // No es necesario hacer nada aquí, ya que actualizaremos current_process_executing más adelante
     }
 
     // hay una conexion libre, asignamos la conexion al proceso
@@ -37,7 +59,7 @@ bool process_pending_io(t_pending_io_args args)
     void *request = get_next_request_in_queue(request_link->io_requests_queue);
     if (request == NULL)
     {
-        LOG_INFO("There is no pending requests for device %s", args.device_name);
+        LOG_INFO("process_pending_io: There is no pending requests for device %s", args.device_name);
         goto free_all;
     }
     t_io_request *io_request = (t_io_request *)request;

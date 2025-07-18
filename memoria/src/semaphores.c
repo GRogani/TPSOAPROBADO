@@ -6,6 +6,7 @@ sem_t sem_process_instructions;
 sem_t sem_swap_file;
 sem_t sem_page_table;
 sem_t sem_process_metrics;
+sem_t sem_process_creation;
 
 void initialize_memory_semaphores() {
     if (sem_init(&sem_process_list, 0, 1) != 0) {
@@ -43,6 +44,16 @@ void initialize_memory_semaphores() {
         sem_destroy(&sem_swap_file);
         sem_destroy(&sem_page_table);
     }
+    
+    if (sem_init(&sem_process_creation, 0, 1) != 0) {
+        LOG_ERROR("sem_init for sem_process_creation failed");
+        sem_destroy(&sem_process_list);
+        sem_destroy(&sem_frame_manager);
+        sem_destroy(&sem_process_instructions);
+        sem_destroy(&sem_swap_file);
+        sem_destroy(&sem_page_table);
+        sem_destroy(&sem_process_metrics);
+    }
     LOG_INFO("Memory semaphores initialized.");
 }
 
@@ -53,6 +64,7 @@ void destroy_memory_semaphores() {
     sem_destroy(&sem_swap_file);
     sem_destroy(&sem_page_table);
     sem_destroy(&sem_process_metrics);
+    sem_destroy(&sem_process_creation);
     LOG_INFO("Memory semaphores destroyed.");
 }
 
@@ -102,4 +114,12 @@ void lock_process_metrics() {
 
 void unlock_process_metrics() {
     sem_post(&sem_process_metrics);
+}
+
+void lock_process_creation() {
+    sem_wait(&sem_process_creation);
+}
+
+void unlock_process_creation() {
+    sem_post(&sem_process_creation);
 }

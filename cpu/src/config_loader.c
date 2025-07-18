@@ -60,6 +60,9 @@ CacheConfig load_cache_config(t_config *config)
     exit(EXIT_FAILURE);
   }
 
+  // Load cache delay from configuration
+  cache_config.retardo_cache = config_get_int_value(config, "RETARDO_CACHE");
+
   // Don't free algo_str here as it's managed by the config system
   return cache_config;
 }

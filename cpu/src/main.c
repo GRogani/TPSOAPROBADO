@@ -9,9 +9,14 @@ int main(int argc, char *argv[])
         argv[1] = "cpu.config";
     }
 
+    if (argc < 3)
+    {
+        argv[2] = "cpu.log";
+    }
+
     t_config *config_file = init_config(argv[1]);
     t_cpu_config config_cpu = init_cpu_config(config_file);
-    init_logger("cpu.log", "CPU", config_cpu.LOG_LEVEL);
+    init_logger(argv[2], "CPU", config_cpu.LOG_LEVEL);
 
     MMUConfig mmu_config = load_mmu_config(argv);
     TLBConfig tlb_config = load_tlb_config(argv);
@@ -24,7 +29,6 @@ int main(int argc, char *argv[])
 
     create_connections(config_cpu, &memory_socket, &kernel_dispatch_socket, &kernel_interrupt_socket);
 
-    t_package *kernel_package = NULL;
     uint32_t pid, pc;
 
     interrupt_args_t thread_args = {kernel_interrupt_socket, &pid, &pc, memory_socket};
@@ -34,12 +38,7 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        kernel_package = recv_dispatch(kernel_dispatch_socket, &pid, &pc);
-        if (kernel_package == NULL)
-        {
-            LOG_INFO("Disconneted from Kernel Dispatch");
-            break;
-        }
+        recv_dispatch(kernel_dispatch_socket, &pid, &pc);
 
         while (1)
         {

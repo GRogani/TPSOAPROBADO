@@ -13,7 +13,9 @@ void write_memory_request_handler(int client_socket, t_package* package) {
     LOG_DEBUG("Writing %u bytes to physical address %u", request->size, request->physical_address);
     
     write_to_user_space(request->physical_address, request->data, request->size);
-    
+
+    delay_memory_access();
+
     send_confirmation_package(client_socket, 0);
 
     LOG_DEBUG("Write memory confirmation sent successfully");

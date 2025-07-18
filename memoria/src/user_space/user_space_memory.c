@@ -1,5 +1,4 @@
 #include "user_space_memory.h"
-#include "../semaphores.h"
 
 static char *user_space = NULL;
 static size_t user_space_size = 0;
@@ -11,17 +10,10 @@ void init_user_space(size_t size)
 {
     pthread_mutex_init(&user_space_mutex, NULL);
 
-    user_space = malloc(size);
-    if (user_space == NULL)
-    {
-        LOG_ERROR("Failed to allocate user space memory of size %zu", size);
-        exit(EXIT_FAILURE);
-    }
-
-    memset(user_space, 0, size);
+    user_space = safe_calloc(size);
     user_space_size = size;
 
-    LOG_INFO("User space memory initialized with size %zu bytes", size);
+    LOG_INFO("Memoria de usuario inicializada con: %zu bytes", size);
 }
 
 void destroy_user_space(void)
@@ -33,7 +25,7 @@ void destroy_user_space(void)
         user_space_size = 0;
 
         pthread_mutex_destroy(&user_space_mutex);
-        LOG_INFO("User space memory destroyed");
+        LOG_INFO("Memoria de usuario destruida");
     }
 }
 
@@ -41,31 +33,31 @@ void write_to_user_space(uint32_t physical_address, void *data, uint32_t size)
 {
     if (size > memoria_config.TAM_PAGINA)
     {
-        LOG_ERROR("Write size %u exceeds page size %d", size, memoria_config.TAM_PAGINA);
+        LOG_ERROR("Size de escritura %u excede size de frame %d", size, memoria_config.TAM_PAGINA);
         return;
     }
 
     if (physical_address + size > user_space_size)
     {
-        LOG_ERROR("Memory access violation: Attempted write to address %u with size %u exceeds user space size %zu",
+        LOG_ERROR("Escritura en direccion Fisica %u de %uB excede el size de espacio de usuario %zu",
                   physical_address, size, user_space_size);
         return;
     }
-
+    
     pthread_mutex_lock(&user_space_mutex);
 
     memcpy(&user_space[physical_address], data, size);
 
     pthread_mutex_unlock(&user_space_mutex);
 
-    LOG_DEBUG("Written %u bytes to physical address %u", size, physical_address);
+    LOG_DEBUG("Se escribieron %uB en la direccion fisica %u", size, physical_address);
 }
 
 void read_from_user_space(uint32_t physical_address, void *buffer, uint32_t size)
 {
     if (physical_address + size > user_space_size)
     {
-        LOG_ERROR("Memory access violation: Attempted read from address %u with size %u exceeds user space size %zu",
+        LOG_ERROR("Lectura desde direccion fisica %u de %uB excede el size de espacio de usuario %zu",
                   physical_address, size, user_space_size);
         memset(buffer, 0, size);
         return;
@@ -77,7 +69,7 @@ void read_from_user_space(uint32_t physical_address, void *buffer, uint32_t size
 
     pthread_mutex_unlock(&user_space_mutex);
 
-    LOG_DEBUG("Read %u bytes from physical address %u", size, physical_address);
+    LOG_DEBUG("Leidos %uB desde la direccion fisica %u", size, physical_address);
 }
 
 size_t get_user_space_size(void)

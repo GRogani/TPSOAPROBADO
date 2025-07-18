@@ -20,7 +20,9 @@ void read_memory_request_handler(int client_socket, t_package* package) {
     }
     
     read_from_user_space(request->physical_address, buffer, request->size);
-    
+
+    delay_memory_access();
+
     send_memory_read_response(client_socket, buffer, request->size);
     
     LOG_DEBUG("Read memory response sent successfully");

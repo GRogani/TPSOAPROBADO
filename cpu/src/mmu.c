@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include "delay_utils.h"
 #include "utils/safe_alloc.h"
 #include "utils/serialization/package.h"
 #include "utils/DTPs/mmu_request_page_read_response.h"
@@ -217,6 +218,7 @@ uint32_t mmu_translate_address(int memory_socket, uint32_t logical_address, uint
   else
   {
     LOG_OBLIGATORIO("PID: %d - TLB MISS - Pagina: %u", pid, page_number);
+    // TODO: find victim entry in TLB
     frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
     tlb_add_entry(page_number, frame_number);
   }
@@ -225,6 +227,26 @@ uint32_t mmu_translate_address(int memory_socket, uint32_t logical_address, uint
   LOG_DEBUG("  -> Resulting Physical Address: %u", physical_address);
 
   return physical_address;
+}
+
+uint32_t mmu_translate_address_with_page_number(int memory_socket, uint32_t page_number, uint32_t pid)
+{
+  uint32_t frame_number;
+  TLBEntry *tlb_entry = tlb_find_entry(page_number);
+
+  if (tlb_entry)
+  {
+    LOG_OBLIGATORIO("PID: %d - TLB HIT - Pagina: %u", pid, page_number);
+    frame_number = tlb_entry->frame;
+  }
+  else
+  {
+    LOG_OBLIGATORIO("PID: %d - TLB MISS - Pagina: %u", pid, page_number);
+    frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
+    tlb_add_entry(page_number, frame_number);
+  }
+
+  return (frame_number * g_mmu_config->page_size);
 }
 
 /*MMU Administrativos*/
@@ -237,6 +259,7 @@ void mmu_init(MMUConfig *mmu_config, TLBConfig *tlb_config, CacheConfig *cache_c
   if (g_tlb_config->entry_count > 0)
   {
     g_tlb = list_create();
+    // TODO: agregar el limite de entradas de TLB.
   }
   if (g_cache_config->entry_count > 0)
   {
@@ -246,6 +269,8 @@ void mmu_init(MMUConfig *mmu_config, TLBConfig *tlb_config, CacheConfig *cache_c
       CacheEntry *entry = malloc(sizeof(CacheEntry));
       entry->is_valid = false;
       entry->content = safe_calloc(1, g_mmu_config->page_size); // Initialize with zeros
+      entry->modified_start = 0;
+      entry->modified_end = 0;
       list_add(g_cache, entry);
     }
   }
@@ -263,10 +288,49 @@ void mmu_process_cleanup(int memory_socket)
       CacheEntry *entry = (CacheEntry *)element;
       if (entry->is_valid && entry->modified_bit)
       {
+        uint32_t physic_dir = mmu_translate_address_with_page_number(memory_socket, entry->page, entry->pid);
 
-        mmu_request_page_write_to_memory(memory_socket, entry->page, entry->content);
+        if (entry->modified_start < entry->modified_end)
+        {
+          uint32_t modified_region_addr = physic_dir + entry->modified_start;
+          uint32_t modified_size = entry->modified_end - entry->modified_start;
+
+          LOG_INFO("[Cache] Writing modified region to memory during cleanup: page %u, offset %u to %u (size %u bytes)",
+                   entry->page, entry->modified_start, entry->modified_end, modified_size);
+
+          t_memory_write_request *request = create_memory_write_request(
+              modified_region_addr,
+              modified_size,
+              ((char *)entry->content) + entry->modified_start);
+
+          send_memory_write_request(memory_socket, request);
+          destroy_memory_write_request(request);
+
+          t_package *package = recv_package(memory_socket);
+          if (package->opcode != CONFIRMATION)
+          {
+            LOG_ERROR("Failed to receive confirmation for memory write during cleanup");
+          }
+          else
+          {
+            bool success = read_confirmation_package(package);
+            if (!success)
+            {
+              LOG_ERROR("Memory write operation failed during cleanup");
+            }
+            destroy_package(package);
+          }
+        }
+        else
+        {
+          LOG_INFO("[Cache] No specific modified region or invalid tracking for page %u. Skipping memory write during cleanup.", entry->page);
+        }
       }
-      entry->is_valid = false; // Invalidate all entries
+
+      entry->is_valid = false;
+      entry->modified_bit = false;
+      entry->modified_start = 0;
+      entry->modified_end = 0;
     }
     list_iterate(g_cache, _writeback_if_dirty);
     LOG_INFO("[Cache] All cache entries invalidated.");
@@ -296,6 +360,7 @@ void mmu_destroy()
 
 CacheEntry *cache_find_entry(uint32_t page_number, uint32_t pid)
 {
+  delay_cache_access();
 
   bool _is_frame(void *element)
   {
@@ -323,7 +388,10 @@ int cache_find_victim_clock()
     CacheEntry *entry = list_get(g_cache, g_cache_clock_pointer);
     if (!entry->is_valid)
     {
-      return g_cache_clock_pointer; // Found an unused slot
+      // Found an unused slot, update pointer
+      uint32_t victim_index = g_cache_clock_pointer;
+      g_cache_clock_pointer = (g_cache_clock_pointer + 1) % g_cache_config->entry_count;
+      return victim_index;
     }
     if (entry->use_bit)
     {
@@ -351,7 +419,9 @@ int cache_find_victim_clock_m()
       if (!entry->is_valid)
       {
         // Se encontró un espacio libre, es la mejor víctima.
-        return g_cache_clock_pointer;
+        uint32_t victim_index = g_cache_clock_pointer;
+        g_cache_clock_pointer = (g_cache_clock_pointer + 1) % g_cache_config->entry_count;
+        return victim_index;
       }
       if (!entry->use_bit && !entry->modified_bit)
       {
@@ -382,9 +452,9 @@ int cache_find_victim_clock_m()
   }
 }
 
-CacheEntry *select_victim_entry(int memory_socket, uint32_t logic_dir, uint32_t pid)
+CacheEntry *select_victim_entry(int memory_socket, uint32_t pid)
 {
-  LOG_INFO("[Cache] Loading page for logical address %u", logic_dir);
+  LOG_INFO("[Cache] Loading page into cache for PID %u", pid);
   int victim_index;
   if (g_cache_config->replacement_algo == CACHE_ALGO_CLOCK)
   {
@@ -402,21 +472,59 @@ CacheEntry *select_victim_entry(int memory_socket, uint32_t logic_dir, uint32_t 
   if (victim_entry->is_valid && victim_entry->modified_bit)
   {
     LOG_INFO("[Cache] Victim (page %u) is dirty. Writing back to memory.", victim_entry->page);
+
     if (g_tlb_config->entry_count > 0)
     {
-      physic_addr = mmu_translate_address(memory_socket, logic_dir, pid);
+      physic_addr = mmu_translate_address_with_page_number(memory_socket, victim_entry->page, victim_entry->pid);
       uint32_t frame_number = (physic_addr) / g_mmu_config->page_size;
-      LOG_OBLIGATORIO("PID: %u - Memory Update - Página: %u - Frame: %u", pid, victim_entry->page, frame_number);
+      LOG_OBLIGATORIO("PID: %u - Memory Update - Página: %u - Frame: %u", victim_entry->pid, victim_entry->page, frame_number);
     }
     else
     {
-      uint32_t page_number = floor(logic_dir / g_mmu_config->page_size);
-      uint32_t offset = logic_dir % g_mmu_config->page_size;
-      uint32_t frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
-      physic_addr = (frame_number * g_mmu_config->page_size) + offset;
-      LOG_OBLIGATORIO("PID: %u - Memory Update - Página: %u - Frame: %u", pid, victim_entry->page, frame_number);
+      uint32_t frame_number = mmu_perform_page_walk(memory_socket, victim_entry->page, victim_entry->pid);
+      physic_addr = (frame_number * g_mmu_config->page_size);
+      LOG_OBLIGATORIO("PID: %u - Memory Update - Página: %u - Frame: %u", victim_entry->pid, victim_entry->page, frame_number);
     }
-    mmu_request_page_write_to_memory(memory_socket, physic_addr, victim_entry->content);
+
+    if (victim_entry->modified_start < victim_entry->modified_end)
+    {
+      uint32_t modified_region_addr = physic_addr + victim_entry->modified_start;
+      uint32_t modified_size = victim_entry->modified_end - victim_entry->modified_start;
+
+      LOG_INFO("[Cache] Writing modified region to memory: offset %u to %u (size %u bytes)",
+               victim_entry->modified_start, victim_entry->modified_end, modified_size);
+
+      t_memory_write_request *request = create_memory_write_request(
+          modified_region_addr,
+          modified_size,
+          ((char *)victim_entry->content) + victim_entry->modified_start);
+
+      send_memory_write_request(memory_socket, request);
+      destroy_memory_write_request(request);
+
+      t_package *package = recv_package(memory_socket);
+      if (package->opcode != CONFIRMATION)
+      {
+        LOG_ERROR("Failed to receive confirmation for memory write");
+      }
+      else
+      {
+        bool success = read_confirmation_package(package);
+        if (!success)
+        {
+          LOG_ERROR("Memory write operation failed");
+        }
+        destroy_package(package);
+      }
+    }
+    else
+    {
+      LOG_INFO("[Cache] No specific modified region or invalid tracking. Skipping memory write.");
+    }
+
+    memset(victim_entry->content, 0, g_mmu_config->page_size);
+    victim_entry->modified_start = 0;
+    victim_entry->modified_end = 0;
   }
   return victim_entry;
 }
@@ -440,12 +548,18 @@ CacheEntry *cache_load_page(uint32_t logic_dir, int memory_socket, CacheEntry *v
     physic_dir = (frame_number * g_mmu_config->page_size) + offset;
   }
 
+  // antes de asignar la nueva página, limpiar el contenido del victim_entry
+  memset(victim_entry->content, 0, g_mmu_config->page_size);
+
   mmu_request_page_read_from_memory(memory_socket, physic_dir, victim_entry->content);
 
   victim_entry->is_valid = true;
   victim_entry->page = page_number;
+  victim_entry->pid = pid; // Ensure we set the pid
   victim_entry->use_bit = true;
   victim_entry->modified_bit = false;
+  victim_entry->modified_start = 0;
+  victim_entry->modified_end = 0;
 
   LOG_OBLIGATORIO("PID: %d - Cache Add - Pagina: %u", pid, page_number);
   return victim_entry;
