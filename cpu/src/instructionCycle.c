@@ -100,44 +100,49 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
             {
                 // Cache miss - select a victim entry
                 cache_entry = select_victim_entry(socket_memory, *pid);
-                
+
                 // Set up the entry for the new page - we don't need to read from memory
                 // since we'll be writing directly to the part we care about
                 cache_entry->is_valid = true;
                 cache_entry->pid = *pid;
                 cache_entry->page = page_number;
                 cache_entry->use_bit = true;
-                
+
                 // Initialize the modified region to the current write
                 cache_entry->modified_start = offset;
                 cache_entry->modified_end = offset + instruction->operand_string_size;
-                
+
                 // Clear our page content initially - we'll write to it directly
                 memset(cache_entry->content, 0, g_mmu_config->page_size);
-                
-                LOG_INFO("Cache miss for page %u (PID %u), initialized new entry for writing at offset %u", 
+
+                LOG_INFO("Cache miss for page %u (PID %u), initialized new entry for writing at offset %u",
                          page_number, *pid, offset);
             }
-            
+
             // Update modified region tracking
-            if (!cache_entry->modified_bit) {
+            if (!cache_entry->modified_bit)
+            {
                 // First modification to this page
                 cache_entry->modified_start = offset;
                 cache_entry->modified_end = offset + instruction->operand_string_size;
-            } else {
+            }
+            else
+            {
                 // Update the modified range to encompass the new write
-                if (offset < cache_entry->modified_start) {
+                if (offset < cache_entry->modified_start)
+                {
                     cache_entry->modified_start = offset;
                 }
-                if (offset + instruction->operand_string_size > cache_entry->modified_end) {
+                if (offset + instruction->operand_string_size > cache_entry->modified_end)
+                {
                     cache_entry->modified_end = offset + instruction->operand_string_size;
                 }
             }
-            
-            LOG_INFO("Writing to cache page %u (PID %u) at offset %u, size %u, modified region now %u-%u", 
-                    page_number, *pid, offset, instruction->operand_string_size,
-                    cache_entry->modified_start, cache_entry->modified_end);
-            
+
+            LOG_INFO("Writing to cache page %u (PID %u) at offset %u, size %u, modified region now %u-%u",
+                     page_number, *pid, offset, instruction->operand_string_size,
+                     cache_entry->modified_start, cache_entry->modified_end);
+
             // Copy the string data
             memcpy(cache_entry->content + offset, valor_write, instruction->operand_string_size);
             cache_entry->modified_bit = true;
@@ -241,10 +246,15 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
                 t_memory_read_response *response = read_memory_read_response(package);
                 destroy_package(package);
 
-                if (response->data != NULL)
+                void *value_readed = safe_malloc(size + 1);
+                memcpy(value_readed, response->data, size);
+                ((char*)value_readed)[size] = '\0';
+
+                if (value_readed != NULL)
                 {
-                    LOG_OBLIGATORIO("PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", *pid, physic_dir_read, response->data);
-                    LOG_INFO("Data read from memory: %s", response->data);
+                    LOG_OBLIGATORIO("PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", *pid, physic_dir_read, (char*)value_readed);
+                    LOG_INFO("Data read from memory: %s", (char*)value_readed);
+                    free(value_readed);
                     destroy_memory_read_response(response);
                 }
                 else
@@ -278,8 +288,15 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
 
                 if (response->data != NULL)
                 {
-                    LOG_OBLIGATORIO("PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", *pid, physic_dir_read, response->data);
-                    LOG_INFO("Data read from memory: %s", response->data);
+                    // Crear una copia con null terminator para logging seguro
+                    char *safe_data = safe_malloc(size + 1);
+                    memcpy(safe_data, response->data, size);
+                    safe_data[size] = '\0';
+                    
+                    LOG_OBLIGATORIO("PID: %u - Acción: LEER - Dirección Física: %u - Valor: %s", *pid, physic_dir_read, safe_data);
+                    LOG_INFO("Data read from memory: %s", safe_data);
+                    
+                    free(safe_data);
                     destroy_memory_read_response(response);
                 }
                 else
@@ -333,7 +350,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
         {
             LOG_ERROR("Failed to receive confirmation package from kernel for PID %d", *pid);
             destroy_package(package); // Free the package even on failure
-            return true; // should preempt due an issue
+            return true;              // should preempt due an issue
         }
         bool success = read_confirmation_package(package);
         if (!success)

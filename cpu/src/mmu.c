@@ -562,5 +562,7 @@ CacheEntry *cache_load_page(uint32_t logic_dir, int memory_socket, CacheEntry *v
   victim_entry->modified_end = 0;
 
   LOG_OBLIGATORIO("PID: %d - Cache Add - Pagina: %u", pid, page_number);
+  LOG_OBLIGATORIO("PID: %d - Acción: LEER - Dirección Física: %u - Valor: %s", pid, physic_dir, victim_entry->content);
+
   return victim_entry;
 }
