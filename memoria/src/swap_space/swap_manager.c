@@ -58,7 +58,7 @@ bool swap_write_frame(uint32_t frame_num, void *data, uint32_t size)
 
   long position = frame_num * memoria_config.TAM_PAGINA;
 
-  int result = true;
+  bool result = true;
 
   if (fseek(swap_file, position, SEEK_SET) != 0)
   {

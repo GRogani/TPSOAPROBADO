@@ -50,7 +50,7 @@ void release_frames(t_list *frame_list)
 t_list* allocate_frames(uint32_t pages_needed) {
     pthread_mutex_lock(&frames_mutex);
     
-    if (pages_needed > frames_free_count) {
+    if (pages_needed > frame_get_free_count()) {
         LOG_WARNING("No hay suficientes frames para asignar %u paginas. Frames disponibles: %u", pages_needed, frames_free_count);
         pthread_mutex_unlock(&frames_mutex);
         return NULL;

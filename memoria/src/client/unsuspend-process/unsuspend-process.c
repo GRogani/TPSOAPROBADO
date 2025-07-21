@@ -6,11 +6,11 @@ void unsuspend_process_request_handler(int client_fd, t_package *package)
 
     LOG_INFO("Solicitud de UNSUSPEND recibida para proceso PID: %u", pid);
     
-    int result = swap_in_process(pid);
+    bool result = swap_in_process(pid);
     
     delay_swap_access();
 
-    if (result == 0) {
+    if (result) {
         LOG_INFO("UNSUSPEND exitoso para el proceso PID: %u", pid);
         send_confirmation_package(client_fd, true);
     } else {
