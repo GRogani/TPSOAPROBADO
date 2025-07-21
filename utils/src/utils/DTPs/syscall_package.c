@@ -33,6 +33,7 @@ t_package *create_syscall_package(syscall_package_data *syscall)
 // used by CPU
 int send_syscall_package(int socket, syscall_package_data *syscall) 
 {
+    LOG_PACKAGE("Sending syscall package: syscall_type: %d, pid: %u, pc: %u", syscall->syscall_type, syscall->pid, syscall->pc);
     t_package *package = create_syscall_package(syscall);
     int bytes_sent = send_package(socket, package);
     destroy_package(package);
@@ -71,6 +72,7 @@ syscall_package_data *read_syscall_package(t_package *package)
     }
 
     package->buffer->offset = 0;
+    LOG_PACKAGE("Read syscall package: syscall_type: %d, pid: %u, pc: %u", syscall->syscall_type, syscall->pid, syscall->pc);
     return syscall;
 }
 

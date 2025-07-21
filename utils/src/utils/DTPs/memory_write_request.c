@@ -20,6 +20,7 @@ void destroy_memory_write_request(t_memory_write_request *request)
 
 int send_memory_write_request(int socket, t_memory_write_request *request)
 {
+  LOG_PACKAGE("Sending memory write request: physical_address: %u, size: %u", request->physical_address, request->size);
   t_buffer *buffer = buffer_create(sizeof(uint32_t) * 2 + request->size);
   buffer_add_uint32(buffer, request->physical_address);
   buffer_add_uint32(buffer, request->size);
@@ -44,5 +45,6 @@ t_memory_write_request *read_memory_write_request(t_package *package)
 
   t_memory_write_request *request = create_memory_write_request(physical_address, size, data);
   free(data);
+  LOG_PACKAGE("Read memory write request: physical_address: %u, size: %u", request->physical_address, request->size);
   return request;
 }

@@ -11,6 +11,7 @@ t_package* create_page_entry_request_package(uint32_t pid, uint32_t table_id, ui
 
 void send_page_entry_request_package(int socket, uint32_t pid, uint32_t table_id, uint32_t entry_index)
 {
+    LOG_PACKAGE("Sending page entry request package: pid: %u, table_id: %u, entry_index: %u", pid, table_id, entry_index);
     t_package* package = create_page_entry_request_package(pid, table_id, entry_index);
     send_package(socket, package);
     destroy_package(package);
@@ -23,7 +24,7 @@ page_entry_request_data read_page_entry_request_package(t_package* package)
     data.pid = buffer_read_uint32(package->buffer);
     data.table_id = buffer_read_uint32(package->buffer);
     data.entry_index = buffer_read_uint32(package->buffer);
-    
+    LOG_PACKAGE("Read page entry request package: pid: %u, table_id: %u, entry_index: %u", data.pid, data.table_id, data.entry_index);
     return data;
 }
 

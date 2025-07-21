@@ -10,7 +10,7 @@
 // Cambiar a 1 para logear los debugs
 // Cambiar a 0 para no logear los debugs
 #define DEBUG_MODE 1
-
+#define PACKAGE 1
 #define SOLO_LOGS_OBLIGATORIOS 1 // 1 para solo obligatorios, 0 para todos
 
 
@@ -24,6 +24,15 @@
         log_info(get_logger(), "%s", _log_obl_colored);        \
         unlock_logger();                                         \
     } while(0)
+    
+#if PACKAGE
+    #define LOG_PACKAGE(...)                          \
+        do {                                          \
+            lock_logger();                            \
+            log_info(get_logger(), __VA_ARGS__);      \
+            unlock_logger();                          \
+        } while(0)
+#endif
 
 #if SOLO_LOGS_OBLIGATORIOS
     #define LOG_INFO(...) do { } while(0)

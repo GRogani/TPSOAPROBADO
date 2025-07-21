@@ -10,6 +10,7 @@ t_package* create_io_completion_package(char* device_name, uint32_t pid){
 }
 
 int send_io_completion_package(int kernel_socket, char* device_name, uint32_t pid){
+    LOG_PACKAGE("Sending IO completion package: device_name: %s, pid: %u", device_name, pid);
     t_package* package;
     package = create_io_completion_package(device_name, pid);
     int bytes_sent = send_package(kernel_socket, package);
@@ -24,5 +25,6 @@ io_completion_package_data* read_io_completion_package(t_package* package){
     result->device_name = buffer_read_string(package->buffer, &bytes_read);
     result->pid = buffer_read_uint32(package->buffer);
     package->buffer->offset = 0;
+    LOG_PACKAGE("Read IO completion package: device_name: %s, pid: %u", result->device_name, result->pid);
     return result;
 }

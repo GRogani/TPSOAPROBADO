@@ -10,6 +10,7 @@ t_package* create_instruction_package(char* instruction)
 
 int send_instruction_package(int socket, char* instruction) 
 {
+    LOG_PACKAGE("Sending instruction package: instruction: %s", instruction);
     t_package* package = create_instruction_package(instruction);
     int bytes_sent = send_package(socket, package);
     destroy_package(package);
@@ -21,5 +22,6 @@ char* read_instruction_package(t_package* package)
     package->buffer->offset = 0;
     uint32_t instruction_len;
     char* instruction = buffer_read_string(package->buffer, &instruction_len);
+    LOG_PACKAGE("Read instruction package: instruction: %s", instruction);
     return instruction;
 }

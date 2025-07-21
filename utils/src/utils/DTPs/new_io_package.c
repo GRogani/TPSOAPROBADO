@@ -8,6 +8,7 @@ t_package* create_new_io_package(char* device_name){
 
 int send_new_io_package(int kernel_socket, char* device_name)
 {
+    LOG_PACKAGE("Sending new IO package: device_name: %s", device_name);
     t_package* package;
     package = create_new_io_package(device_name);
     int bytes_sent = send_package(kernel_socket, package);
@@ -22,5 +23,6 @@ char* read_new_io_package(t_package* package)
     uint32_t bytes_read;
     char* result = buffer_read_string(package->buffer, &bytes_read);
     package->buffer->offset = 0;
+    LOG_PACKAGE("Read new IO package: device_name: %s", result);
     return result;
 };

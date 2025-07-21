@@ -10,6 +10,7 @@ t_package *create_package_memory_read_response(char *data, uint32_t size)
 
 void send_memory_read_response(int socket, char *data, uint32_t size)
 {
+  LOG_PACKAGE("Sending memory read response: size: %u", size);
   t_package *package = create_package_memory_read_response(data, size);
   send_package(socket, package);
   destroy_package(package);
@@ -20,6 +21,7 @@ t_memory_read_response *read_memory_read_response(t_package *package)
   t_memory_read_response *response = safe_malloc(sizeof(t_memory_read_response));
   package->buffer->offset = 0;
   response->data = buffer_read_string(package->buffer, &response->data_size);
+  LOG_PACKAGE("Read memory read response: data_size: %u", response->data_size);
   return response;
 }
 

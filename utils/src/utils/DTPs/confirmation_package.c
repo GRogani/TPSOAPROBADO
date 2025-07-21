@@ -9,6 +9,7 @@ t_package *create_confirmation_package(uint32_t success)
 
 int send_confirmation_package(int socket, bool success)
 {
+    LOG_PACKAGE("Sending confirmation package: success: %d", success);
     t_package *package = create_confirmation_package((uint32_t)success);
     int bytes_sent = send_package(socket, package);
     destroy_package(package);
@@ -19,5 +20,6 @@ bool read_confirmation_package(t_package *package)
 {
     package->buffer->offset = 0;
     int success = buffer_read_uint32(package->buffer);
+    LOG_PACKAGE("Read confirmation package: success: %d", success);
     return success;
 }

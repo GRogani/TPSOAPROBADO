@@ -9,6 +9,7 @@ int send_swap_in_package(int socket, uint32_t pid) {
 }
 
 int send_swap_operation_package(int socket, uint32_t pid, OPCODE operation) {
+    LOG_PACKAGE("Sending swap operation package: pid: %u, operation: %d", pid, operation);
     t_package* package = create_swap_operation_package(pid, operation);
     int bytes_sent = send_package(socket, package);
     destroy_package(package);
@@ -25,5 +26,6 @@ t_package *create_swap_operation_package(uint32_t pid, OPCODE operation) {
 uint32_t read_swap_package(t_package* package) {
     package->buffer->offset = 0;
     uint32_t pid = buffer_read_uint32(package->buffer);
+    LOG_PACKAGE("Read swap package: pid: %u", pid);
     return pid;
 }

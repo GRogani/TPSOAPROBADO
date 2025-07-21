@@ -20,6 +20,7 @@ t_package* create_init_process_package(uint32_t pid, uint32_t size, char* pseudo
 
 int send_init_process_package(int socket, uint32_t pid, uint32_t size, char* pseudocode_path) 
 {
+    LOG_PACKAGE("Sending init process package: pid: %u, size: %u, pseudocode_path: %s", pid, size, pseudocode_path ? pseudocode_path : "NULL");
     t_package* package = create_init_process_package(pid, size, pseudocode_path);
     int bytes_sent = send_package(socket, package);
     destroy_package(package);
@@ -38,6 +39,7 @@ init_process_package_data* read_init_process_package(t_package* package)
     request->pseudocode_path = buffer_read_string(package->buffer, &path_len);
     
     package->buffer->offset = 0;
+    LOG_PACKAGE("Read init process package: pid: %u, size: %u, pseudocode_path: %s", request->pid, request->size, request->pseudocode_path ? request->pseudocode_path : "NULL");
     return request;
 }
 

@@ -10,6 +10,7 @@ t_package* create_fetch_package(int32_t pid, int32_t pc)
 
 void send_fetch_package(int socket, int32_t pid, int32_t pc) 
 {
+    LOG_PACKAGE("Sending fetch package: pid: %d, pc: %d", pid, pc);
     t_package* package = create_fetch_package(pid, pc);
     send_package(socket, package);
     destroy_package(package);
@@ -22,6 +23,6 @@ fetch_package_data read_fetch_package(t_package* package)
     package->buffer->offset = 0;   
     fetch.pid = buffer_read_uint32(package->buffer);
     fetch.pc = buffer_read_uint32(package->buffer);
-    
+    LOG_PACKAGE("Read fetch package: pid: %d, pc: %d", fetch.pid, fetch.pc);
     return fetch;
 }
