@@ -9,6 +9,6 @@
  * @param pid Process ID of the process to resume.
  * @return 0 on success, -1 on failure.
  */
-int swap_in_process(uint32_t pid);
+bool swap_in_process(uint32_t pid);
 
 #endif

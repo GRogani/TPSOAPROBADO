@@ -7,7 +7,7 @@
 /**
  * @brief Resume a process - move its pages from swap space back to user space.
  */
-int swap_in_process(uint32_t pid) {
+bool swap_in_process(uint32_t pid) {
     LOG_INFO("## PID: %u - Iniciando reanudación del proceso", pid);
     
     lock_swap_file();
@@ -16,20 +16,20 @@ int swap_in_process(uint32_t pid) {
     if (proc == NULL) {
         LOG_ERROR("## PID: %u - Proceso no encontrado para reanudar", pid);
         unlock_swap_file();
-        return -1;
+        return false;
     }
     
     if (!proc->is_suspended) {
         LOG_WARNING("## PID: %u - El proceso no está suspendido", pid);
         unlock_swap_file();
-        return 0; // Already in memory, nothing to do
+        return true;
     }
     
     if (proc->allocated_frames == NULL || list_is_empty(proc->allocated_frames)) {
         LOG_WARNING("## PID: %u - No hay frames en swap para reanudar", pid);
         proc->is_suspended = false;
         unlock_swap_file();
-        return 0;
+        return true;
     }
 
     t_list *frames_to_unswap = list_create();
@@ -52,7 +52,7 @@ int swap_in_process(uint32_t pid) {
             list_destroy_and_destroy_elements(user_frames, free);
         }
         unlock_swap_file();
-        return -1;
+        return false;
     }
     
     void *page_buffer = malloc(memoria_config.TAM_PAGINA);
@@ -61,7 +61,7 @@ int swap_in_process(uint32_t pid) {
         list_destroy_and_destroy_elements(frames_to_unswap, free);
         list_destroy_and_destroy_elements(user_frames, free);
         unlock_swap_file();
-        return -1;
+        return false;
     }
     
     bool success = true;
@@ -91,7 +91,7 @@ int swap_in_process(uint32_t pid) {
         list_destroy_and_destroy_elements(frames_to_unswap, free);
         release_frames(user_frames);
         unlock_swap_file();
-        return -1;
+        return false;
     }
     
     swap_release_frames(proc->allocated_frames);
@@ -105,5 +105,5 @@ int swap_in_process(uint32_t pid) {
     list_destroy_and_destroy_elements(frames_to_unswap, free);
     
     unlock_swap_file();
-    return 0;
+    return true;
 }
