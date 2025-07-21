@@ -78,9 +78,9 @@ process_info *process_manager_find_process(uint32_t pid)
     return found_proc;
 }
 
-int process_manager_delete_process(uint32_t pid)
+bool process_manager_delete_process(uint32_t pid)
 {
-    int result = -1;
+    bool result = false;
     lock_process_list();
     int found_index = -1;
     for (int i = 0; i < list_size(global_process_list); i++)
@@ -93,11 +93,11 @@ int process_manager_delete_process(uint32_t pid)
         }
     }
 
-    if (found_index != -1)
+    if (found_index > -1)
     {
         list_remove_and_destroy_element(global_process_list, found_index, destroy_process_info);
         LOG_INFO("## PID: %u - Proceso Finalizado y recursos liberados.", pid);
-        result = 0;
+        result = true;
     }
     else
     {

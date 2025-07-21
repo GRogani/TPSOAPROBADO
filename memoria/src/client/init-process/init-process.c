@@ -7,7 +7,7 @@ void init_process_request_handler(int socket, t_package *package)
   LOG_OBLIGATORIO("## PID: %u - Solicitud de creacion de Proceso Recibida.", init_process_args->pid);
 
   lock_process_creation();
-  int result = create_process(init_process_args->pid, init_process_args->size, init_process_args->pseudocode_path);
+  bool result = create_process(init_process_args->pid, init_process_args->size, init_process_args->pseudocode_path);
   unlock_process_creation();
 
   destroy_init_process_package(init_process_args);
@@ -15,7 +15,7 @@ void init_process_request_handler(int socket, t_package *package)
   send_confirmation_package(socket, result);
 }
 
-int create_process(uint32_t pid, uint32_t size, char *script_path)
+bool create_process(uint32_t pid, uint32_t size, char *script_path)
 {
   process_info *proc = safe_malloc(sizeof(process_info));
 
@@ -28,7 +28,7 @@ int create_process(uint32_t pid, uint32_t size, char *script_path)
   {
     LOG_ERROR("## PID: %u - Error al cargar pseudocodigo desde: %s", pid, script_path);
     free(proc);
-    return -1;
+    return false;
   }
 
   if (size != 0)
@@ -43,7 +43,7 @@ int create_process(uint32_t pid, uint32_t size, char *script_path)
       if (proc->instructions)
         list_destroy_and_destroy_elements(proc->instructions, free);
       free(proc);
-      return -1;
+      return false;
     }
 
     proc->allocated_frames = allocate_frames(pages_needed);
@@ -53,7 +53,7 @@ int create_process(uint32_t pid, uint32_t size, char *script_path)
       if (proc->instructions)
         list_destroy_and_destroy_elements(proc->instructions, free);
       free(proc);
-      return -1;
+      return false;
     }
 
     proc->page_table = init_page_table();
@@ -64,7 +64,7 @@ int create_process(uint32_t pid, uint32_t size, char *script_path)
         list_destroy_and_destroy_elements(proc->instructions, free);
       release_frames(proc->allocated_frames); // TODO
       free(proc);
-      return -1;
+      return false;
     }
 
     bool success = assign_frames(proc->page_table, proc->allocated_frames, pages_needed);
@@ -76,7 +76,7 @@ int create_process(uint32_t pid, uint32_t size, char *script_path)
       free_page_table(proc->page_table);
       release_frames(proc->allocated_frames);
       free(proc);
-      return -1;
+      return false;
     }
   }
 
@@ -89,7 +89,7 @@ int create_process(uint32_t pid, uint32_t size, char *script_path)
     free_page_table(proc->page_table);
     release_frames(proc->allocated_frames);
     free(proc);
-    return -1;
+    return false;
   }
   memset(proc->metrics, 0, sizeof(t_process_metrics));
 
@@ -98,7 +98,7 @@ int create_process(uint32_t pid, uint32_t size, char *script_path)
   unlock_process_list();
 
   LOG_OBLIGATORIO("## PID: %u - Proceso Creado - Tamaño: %u", pid, size);
-  return 0;
+  return true;
 }
 
 t_list *process_manager_load_script_lines(char *path)

@@ -49,8 +49,7 @@ bool create_process(int memory_socket, uint32_t pid, uint32_t size, char* pseudo
     }
     bool success = false;
     if (response->opcode == CONFIRMATION) {
-        bool create_process_result = read_confirmation_package(response);
-        success = create_process_result;
+        success = read_confirmation_package(response);
     } else {
         LOG_ERROR("memory_client: Respuesta inesperada de memoria (opcode: %d)", response->opcode);
     }

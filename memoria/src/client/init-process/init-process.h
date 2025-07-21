@@ -13,7 +13,7 @@ extern t_memoria_config memoria_config;
 
 void init_process_request_handler(int socket, t_package *package);
 
-int create_process(uint32_t pid, uint32_t size, char *script_path);
+bool create_process(uint32_t pid, uint32_t size, char *script_path);
 
 t_list *process_manager_load_script_lines(char *path);
 

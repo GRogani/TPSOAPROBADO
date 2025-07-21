@@ -37,7 +37,7 @@ void process_manager_destroy();
 
 process_info* process_manager_find_process(uint32_t pid);
 
-int process_manager_delete_process(uint32_t pid);
+bool process_manager_delete_process(uint32_t pid);
 
 t_list* process_manager_get_process_list();
 

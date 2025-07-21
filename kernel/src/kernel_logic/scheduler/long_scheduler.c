@@ -64,7 +64,7 @@ bool run_long_scheduler(void)
   lock_new_list();
   LOG_INFO("Lista NEW lockeada");
 
-  while (!list_is_empty(get_new_list()))
+  while (1)
   {
     // Obtener siguiente proceso de NEW usando algoritmo configurado
     t_pcb *pcb = get_next_process_to_initialize_from_new();
@@ -76,12 +76,11 @@ bool run_long_scheduler(void)
 
     LOG_INFO("Intentando inicializar proceso con PID %d", pcb->pid);
 
-    // Intentar crear proceso en memoria (para inicialización usamos tamaño mock)
+    
     bool memory_ok = create_process(memory_socket, pcb->pid, pcb->size, pcb->pseudocode_file);
 
     if (memory_ok)
     {
-      // Éxito: mover de NEW a READY
       LOG_INFO("Proceso con PID %d inicializado correctamente", pcb->pid);
 
       t_pcb* pcb_pop = remove_pcb_from_new(pcb->pid);
@@ -93,7 +92,6 @@ bool run_long_scheduler(void)
     }
     else
     {
-      // Error: devolver proceso a NEW y terminar
       LOG_WARNING("No se pudo inicializar proceso con PID %d, memoria sin espacio suficiente", pcb->pid);
       break;
     }

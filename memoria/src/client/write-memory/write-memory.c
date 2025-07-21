@@ -7,6 +7,7 @@ void write_memory_request_handler(int client_socket, t_package* package) {
     t_memory_write_request* request = read_memory_write_request(package);
     if (request == NULL) {
         LOG_ERROR("Failed to parse write memory request");
+        send_confirmation_package(client_socket, false);
         return;
     }
     
@@ -16,7 +17,7 @@ void write_memory_request_handler(int client_socket, t_package* package) {
 
     delay_memory_access();
 
-    send_confirmation_package(client_socket, 0);
+    send_confirmation_package(client_socket, true);
 
     LOG_DEBUG("Write memory confirmation sent successfully");
     

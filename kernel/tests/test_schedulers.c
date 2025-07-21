@@ -30,7 +30,7 @@ void* memory_server_mock(void* arg) {
         printf("[MEMORY MOCK] Recibida solicitud de suspensión para PID %u\n", pid);
         
         // Enviar respuesta exitosa
-        send_confirmation_package(client_socket, 1);
+        send_confirmation_package(client_socket, true);
         printf("[MEMORY MOCK] Respuesta enviada: ÉXITO\n");
         
         destroy_package(request);

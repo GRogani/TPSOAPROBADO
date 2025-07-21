@@ -7,7 +7,7 @@
 
 t_package *create_confirmation_package (uint32_t success);
 
-int send_confirmation_package (int socket, uint32_t success);
+int send_confirmation_package (int socket, bool success);
 
 bool read_confirmation_package (t_package *package);
 

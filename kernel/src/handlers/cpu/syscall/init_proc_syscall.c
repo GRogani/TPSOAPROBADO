@@ -55,7 +55,7 @@ void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc,
     unlock_new_list();
     unlock_exec_list();
 
-    send_confirmation_package(response_socket, 0); // 0 = success
+    send_confirmation_package(response_socket, true);
     LOG_INFO("init_proc_syscall: Respuesta de confirmación enviada a CPU.");
 
     // mandamos a un thread asi evitamos que se quede trabada la cpu porque no le vamos a poder contestar desde el kernel si entra otra syscall (porque el corto plazo se queda esperando la respuesta de la interrupcion)

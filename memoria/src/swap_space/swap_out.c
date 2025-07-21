@@ -1,13 +1,6 @@
 #include "swap_out.h"
-#include "swap_manager.h"
-#include "../user_space/user_space_memory.h"
-#include "../user_space/frame_manager.h"
-#include "../semaphores.h"
 
-/**
- * @brief Suspend a process - move its pages from user space to swap space.
- */
-int swap_out_process(uint32_t pid)
+bool swap_out_process(uint32_t pid)
 {
     LOG_INFO("## PID: %u - Iniciando suspensión del proceso", pid);
 
@@ -18,14 +11,14 @@ int swap_out_process(uint32_t pid)
     {
         LOG_ERROR("## PID: %u - Proceso no encontrado para suspender", pid);
         unlock_swap_file();
-        return -1;
+        return false;
     }
 
     if (proc->is_suspended)
     {
         LOG_WARNING("## PID: %u - El proceso ya está suspendido", pid);
         unlock_swap_file();
-        return 0; // Already suspended, nothing to do
+        return true;
     }
 
     if (proc->allocated_frames == NULL)
@@ -33,7 +26,7 @@ int swap_out_process(uint32_t pid)
         LOG_WARNING("## PID: %u - No hay frames asignados para suspender", pid);
         proc->is_suspended = true;
         unlock_swap_file();
-        return 0;
+        return true;
     }
 
     uint32_t allocated_frames_length = list_size(proc->allocated_frames);
@@ -60,7 +53,7 @@ int swap_out_process(uint32_t pid)
             list_destroy_and_destroy_elements(swap_frames, free);
         }
         unlock_swap_file();
-        return -1;
+        return false;
     }
 
     void *page_buffer = malloc(memoria_config.TAM_PAGINA);
@@ -70,7 +63,7 @@ int swap_out_process(uint32_t pid)
         list_destroy_and_destroy_elements(frames_to_swap, free);
         list_destroy_and_destroy_elements(swap_frames, free);
         unlock_swap_file();
-        return -1;
+        return false;
     }
 
     bool success = true;
@@ -102,7 +95,7 @@ int swap_out_process(uint32_t pid)
         list_destroy_and_destroy_elements(frames_to_swap, free);
         list_destroy_and_destroy_elements(swap_frames, free);
         unlock_swap_file();
-        return -1;
+        return false;
     }
 
     release_frames(proc->allocated_frames);
@@ -118,5 +111,5 @@ int swap_out_process(uint32_t pid)
     list_destroy_and_destroy_elements(frames_to_swap, free);
 
     unlock_swap_file();
-    return 0;
+    return true;
 }

@@ -63,7 +63,7 @@ void run_medium_scheduler(uint32_t pid)
             return;
         }
         if (!read_confirmation_package(package))
-        { // Success = 0
+        { /
             LOG_WARNING("Fallo el SWAP del PID %d", pid);
             // TODO: si falla el SWAP, por ahora hago esto SUSPEND_BLOCKED -> BLOCKED
             lock_blocked_list();

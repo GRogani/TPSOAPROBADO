@@ -9,7 +9,7 @@ void dump_memory_request_handler(int client_socket, t_package *package)
   if (proc == NULL)
   {
     LOG_ERROR("DUMP_MEMORY: Proceso PID %u no encontrado", pid);
-    send_confirmation_package(client_socket, -1);
+    send_confirmation_package(client_socket, false);
     return;
   }
 
@@ -17,7 +17,7 @@ void dump_memory_request_handler(int client_socket, t_package *package)
   if (frames == NULL || list_size(frames) == 0)
   {
     LOG_ERROR("DUMP_MEMORY: Proceso PID %u no tiene frames asignados", pid);
-    send_confirmation_package(client_socket, -1);
+    send_confirmation_package(client_socket, false);
     return;
   }
 
@@ -27,7 +27,7 @@ void dump_memory_request_handler(int client_socket, t_package *package)
   if (dump_file == NULL)
   {
     LOG_ERROR("DUMP_MEMORY: Error al crear el archivo de dump para el PID %d", proc->pid);
-    send_confirmation_package(client_socket, -1);
+    send_confirmation_package(client_socket, false);
     return;
   }
 
@@ -38,7 +38,7 @@ void dump_memory_request_handler(int client_socket, t_package *package)
   {
     LOG_ERROR("DUMP_MEMORY: Error al alocar buffer para lectura de páginas");
     fclose(dump_file);
-    send_confirmation_package(client_socket, -1);
+    send_confirmation_package(client_socket, false);
     return;
   }
 
@@ -76,12 +76,12 @@ void dump_memory_request_handler(int client_socket, t_package *package)
   {
     LOG_OBLIGATORIO("## PID: %u - Memory Dump completado. %u",
                     pid, total_bytes_dumped);
-    send_confirmation_package(client_socket, 0);
+    send_confirmation_package(client_socket, true);
   }
   else
   {
     LOG_ERROR("DUMP_MEMORY: Error durante el dump de memoria para el PID %u", pid);
-    send_confirmation_package(client_socket, -1);
+    send_confirmation_package(client_socket, false);
   }
 }
 
