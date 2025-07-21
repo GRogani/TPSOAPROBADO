@@ -10,7 +10,7 @@ void swap_request_handler(int client_fd, t_package *package)
     
     delay_swap_access();
 
-    if (result == 0) {
+    if (result) {
         LOG_INFO("SWAP exitoso para el proceso PID: %u", pid);
         send_confirmation_package(client_fd, true);
     } else {
