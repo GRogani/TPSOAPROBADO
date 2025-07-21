@@ -75,7 +75,7 @@ void parse_instruction(char *instruction_string, t_instruction *instruction)
         break;
     }
 }
-bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch, uint32_t *pid, uint32_t *PC)
+bool execution(t_instruction *instruction, int socket_memory, int socket_dispatch, uint32_t *pid, uint32_t *PC)
 
 {
     switch (instruction->instruction_code)
@@ -100,7 +100,11 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
             {
                 // Cache miss - select a victim entry
                 cache_entry = select_victim_entry(socket_memory, *pid);
-
+                if (cache_entry == NULL)
+                {
+                    LOG_ERROR("Failed to select a victim entry for cache");
+                    return false; 
+                }
                 // Set up the entry for the new page - we don't need to read from memory
                 // since we'll be writing directly to the part we care about
                 cache_entry->is_valid = true;
@@ -162,14 +166,14 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
                 if (package->opcode != CONFIRMATION)
                 {
                     LOG_ERROR("Failed to receive confirmation package from memory for PID %d", *pid);
-                    return true; // should preempt due an issue
+                    return false; // should preempt due an issue
                 }
                 bool success = read_confirmation_package(package);
                 if (!success)
                 {
                     LOG_ERROR("Failed to initialize process for PID %d", *pid);
                     destroy_package(package);
-                    return true;
+                    return false;
                 }
                 destroy_package(package); // Free the package after successful use
                 (*PC)++;
@@ -188,14 +192,14 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
                 if (package->opcode != CONFIRMATION)
                 {
                     LOG_ERROR("Failed to receive confirmation package from memory for PID %d", *pid);
-                    return true; // should preempt due an issue
+                    return false; // should preempt due an issue
                 }
                 bool success = read_confirmation_package(package);
                 if (!success)
                 {
                     LOG_ERROR("Failed to initialize process for PID %d", *pid);
                     destroy_package(package);
-                    return true;
+                    return false;
                 }
 
                 (*PC)++;
@@ -217,6 +221,11 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
             {
 
                 cache_entry = select_victim_entry(socket_memory, *pid);
+                if (cache_entry == NULL)
+                {
+                    LOG_ERROR("Failed to select a victim entry for cache");
+                    return false; 
+                }
                 cache_entry = cache_load_page(logic_dir_read, socket_memory, cache_entry, *pid);
             }
             // Read from cache
@@ -240,7 +249,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
                     LOG_INFO("Failed to read data from memory");
                     if (package)
                         destroy_package(package);
-                    return -1;
+                    return false;
                 }
 
                 t_memory_read_response *response = read_memory_read_response(package);
@@ -261,7 +270,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
                 {
                     LOG_INFO("Failed to read data from memory");
                     destroy_memory_read_response(response);
-                    return -1;
+                    return false;
                 }
                 (*PC)++;
                 break;
@@ -280,7 +289,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
                     LOG_INFO("Failed to read data from memory");
                     if (package)
                         destroy_package(package);
-                    return -1;
+                    return false;
                 }
 
                 t_memory_read_response *response = read_memory_read_response(package);
@@ -303,7 +312,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
                 {
                     LOG_INFO("Failed to read data from memory");
                     destroy_memory_read_response(response);
-                    return -1;
+                    return false;
                 }
                 (*PC)++;
                 break;
@@ -389,7 +398,7 @@ bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch,
     default:
     {
         LOG_WARNING("Unknown instruction: %d", instruction->instruction_code);
-        return true;
+        return false;
     }
     }
     return false;

@@ -26,7 +26,7 @@ t_instruction *decode(t_package *package);
 
 void parse_instruction(char *instruction_string, t_instruction *instruction);
 
-bool execute(t_instruction *instruction, int socket_memory, int socket_dispatch, uint32_t *pid, uint32_t *PC);
+bool execution(t_instruction *instruction, int socket_memory, int socket_dispatch, uint32_t *pid, uint32_t *PC);
 
 void *interrupt_listener(void *socket);
 

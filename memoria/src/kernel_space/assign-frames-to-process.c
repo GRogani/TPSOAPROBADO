@@ -1,6 +1,5 @@
 #include "assign-frames-to-process.h"
-#include <stdlib.h>
-#include <math.h>
+
 
 static void collect_last_level_tables(t_page_table *root_table, stack_item_t *result, int *result_size, int max_result_size)
 {

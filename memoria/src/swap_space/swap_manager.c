@@ -46,24 +46,24 @@ t_list *swap_allocate_frames(uint32_t pages_needed)
   return allocated_frames;
 }
 
-int swap_write_frame(uint32_t frame_num, void *data, uint32_t size)
+bool swap_write_frame(uint32_t frame_num, void *data, uint32_t size)
 {
   if (swap_file == NULL)
   {
     LOG_ERROR("Swap no inicializado");
-    return -1;
+    return false;
   }
 
   pthread_mutex_lock(&swap_file_mutex);
 
   long position = frame_num * memoria_config.TAM_PAGINA;
 
-  int result = 0;
+  int result = true;
 
   if (fseek(swap_file, position, SEEK_SET) != 0)
   {
     LOG_ERROR("Swap: Error seeking to position %ld in swap file", position);
-    result = -1;
+    result = false;
   }
   else
   {
@@ -71,7 +71,7 @@ int swap_write_frame(uint32_t frame_num, void *data, uint32_t size)
     if (written != size)
     {
       LOG_ERROR("Swap: Error writing to swap file. Expected to write %u bytes, wrote %zu", size, written);
-      result = -1;
+      result = false;
     }
     else
     {
@@ -136,13 +136,13 @@ void swap_manager_destroy()
 /**
  * Read data from a specific frame in swap space
  */
-int swap_read_frame(uint32_t frame_num, void *buffer, uint32_t size)
+bool swap_read_frame(uint32_t frame_num, void *buffer, uint32_t size)
 {
   
   if (swap_file == NULL)
   {
     LOG_ERROR("Swap: Swap file not initialized");
-    return -1;
+    return false;
   }
 
   pthread_mutex_lock(&swap_file_mutex);
@@ -150,12 +150,12 @@ int swap_read_frame(uint32_t frame_num, void *buffer, uint32_t size)
   // Calculate position (physic dir) in swap file
   long position = frame_num * memoria_config.TAM_PAGINA;
 
-  int result = 0;
+  int result = true;
 
   if (fseek(swap_file, position, SEEK_SET) != 0)
   {
     LOG_ERROR("Swap: Error seeking to position %ld in swap file", position);
-    result = -1;
+    result = false;
   }
   else
   {
@@ -163,7 +163,7 @@ int swap_read_frame(uint32_t frame_num, void *buffer, uint32_t size)
     if (read_bytes != size)
     {
       LOG_ERROR("Swap: Error reading from swap file. Expected to read %u bytes, read %zu", size, read_bytes);
-      result = -1;
+      result = false;
     }
     else
     {

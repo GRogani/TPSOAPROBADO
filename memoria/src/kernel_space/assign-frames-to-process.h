@@ -1,11 +1,13 @@
 #ifndef ASSIGN_FRAMES_TO_PROCESS_H
 #define ASSIGN_FRAMES_TO_PROCESS_H
 
-#include "commons/collections/list.h"
-#include "commons/collections/queue.h"
 #include <stdbool.h>
 #include <stdint.h>
-#include "./page_table.h"
+#include <stdlib.h>
+#include <math.h>
+#include <commons/collections/list.h>
+#include <commons/collections/queue.h>
+#include "page_table.h"
 
 typedef struct {
     t_page_table *table;

@@ -35,7 +35,8 @@ void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc,
     if (new_pcb == NULL)
     {
         LOG_ERROR("init_proc_syscall: Error al crear PCB para nuevo proceso PID %d", new_pid);
-        
+        unlock_exec_list();
+        unlock_new_list();
         return;
     }
     

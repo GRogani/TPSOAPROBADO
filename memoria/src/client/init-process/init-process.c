@@ -62,7 +62,7 @@ bool create_process(uint32_t pid, uint32_t size, char *script_path)
       LOG_ERROR("## PID: %u - Error al inicializar estructura de tabla de paginas.", pid);
       if (proc->instructions)
         list_destroy_and_destroy_elements(proc->instructions, free);
-      release_frames(proc->allocated_frames); // TODO
+      release_frames(proc->allocated_frames);
       free(proc);
       return false;
     }

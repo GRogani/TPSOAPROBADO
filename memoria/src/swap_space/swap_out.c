@@ -77,7 +77,7 @@ bool swap_out_process(uint32_t pid)
         memset(page_buffer, 0, memoria_config.TAM_PAGINA);
         read_from_user_space(physical_address, page_buffer, memoria_config.TAM_PAGINA);
 
-        if (swap_write_frame(*swap_frame, page_buffer, memoria_config.TAM_PAGINA) != 0)
+        if (!swap_write_frame(*swap_frame, page_buffer, memoria_config.TAM_PAGINA))
         {
             LOG_ERROR("## PID: %u - Error al escribir frame %u en swap", pid, *swap_frame);
             success = false;

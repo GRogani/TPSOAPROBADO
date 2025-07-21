@@ -71,10 +71,10 @@ int kill_process_in_memory(uint32_t pid)
     if (response->opcode == CONFIRMATION)
     {
         destroy_package(response);
-        return 0;
+        return true;
     }
     else
-        return -1;
+        return false;
 }
 
 bool dump_memory_routine(uint32_t pid)
@@ -82,14 +82,14 @@ bool dump_memory_routine(uint32_t pid)
     extern t_kernel_config kernel_config; // en globals.h
 
     int memsocket = connect_to_memory(&kernel_config);
-    if (memsocket < 0) return -1;
+    if (memsocket < 0) return false;
     
     send_dump_memory_package(memsocket, pid);
 
     t_package* response = recv_package(memsocket);
     disconnect_from_memory(memsocket);
 
-    if (response == NULL) return -1;
+    if (response == NULL) return false;
 
     if (response->opcode == CONFIRMATION)
     {

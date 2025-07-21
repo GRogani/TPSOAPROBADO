@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
             }
             destroy_package(instruction_package);
 
-            bool should_preempt = execute(instruction, memory_socket, kernel_dispatch_socket, &pid, &pc);
+            bool should_preempt = execution(instruction, memory_socket, kernel_dispatch_socket, &pid, &pc);
 
             cleanup_instruction(instruction);
 

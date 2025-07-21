@@ -32,7 +32,7 @@ uint32_t mmu_request_pagetable_entry_from_memory(int memory_socket, uint32_t tab
     LOG_ERROR("[MEM-REQUEST] Failed to receive valid response for page table entry request");
     if (response_package)
       destroy_package(response_package);
-    return -1; // Error
+    return 0; // Error
   }
 
   // Parse the response
@@ -189,6 +189,11 @@ uint32_t mmu_perform_page_walk(int memory_socket, uint32_t page_number, uint32_t
               level, power, divisor, entry_index);
 
     next_table_id = mmu_request_pagetable_entry_from_memory(memory_socket, next_table_id, entry_index, pid);
+    if (next_table_id == 0)
+    {
+      LOG_ERROR("[MMU] Failed to get page table entry for level %d, entry %u", level, entry_index);
+      return 0; // Error
+    }
 
     LOG_DEBUG("    Next table/frame ID: %u", next_table_id);
   }
@@ -476,6 +481,11 @@ CacheEntry *select_victim_entry(int memory_socket, uint32_t pid)
     if (g_tlb_config->entry_count > 0)
     {
       physic_addr = mmu_translate_address_with_page_number(memory_socket, victim_entry->page, victim_entry->pid);
+      if (physic_addr == 0)
+      {
+        LOG_ERROR("[MMU] Failed to translate address for victim entry page %u, PID %u", victim_entry->page, victim_entry->pid);
+        return NULL; // Error
+      }
       uint32_t frame_number = (physic_addr) / g_mmu_config->page_size;
       LOG_OBLIGATORIO("PID: %u - Memory Update - Página: %u - Frame: %u", victim_entry->pid, victim_entry->page, frame_number);
     }

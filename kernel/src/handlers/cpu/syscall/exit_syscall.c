@@ -21,15 +21,14 @@ void exit_process_syscall(uint32_t pid)
 
 bool exit_routine(t_pcb* pcb) {
   bool memory_space_free = false;
+
   lock_exit_list();
-  LOG_INFO("Lockeada lista EXIT");
+  add_pcb_to_exit(pcb);
 
-  add_pcb_to_exit(pcb); // lo pasamos a EXIT
-
-  int mem_response = kill_process_in_memory(pcb->pid);
+  bool mem_response = kill_process_in_memory(pcb->pid);
   LOG_INFO("KILL PROCESS IN MEMORY EXECUTED");
 
-  if (mem_response == 0)
+  if (mem_response)
   {
     LOG_OBLIGATORIO("## (%d) - Finaliza el proceso", pcb->pid);
     memory_space_free = true;

@@ -16,14 +16,10 @@ bool run_long_scheduler(void)
 
   bool processes_initialized = false;
 
-  // Fase 1: Procesar procesos suspendidos listos (SUSP_READY)
   LOG_INFO("Procesando lista SUSP_READY");
 
-  lock_ready_list();
-  LOG_INFO("Lista READY lockeada");
-
   lock_susp_ready_list();
-  LOG_INFO("Lista susp-READY lockeada");
+
 
   while (!list_is_empty(get_susp_ready_list()))
   {
@@ -46,28 +42,23 @@ bool run_long_scheduler(void)
     // Éxito: mover de SUSP_READY a READY
     LOG_INFO("Proceso con PID %d des-suspendido correctamente", pcb->pid);
     t_pcb *pcb_pop = remove_pcb_from_susp_ready(pcb->pid);
+    lock_ready_list();
     add_pcb_to_ready(pcb_pop);
+    unlock_ready_list();
     processes_initialized = true;
     
     LOG_INFO("Proceso con PID %d movido a READY", pcb->pid);
     destroy_package(response);
     
   }
-
-  LOG_INFO("No hay mas procesos en SUSP_READY");
-
   unlock_susp_ready_list();
-  LOG_INFO("Lista susp-READY deslockeada");
-
-  // Fase 2: Procesar procesos nuevos (NEW)
-  LOG_INFO("Procesando lista NEW");
-  lock_new_list();
-  LOG_INFO("Lista NEW lockeada");
+  LOG_INFO("No hay mas procesos en SUSP_READY");
 
   while (1)
   {
-    // Obtener siguiente proceso de NEW usando algoritmo configurado
+    lock_new_list();
     t_pcb *pcb = get_next_process_to_initialize_from_new();
+    unlock_new_list();
     if (pcb == NULL)
     {
       LOG_INFO("No hay mas procesos en NEW");
@@ -82,13 +73,18 @@ bool run_long_scheduler(void)
     if (memory_ok)
     {
       LOG_INFO("Proceso con PID %d inicializado correctamente", pcb->pid);
-
+      lock_new_list();
       t_pcb* pcb_pop = remove_pcb_from_new(pcb->pid);
+      unlock_new_list();
+
+      lock_ready_list();
       add_pcb_to_ready(pcb_pop);
+      unlock_ready_list();
 
       processes_initialized = true;
 
       LOG_INFO("Proceso con PID %d movido a READY", pcb->pid);
+      break;
     }
     else
     {
@@ -97,22 +93,17 @@ bool run_long_scheduler(void)
     }
   }
 
-  
-  unlock_new_list();
-  LOG_INFO("Lista NEW des-lockeada");
-  unlock_ready_list();
-
-  // Cerrar conexión con memoria
   disconnect_from_memory(memory_socket);
 
   if (processes_initialized)
   {
     LOG_INFO("Planificador de largo plazo finalizado - Se inicializaron procesos correctamente");
-    return true; // indicamos que se inicializaron procesos, asi corremos el algoritmo de corto plazo.
+    return true; 
   }
   else
   {
     LOG_INFO("Planificador de largo plazo finalizado - No se inicializaron nuevos procesos");
+    return false;
   }
 
   return false;

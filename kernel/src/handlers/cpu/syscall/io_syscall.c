@@ -8,6 +8,7 @@ void handle_io_process_syscall(uint32_t pid, uint32_t pc, uint32_t sleep_time, c
   if (!io_connection.found)
   {
     handle_io_connection_not_found(pid, sleep_time, device_name);
+    unlock_io_connections();
     return;
   }
 
@@ -77,8 +78,6 @@ void handle_io_connection_not_found(uint32_t pid, uint32_t sleep_time, char *dev
 
   bool memory_space_free = exit_routine(pcb);
   unlock_exec_list();
-
-  unlock_io_connections();
 
   if (memory_space_free) // si no se pudo sacar de la memoria, no tenemos que correr esto, no tiene sentido porque no se liberó memoria, quedo el proceso ahi zombie.
   {
