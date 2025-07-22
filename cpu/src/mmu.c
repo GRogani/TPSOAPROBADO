@@ -166,8 +166,8 @@ void tlb_add_entry(int32_t page_number, int32_t frame_number)
         }
       }
     }
-    TLBEntry *victim = list_get(g_tlb, victim_index);
-    LOG_DEBUG("[TLB] Replacing victim (page %u) at index %d with new entry (page %u).", victim->page, victim_index, page_number);
+    //TLBEntry *victim = list_get(g_tlb, victim_index);
+    //LOG_DEBUG("[TLB] Replacing victim (page %u) at index %d with new entry (page %u).", victim->page, victim_index, page_number);
     list_replace_and_destroy_element(g_tlb, victim_index, new_entry, tlb_entry_destroy);
   }
 }
@@ -572,7 +572,7 @@ CacheEntry *cache_load_page(int32_t logic_dir, int memory_socket, CacheEntry *vi
   victim_entry->modified_end = 0;
 
   LOG_OBLIGATORIO("PID: %d - Cache Add - Pagina: %u", pid, page_number);
-  LOG_OBLIGATORIO("PID: %d - Acción: LEER - Dirección Física: %u - Valor: %s", pid, physic_dir, victim_entry->content);
+  LOG_OBLIGATORIO("PID: %d - Acción: LEER - Dirección Física: %u - Valor: %p", pid, physic_dir, (char*)victim_entry->content);
 
   return victim_entry;
 }

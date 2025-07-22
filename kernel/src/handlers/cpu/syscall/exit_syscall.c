@@ -46,13 +46,14 @@ bool exit_routine(t_pcb* pcb) {
 
 void log_process_metrics(int32_t pid, t_state_metrics state_metrics, t_time_metrics time_metrics)
 {
-  LOG_OBLIGATORIO("\n## (%d) - Metricas de estado: \nNEW (%d) (%ldms), \nREADY (%d) (%ldms), \nSUSPEND REDY (%d) (%ldms), \nEXEC (%d) (%ldms), \nBLOCK (%d) (%ldms), \nSUSPEND BLOCK (%d) (%ldms), \nEXIT (%d) (%ldms)",
+  char padding[] = "                                            ";
+  LOG_OBLIGATORIO("## (%d) - Metricas de estado: \n%sNEW (%d) (%ldms), \n%sREADY (%d) (%ldms), \n%sSUSPEND REDY (%d) (%ldms), \n%sEXEC (%d) (%ldms), \n%sBLOCK (%d) (%ldms), \n%sSUSPEND BLOCK (%d) (%ldms), \n%sEXIT (%d) (%ldms)",
                   pid,
-                  state_metrics.new_count, time_metrics.new_time_ms,
-                  state_metrics.ready_count, time_metrics.ready_time_ms,
-                  state_metrics.susp_ready_count, time_metrics.susp_ready_time_ms,
-                  state_metrics.exec_count, time_metrics.exec_time_ms,
-                  state_metrics.blocked_count, time_metrics.blocked_time_ms,
-                  state_metrics.susp_blocked_count, time_metrics.susp_blocked_time_ms,
-                  state_metrics.exit_count, time_metrics.exit_time_ms);
+                  padding ,state_metrics.new_count, time_metrics.new_time_ms,
+                  padding ,state_metrics.ready_count, time_metrics.ready_time_ms,
+                  padding ,state_metrics.susp_ready_count, time_metrics.susp_ready_time_ms,
+                  padding ,state_metrics.exec_count, time_metrics.exec_time_ms,
+                  padding ,state_metrics.blocked_count, time_metrics.blocked_time_ms,
+                  padding ,state_metrics.susp_blocked_count, time_metrics.susp_blocked_time_ms,
+                  padding ,state_metrics.exit_count, time_metrics.exit_time_ms);
 }

@@ -1,11 +1,14 @@
 #include "cpuProtocol.h"
 
-t_package* recv_dispatch (int socket_dispatch_kernel, int32_t* PID, int32_t* PC) 
+t_package* recv_dispatch (int socket_dispatch_kernel, _Atomic int32_t* PID, _Atomic int32_t* PC) 
 {
+    if (socket_dispatch_kernel < 0)
+        return NULL;
+
     t_package* package;
     bool corrupted_package;
 
-    do{
+    //do{
         LOG_INFO("Waiting PID & PC from kernel...");
         corrupted_package = false;
         package = recv_package(socket_dispatch_kernel);
@@ -19,18 +22,21 @@ t_package* recv_dispatch (int socket_dispatch_kernel, int32_t* PID, int32_t* PC)
             corrupted_package = true;
             LOG_ERROR("Received package with unexpected opcode: %s", opcode_to_string(package->opcode) );
             destroy_package(package);
+            return NULL;
         }
         else if (package->buffer == NULL)
         {
             corrupted_package = true;
             LOG_WARNING("Received package with NULL buffer");
             destroy_package(package);
+            return NULL;
         }
         if (corrupted_package) 
         {
-            LOG_INFO("Retrying to receive PID and PC package...");
+            //LOG_INFO("Retrying to receive PID and PC package...");
+            return NULL;
         }
-    } while (corrupted_package);
+    //} while (corrupted_package);
 
     lock_cpu_mutex();
 
@@ -47,9 +53,9 @@ t_package* recv_dispatch (int socket_dispatch_kernel, int32_t* PID, int32_t* PC)
 t_package* receive_instruction(int socket) 
 {
     t_package* package;
-    bool corrupted_package;
+    //bool corrupted_package;
     //do{
-        corrupted_package = false;
+        //corrupted_package = false;
         package = recv_package(socket);
 
         if (package == NULL) {
@@ -57,7 +63,7 @@ t_package* receive_instruction(int socket)
             return NULL;
         }
         else if (package->opcode != INSTRUCTION) {
-            corrupted_package = true;
+            //corrupted_package = true;
             LOG_ERROR("Received package with unexpected opcode: %s", opcode_to_string(package->opcode) );
             destroy_package(package);
             return NULL;

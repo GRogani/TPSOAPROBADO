@@ -26,13 +26,13 @@ t_instruction *decode(t_package *package);
 
 void parse_instruction(char *instruction_string, t_instruction *instruction);
 
-bool execution(t_instruction *instruction, int socket_memory, int socket_dispatch, int32_t *pid, int32_t *PC);
+bool execution(t_instruction *instruction, int socket_memory, int socket_dispatch, _Atomic int32_t *pid, _Atomic int32_t *PC);
 
 void *interrupt_listener(void *socket);
 
 bool interrupt_handler(void *thread_args);
 
-void check_interrupt(int socket_interrupt, t_package *package, int32_t *pid_on_execute, int32_t *pc_on_execute, int socket_memory);
+void check_interrupt(int socket_interrupt, t_package *package,_Atomic int32_t *pid_on_execute,_Atomic int32_t *pc_on_execute, int socket_memory);
 
 int32_t MMU(int32_t logic_dir);
 

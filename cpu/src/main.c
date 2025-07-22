@@ -1,5 +1,7 @@
 #include "main.h"
 
+_Atomic int32_t pid = 0, pc = 0;
+
 int main(int argc, char *argv[])
 {
     init_list_and_mutex();
@@ -29,8 +31,6 @@ int main(int argc, char *argv[])
 
     create_connections(config_cpu, &memory_socket, &kernel_dispatch_socket, &kernel_interrupt_socket);
 
-    int32_t pid, pc;
-
     interrupt_args_t thread_args = {kernel_interrupt_socket, &pid, &pc, memory_socket};
 
     pthread_t interrupt_listener_thread;
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     while (1)
     {
         recv_dispatch(kernel_dispatch_socket, &pid, &pc);
-
+        
         while (1)
         {
 
@@ -70,9 +70,8 @@ int main(int argc, char *argv[])
             if (should_preempt || should_interrupt)
             {
                 LOG_INFO("Preemption or interruption detected, breaking the instruction cycle.");
-                // limpiamos PC y PID
-                pid = 93847593; // un valor que es imposible que sea un PID real, lo consideramos basura
-                pc = 0;
+                pid = -1; 
+                pc = -1;
                 unlock_cpu_mutex();
                 break;
             }

@@ -24,7 +24,13 @@ t_instruction *decode(t_package *package)
     t_instruction *instruction = safe_calloc(1, sizeof(t_instruction));
 
     char *instruction_string = read_instruction_package(package);
-
+    if (instruction_string == NULL)
+    {
+        LOG_ERROR("Failed to read instruction string from package");
+        destroy_package(package);
+        free(instruction);
+        return NULL;
+    }
     parse_instruction(instruction_string, instruction);
 
     free(instruction_string);
@@ -77,7 +83,7 @@ void parse_instruction(char *instruction_string, t_instruction *instruction)
         break;
     }
 }
-bool execution(t_instruction *instruction, int socket_memory, int socket_dispatch, int32_t *pid, int32_t *PC)
+bool execution(t_instruction *instruction, int socket_memory, int socket_dispatch, _Atomic int32_t *pid, _Atomic int32_t *PC)
 
 {
     switch (instruction->instruction_code)
@@ -406,7 +412,7 @@ bool execution(t_instruction *instruction, int socket_memory, int socket_dispatc
     return false;
 }
 
-void check_interrupt(int socket_interrupt, t_package *package, int32_t *pid_on_execute, int32_t *pc_on_execute, int socket_memory)
+void check_interrupt(int socket_interrupt, t_package *package, _Atomic int32_t *pid_on_execute, _Atomic int32_t *pc_on_execute, int socket_memory)
 {
     if (package->opcode == INTERRUPT)
     {
