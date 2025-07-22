@@ -43,7 +43,7 @@ void destroy_package (t_package* package);
  * @param total_size Puntero donde se guarda el tamaño total del stream serializado
  * @return Stream serializado listo para enviar
  */
-void* serialize_package(t_package* package, uint32_t* total_size);
+void* serialize_package(t_package* package, int32_t* total_size);
 
 /**
  * @brief Envia un paquete a través de un socket

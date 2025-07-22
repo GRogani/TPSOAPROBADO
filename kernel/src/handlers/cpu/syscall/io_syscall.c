@@ -1,6 +1,6 @@
 #include "io_syscall.h"
 
-void handle_io_process_syscall(uint32_t pid, uint32_t pc, uint32_t sleep_time, char *device_name)
+void handle_io_process_syscall(int32_t pid, int32_t pc, int32_t sleep_time, char *device_name)
 {
   lock_io_connections();
 
@@ -68,7 +68,7 @@ void handle_io_process_syscall(uint32_t pid, uint32_t pc, uint32_t sleep_time, c
   LOG_INFO("io_syscall: short scheduler finished");
 }
 
-void handle_io_connection_not_found(uint32_t pid, uint32_t sleep_time, char *device_name)
+void handle_io_connection_not_found(int32_t pid, int32_t sleep_time, char *device_name)
 {
   LOG_INFO("IO connection not found for device %s in PID %d", device_name, pid);
 
@@ -83,7 +83,7 @@ void handle_io_connection_not_found(uint32_t pid, uint32_t sleep_time, char *dev
 }
 
 void* medium_scheduler_thread(void* arg) {
-    uint32_t pid = (uint32_t)(uintptr_t)arg;
+    int32_t pid = (int32_t)(uintptr_t)arg;
     run_medium_scheduler(pid);
     return NULL;
 }

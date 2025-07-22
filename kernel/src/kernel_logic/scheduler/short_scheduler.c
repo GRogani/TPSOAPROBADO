@@ -34,7 +34,7 @@ t_cpu_connection *get_cpu_to_dispatch(void)
     return available_cpu;
 }
 
-cpu_context_package_data send_and_receive_interrupt(int interrupt_socket_id, uint32_t pid)
+cpu_context_package_data send_and_receive_interrupt(int interrupt_socket_id, int32_t pid)
 {
     LOG_INFO("Enviando interrupcion para PID %d", pid);
 
@@ -61,7 +61,7 @@ cpu_context_package_data send_and_receive_interrupt(int interrupt_socket_id, uin
     return cpu_context;
 }
 
-bool send_dispatch_to_cpu(t_cpu_connection *cpu_connection, uint32_t pid, uint32_t pc)
+bool send_dispatch_to_cpu(t_cpu_connection *cpu_connection, int32_t pid, int32_t pc)
 {
     if (cpu_connection == NULL)
     {

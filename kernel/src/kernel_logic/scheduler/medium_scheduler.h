@@ -10,6 +10,6 @@
 
 extern t_kernel_config kernel_config;
 
-void run_medium_scheduler(uint32_t  pid);
+void run_medium_scheduler(int32_t  pid);
 
 #endif

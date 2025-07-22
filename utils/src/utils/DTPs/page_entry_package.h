@@ -7,25 +7,25 @@
 #include "enums/Eopcodes.h"
 
 typedef struct page_entry_request_data {
-    uint32_t pid;
-    uint32_t table_id;
-    uint32_t entry_index;
+    int32_t pid;
+    int32_t table_id;
+    int32_t entry_index;
 } page_entry_request_data;
 
 typedef struct page_entry_response_data {
-    uint32_t value; // table_ptr or frame_number
+    int32_t value; // table_ptr or frame_number
     bool is_last_level;
 } page_entry_response_data;
 
-t_package* create_page_entry_request_package(uint32_t pid, uint32_t table_level, uint32_t entry_index);
+t_package* create_page_entry_request_package(int32_t pid, int32_t table_level, int32_t entry_index);
 
-void send_page_entry_request_package(int socket, uint32_t pid, uint32_t table_level, uint32_t entry_index);
+void send_page_entry_request_package(int socket, int32_t pid, int32_t table_level, int32_t entry_index);
 
 page_entry_request_data read_page_entry_request_package(t_package* package);
 
-t_package *create_page_entry_response_package(uint32_t value, uint32_t is_last_level);
+t_package *create_page_entry_response_package(int32_t value, int32_t is_last_level);
 
-void send_page_entry_response_package(int socket, uint32_t value, uint32_t is_last_level);
+void send_page_entry_response_package(int socket, int32_t value, int32_t is_last_level);
 
 page_entry_response_data read_page_entry_response_package(t_package* package);
 

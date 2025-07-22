@@ -1,6 +1,6 @@
 #include "process_initialization.h"
 
-void initialize_root_process(uint32_t pid, uint32_t memory_space, char *pseudocode_file)
+void initialize_root_process(int32_t pid, int32_t memory_space, char *pseudocode_file)
 {
     LOG_INFO("Inicializando proceso root con PID %d, memoria %d bytes, archivo %s", pid, memory_space, pseudocode_file ? pseudocode_file : "NULL");
 

@@ -6,8 +6,8 @@
 #include "utils/serialization/buffer.h"
 
 // Wrappers
-int send_swap_package(int socket, uint32_t pid);
-int send_swap_in_package(int socket, uint32_t pid);
+int send_swap_package(int socket, int32_t pid);
+int send_swap_in_package(int socket, int32_t pid);
 
 /**
  * @brief Envía a Memoria la petición de una operación de SWAP genérica (SWAP-OUT / SWAP-IN).
@@ -17,7 +17,7 @@ int send_swap_in_package(int socket, uint32_t pid);
  * @param operation código de operación (SWAP o UNSUSPEND_PROCESS)
  * @return bytes enviados
  */
-int send_swap_operation_package(int socket, uint32_t pid, OPCODE operation);
+int send_swap_operation_package(int socket, int32_t pid, OPCODE operation);
 
 /**
  * @brief Crea un paquete para operaciones de SWAP genéricas
@@ -25,13 +25,13 @@ int send_swap_operation_package(int socket, uint32_t pid, OPCODE operation);
  * @param operation código de operación (SWAP o UNSUSPEND_PROCESS)
  * @return paquete creado
  */
-t_package *create_swap_operation_package(uint32_t pid, OPCODE operation);
+t_package *create_swap_operation_package(int32_t pid, OPCODE operation);
 
 /**
  * @brief Lee un paquete de operación de SWAP (para uso en Memoria)
  * @param package paquete a leer
  * @return PID del proceso
  */
-uint32_t read_swap_package(t_package* package);
+int32_t read_swap_package(t_package* package);
 
 #endif

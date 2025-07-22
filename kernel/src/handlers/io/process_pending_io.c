@@ -28,7 +28,7 @@ bool process_pending_io(t_pending_io_args args)
 
     // Verificar si el dispositivo está realmente ocupado comprobando si el PID actual 
     // está en las listas BLOCKED o SUSP_BLOCKED
-    uint32_t current_pid = connection_found.connection->current_process_executing;
+    int32_t current_pid = connection_found.connection->current_process_executing;
     bool is_truly_busy = false;
     
     if (current_pid != -1) {

@@ -1,9 +1,9 @@
 #include "init_proc_syscall.h"
 
-_Atomic uint32_t new_pid = 0; // PID 0 reservado para el proceso root
+_Atomic int32_t new_pid = 0; // PID 0 reservado para el proceso root
 
-void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc, 
-                                     uint32_t new_process_memory_space, 
+void handle_init_proc_syscall(int32_t caller_pid, int32_t caller_pc, 
+                                     int32_t new_process_memory_space, 
                                      char *new_process_pseudocode_file,
                                      int response_socket)
 {
@@ -28,7 +28,7 @@ void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc,
     current_pcb->pc = caller_pc;
 
     // 2. Crear PCB del nuevo proceso
-    // uint32_t new_pid = generate_new_pid();
+    // int32_t new_pid = generate_new_pid();
     new_pid++;
 
     t_pcb *new_pcb = pcb_create(new_pid, 0, new_process_memory_space, new_process_pseudocode_file); // PC inicial en 0
@@ -80,13 +80,13 @@ void process_schedulers() {
     LOG_INFO("init_proc_syscall: Syscall INIT_PROC completada para nuevo proceso PID=%d", new_pid);
 }
 
-uint32_t generate_new_pid(void)
+int32_t generate_new_pid(void)
 {    
     // Generar PID basado en tiempo actual y número aleatorio
     // Evitamos PID 0 que está reservado para el proceso root
-    uint32_t new_pid;
+    int32_t new_pid;
     do {
-        new_pid = (uint32_t)(time(NULL) % 10000) + (rand() % 1000) + 1;
+        new_pid = (int32_t)(time(NULL) % 10000) + (rand() % 1000) + 1;
     } while (new_pid == 0); // Asegurar que no sea 0
 
     return new_pid;

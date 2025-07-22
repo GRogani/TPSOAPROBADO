@@ -19,17 +19,17 @@ void swap_manager_destroy();
 /**
  * @brief Allocate frames in the swap space.
  */
-t_list *swap_allocate_frames(uint32_t pages_needed);
+t_list *swap_allocate_frames(int32_t pages_needed);
 
 /**
  * @brief Write data to a specific frame in swap space.
  */
-bool swap_write_frame(uint32_t frame_num, void *data, uint32_t size);
+bool swap_write_frame(int32_t frame_num, void *data, int32_t size);
 
 /**
  * @brief Read data from a specific frame in swap space.
  */
-bool swap_read_frame(uint32_t frame_num, void *buffer, uint32_t size);
+bool swap_read_frame(int32_t frame_num, void *buffer, int32_t size);
 
 /**
  * @brief Release allocated frames in swap space.

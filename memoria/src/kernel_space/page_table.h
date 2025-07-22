@@ -10,7 +10,7 @@ extern t_memoria_config memoria_config;
 
 typedef struct page_table
 {
-    uint32_t table_id;
+    int32_t table_id;
     t_list *entries;
     size_t num_entries;
 } t_page_table;
@@ -18,7 +18,7 @@ typedef struct page_table
 typedef struct page_table_entry
 {
     bool is_last_level;
-    uint32_t next_table_id;
+    int32_t next_table_id;
     union
     {
         int32_t frame_number;

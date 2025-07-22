@@ -16,7 +16,7 @@ typedef enum {
 } CacheReplacementAlgorithm;
 
 typedef struct {
-    uint32_t page_size;
+    int32_t page_size;
     int page_table_levels;
     int entries_per_table;
 } MMUConfig;

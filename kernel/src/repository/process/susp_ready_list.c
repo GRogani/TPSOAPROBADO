@@ -21,7 +21,7 @@ void unlock_susp_ready_list() {
     sem_post(&sem_susp_ready);
 }
 
-bool find_pcb_in_susp_ready(uint32_t pid) {
+bool find_pcb_in_susp_ready(int32_t pid) {
     bool pid_matches(void* ptr) {
         t_pcb* pcb = (t_pcb*) ptr;
         return pcb->pid == pid;
@@ -38,7 +38,7 @@ void add_pcb_to_susp_ready(t_pcb* pcb) {
     list_add(get_susp_ready_list(), pcb);
 }
 
-t_pcb* remove_pcb_from_susp_ready(uint32_t pid) {
+t_pcb* remove_pcb_from_susp_ready(int32_t pid) {
     bool pid_matches(void* ptr) {
         t_pcb* pcb = (t_pcb*) ptr;
         return pcb->pid == pid;

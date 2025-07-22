@@ -21,7 +21,7 @@ void unlock_blocked_list() {
     sem_post(&sem_blocked);
 }
 
-void* find_pcb_in_blocked(uint32_t pid) {
+void* find_pcb_in_blocked(int32_t pid) {
     bool pid_matches(void* ptr) {
         t_pcb* pcb = (t_pcb*) ptr;
         return pcb->pid == pid;
@@ -38,7 +38,7 @@ void add_pcb_to_blocked(t_pcb* pcb) {
     list_add(get_blocked_list(), pcb);
 }
 
-t_pcb* remove_pcb_from_blocked(uint32_t pid) {
+t_pcb* remove_pcb_from_blocked(int32_t pid) {
     bool pid_matches(void* ptr) {
         t_pcb* pcb = (t_pcb*) ptr;
         return pcb->pid == pid;

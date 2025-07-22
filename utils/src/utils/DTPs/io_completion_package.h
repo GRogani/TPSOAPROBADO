@@ -7,12 +7,12 @@
 
 typedef struct io_completion_package_data {
     char* device_name;
-    uint32_t pid;
+    int32_t pid;
 } io_completion_package_data;
 
-t_package* create_io_completion_package (char*, uint32_t);
+t_package* create_io_completion_package (char*, int32_t);
 
-int send_io_completion_package (int, char*, uint32_t);
+int send_io_completion_package (int, char*, int32_t);
 
 io_completion_package_data* read_io_completion_package (t_package*);
 

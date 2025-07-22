@@ -7,7 +7,7 @@ void* io_completion(void *thread_args)
     LOG_INFO("io_completion: Processing IO completion for device %s for PID %d", args->device_name, args->pid);
 
     // 1. Usar el PID proporcionado por el módulo IO
-    uint32_t pid = args->pid;
+    int32_t pid = args->pid;
 
     // Obtener la conexión IO para liberar el dispositivo
     lock_io_connections();

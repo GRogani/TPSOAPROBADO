@@ -1,6 +1,6 @@
 #include "exit_syscall.h"
 
-void exit_process_syscall(uint32_t pid) 
+void exit_process_syscall(int32_t pid) 
 {
   LOG_INFO("Exit syscall called for PID %d", pid);
 
@@ -44,9 +44,9 @@ bool exit_routine(t_pcb* pcb) {
   return memory_space_free;
 }
 
-void log_process_metrics(uint32_t pid, t_state_metrics state_metrics, t_time_metrics time_metrics)
+void log_process_metrics(int32_t pid, t_state_metrics state_metrics, t_time_metrics time_metrics)
 {
-  LOG_OBLIGATORIO("## (%d) - Metricas de estado: \nNEW (%d) (%ldms), \nREADY (%d) (%ldms), \nSUSPEND REDY (%d) (%ldms), \nEXEC (%d) (%ldms), \nBLOCK (%d) (%ldms), \nSUSPEND BLOCK (%d) (%ldms), \nEXIT (%d) (%ldms)",
+  LOG_OBLIGATORIO("\n## (%d) - Metricas de estado: \nNEW (%d) (%ldms), \nREADY (%d) (%ldms), \nSUSPEND REDY (%d) (%ldms), \nEXEC (%d) (%ldms), \nBLOCK (%d) (%ldms), \nSUSPEND BLOCK (%d) (%ldms), \nEXIT (%d) (%ldms)",
                   pid,
                   state_metrics.new_count, time_metrics.new_time_ms,
                   state_metrics.ready_count, time_metrics.ready_time_ms,

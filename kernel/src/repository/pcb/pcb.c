@@ -2,7 +2,7 @@
 
 extern t_kernel_config kernel_config; // en globals.h
 
-t_pcb* pcb_create(uint32_t pid, uint32_t pc, uint32_t size, char* pseudocode_file) {
+t_pcb* pcb_create(int32_t pid, int32_t pc, int32_t size, char* pseudocode_file) {
     t_pcb* pcb = safe_malloc(sizeof(t_pcb));
     if (pcb == NULL) {
         return NULL;

@@ -2,7 +2,7 @@
 
 void dump_memory_request_handler(int client_socket, t_package *package)
 {
-  uint32_t pid = read_dump_memory_package(package);
+  int32_t pid = read_dump_memory_package(package);
   LOG_OBLIGATORIO("## PID: %u - Memory Dump solicitado", pid);
 
   process_info *proc = process_manager_find_process(pid);
@@ -43,19 +43,19 @@ void dump_memory_request_handler(int client_socket, t_package *package)
   }
 
   bool dump_success = true;
-  uint32_t total_bytes_dumped = 0;
-  uint32_t allocated_frames_length = list_size(frames);
+  int32_t total_bytes_dumped = 0;
+  int32_t allocated_frames_length = list_size(frames);
 
   for (int i = 0; i < allocated_frames_length; i++)
   {
-    uint32_t *frame_number = list_get(frames, i);
+    int32_t *frame_number = list_get(frames, i);
     if (frame_number == NULL)
     {
       LOG_ERROR("DUMP_MEMORY: Frame número %d es NULL", i);
       continue;
     }
 
-    uint32_t physical_address = (*frame_number) * memoria_config.TAM_PAGINA;
+    int32_t physical_address = (*frame_number) * memoria_config.TAM_PAGINA;
     read_from_user_space(physical_address, buffer, memoria_config.TAM_PAGINA);
 
     if (fwrite(buffer, 1, memoria_config.TAM_PAGINA, dump_file) != memoria_config.TAM_PAGINA)
@@ -85,7 +85,7 @@ void dump_memory_request_handler(int client_socket, t_package *package)
   }
 }
 
-FILE *create_dump_file(uint32_t pid)
+FILE *create_dump_file(int32_t pid)
 {
   time_t now = time(NULL);
   struct tm *local_time = localtime(&now);

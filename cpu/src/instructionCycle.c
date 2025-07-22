@@ -4,8 +4,10 @@ extern CacheConfig *g_cache_config;
 extern TLBConfig *g_tlb_config;
 extern MMUConfig *g_mmu_config;
 
-t_package *fetch(int socket, uint32_t PID, uint32_t PC)
+t_package *fetch(int socket, int32_t PID, int32_t PC)
 {
+    if (socket<0 || PID < 0 || PC < 0) return NULL;
+
     t_package *package;
 
     LOG_OBLIGATORIO("## PID: %d - FETCH - Program Counter: %d", PID, PC);
@@ -75,7 +77,7 @@ void parse_instruction(char *instruction_string, t_instruction *instruction)
         break;
     }
 }
-bool execution(t_instruction *instruction, int socket_memory, int socket_dispatch, uint32_t *pid, uint32_t *PC)
+bool execution(t_instruction *instruction, int socket_memory, int socket_dispatch, int32_t *pid, int32_t *PC)
 
 {
     switch (instruction->instruction_code)
@@ -89,10 +91,10 @@ bool execution(t_instruction *instruction, int socket_memory, int socket_dispatc
     case WRITE:
     {
         LOG_OBLIGATORIO("## PID: %d - Ejecutando: WRITE - %d %s", *pid, instruction->operand_numeric1, instruction->operand_string);
-        uint32_t logic_dir_write = instruction->operand_numeric1;
+        int32_t logic_dir_write = instruction->operand_numeric1;
         char *valor_write = instruction->operand_string;
-        uint32_t page_number = floor(logic_dir_write / g_mmu_config->page_size);
-        uint32_t offset = logic_dir_write % g_mmu_config->page_size;
+        int32_t page_number = floor(logic_dir_write / g_mmu_config->page_size);
+        int32_t offset = logic_dir_write % g_mmu_config->page_size;
         if (g_cache_config->entry_count > 0)
         {
             CacheEntry *cache_entry = cache_find_entry(page_number, *pid);
@@ -157,7 +159,7 @@ bool execution(t_instruction *instruction, int socket_memory, int socket_dispatc
         {
             if (g_tlb_config->entry_count > 0)
             {
-                uint32_t physic_dir_write = mmu_translate_address(socket_memory, logic_dir_write, *pid);
+                int32_t physic_dir_write = mmu_translate_address(socket_memory, logic_dir_write, *pid);
                 t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
                 LOG_OBLIGATORIO("PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %s", *pid, physic_dir_write, valor_write);
                 send_memory_write_request(socket_memory, write_req);
@@ -181,8 +183,8 @@ bool execution(t_instruction *instruction, int socket_memory, int socket_dispatc
             }
             else
             {
-                uint32_t frame_number = mmu_perform_page_walk(socket_memory, page_number, *pid);
-                uint32_t physic_dir_write = (frame_number * g_mmu_config->page_size) + offset;
+                int32_t frame_number = mmu_perform_page_walk(socket_memory, page_number, *pid);
+                int32_t physic_dir_write = (frame_number * g_mmu_config->page_size) + offset;
                 t_memory_write_request *write_req = create_memory_write_request(physic_dir_write, instruction->operand_string_size, valor_write);
                 LOG_OBLIGATORIO("PID: %u - Acción: ESCRIBIR - Dirección Física: %u - Valor: %s", *pid, physic_dir_write, valor_write);
                 send_memory_write_request(socket_memory, write_req);
@@ -210,10 +212,10 @@ bool execution(t_instruction *instruction, int socket_memory, int socket_dispatc
     case READ:
     {
         LOG_OBLIGATORIO("## PID: %d - Ejecutando: READ - %d %d", *pid, instruction->operand_numeric1, instruction->operand_numeric2);
-        uint32_t logic_dir_read = instruction->operand_numeric1;
-        uint32_t size = instruction->operand_numeric2;
-        uint32_t page_number = floor(logic_dir_read / g_mmu_config->page_size);
-        uint32_t offset = logic_dir_read % g_mmu_config->page_size;
+        int32_t logic_dir_read = instruction->operand_numeric1;
+        int32_t size = instruction->operand_numeric2;
+        int32_t page_number = floor(logic_dir_read / g_mmu_config->page_size);
+        int32_t offset = logic_dir_read % g_mmu_config->page_size;
         if (g_cache_config->entry_count > 0)
         {
             CacheEntry *cache_entry = cache_find_entry(page_number, *pid);
@@ -238,7 +240,7 @@ bool execution(t_instruction *instruction, int socket_memory, int socket_dispatc
             LOG_INFO("Cache is disabled, reading directly from memory");
             if (g_tlb_config->entry_count > 0)
             {
-                uint32_t physic_dir_read = mmu_translate_address(socket_memory, logic_dir_read, *pid);
+                int32_t physic_dir_read = mmu_translate_address(socket_memory, logic_dir_read, *pid);
                 t_memory_read_request *request = create_memory_read_request(physic_dir_read, size);
                 send_memory_read_request(socket_memory, request);
                 destroy_memory_read_request(request);
@@ -277,8 +279,8 @@ bool execution(t_instruction *instruction, int socket_memory, int socket_dispatc
             }
             else
             {
-                uint32_t frame_number = mmu_perform_page_walk(socket_memory, page_number, *pid);
-                uint32_t physic_dir_read = (frame_number * g_mmu_config->page_size) + offset;
+                int32_t frame_number = mmu_perform_page_walk(socket_memory, page_number, *pid);
+                int32_t physic_dir_read = (frame_number * g_mmu_config->page_size) + offset;
                 t_memory_read_request *request = create_memory_read_request(physic_dir_read, size);
                 send_memory_read_request(socket_memory, request);
                 destroy_memory_read_request(request);
@@ -404,7 +406,7 @@ bool execution(t_instruction *instruction, int socket_memory, int socket_dispatc
     return false;
 }
 
-void check_interrupt(int socket_interrupt, t_package *package, uint32_t *pid_on_execute, uint32_t *pc_on_execute, int socket_memory)
+void check_interrupt(int socket_interrupt, t_package *package, int32_t *pid_on_execute, int32_t *pc_on_execute, int socket_memory)
 {
     if (package->opcode == INTERRUPT)
     {

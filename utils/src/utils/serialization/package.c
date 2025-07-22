@@ -21,7 +21,7 @@ void destroy_package(t_package* package)
 
 int send_package(int socket, t_package* package) 
 {
-    uint32_t bytes;
+    int32_t bytes;
     void* serialized_data = serialize_package(package, &bytes);
     int sent = send(socket, serialized_data, bytes, 0);
     free(serialized_data);
@@ -29,19 +29,19 @@ int send_package(int socket, t_package* package)
 }
 
 
-void* serialize_package(t_package* package, uint32_t* total_size) 
+void* serialize_package(t_package* package, int32_t* total_size) 
 {
-    *total_size = sizeof(OPCODE) + sizeof(uint32_t) + package->buffer->stream_size;
+    *total_size = sizeof(OPCODE) + sizeof(int32_t) + package->buffer->stream_size;
 
     void* stream = safe_malloc(*total_size); 
 
-    uint32_t offset = 0;
+    int32_t offset = 0;
 
     memcpy(stream + offset, &(package->opcode), sizeof(OPCODE));
     offset += sizeof(OPCODE);
 
-    memcpy(stream + offset, &(package->buffer->stream_size), sizeof(uint32_t));
-    offset += sizeof(uint32_t);
+    memcpy(stream + offset, &(package->buffer->stream_size), sizeof(int32_t));
+    offset += sizeof(int32_t);
 
     memcpy(stream + offset, package->buffer->stream, package->buffer->stream_size);
 
@@ -51,14 +51,14 @@ void* serialize_package(t_package* package, uint32_t* total_size)
 t_package* recv_package(int socket) 
 {
     OPCODE opcode;
-    uint32_t buffer_stream_size;
+    int32_t buffer_stream_size;
 
     if (recv(socket, &opcode, sizeof(OPCODE), MSG_WAITALL) <= 0) {
         LOG_WARNING("socket %d disconnected", socket);
         return NULL; 
     }
 
-    if (recv(socket, &buffer_stream_size, sizeof(uint32_t), MSG_WAITALL) <= 0) {
+    if (recv(socket, &buffer_stream_size, sizeof(int32_t), MSG_WAITALL) <= 0) {
         LOG_ERROR("Failed to receive buffer stream size from socket %d", socket);
         return NULL; 
     }

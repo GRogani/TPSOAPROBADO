@@ -13,6 +13,6 @@
  * @param pid Process ID of the process to suspend.
  * @return 0 on success, -1 on failure.
  */
-bool swap_out_process(uint32_t pid);
+bool swap_out_process(int32_t pid);
 
 #endif

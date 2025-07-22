@@ -21,9 +21,9 @@ void destroy_repository_susp_ready();
 void lock_susp_ready_list();
 void unlock_susp_ready_list();
 
-bool find_pcb_in_susp_ready(uint32_t pid);
+bool find_pcb_in_susp_ready(int32_t pid);
 void add_pcb_to_susp_ready(t_pcb* pcb);
-t_pcb* remove_pcb_from_susp_ready(uint32_t pid);
+t_pcb* remove_pcb_from_susp_ready(int32_t pid);
 t_pcb* get_next_pcb_from_susp_ready(); // Para algoritmos de planificación
 
 #endif

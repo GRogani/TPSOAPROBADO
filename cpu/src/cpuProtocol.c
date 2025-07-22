@@ -1,6 +1,6 @@
 #include "cpuProtocol.h"
 
-t_package* recv_dispatch (int socket_dispatch_kernel, uint32_t* PID, uint32_t* PC) 
+t_package* recv_dispatch (int socket_dispatch_kernel, int32_t* PID, int32_t* PC) 
 {
     t_package* package;
     bool corrupted_package;
@@ -48,7 +48,7 @@ t_package* receive_instruction(int socket)
 {
     t_package* package;
     bool corrupted_package;
-    do{
+    //do{
         corrupted_package = false;
         package = recv_package(socket);
 
@@ -60,8 +60,9 @@ t_package* receive_instruction(int socket)
             corrupted_package = true;
             LOG_ERROR("Received package with unexpected opcode: %s", opcode_to_string(package->opcode) );
             destroy_package(package);
+            return NULL;
         }
-    }while(corrupted_package);
+    //}while(corrupted_package);
 
     return package;
 }

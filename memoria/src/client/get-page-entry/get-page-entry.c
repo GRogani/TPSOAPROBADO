@@ -37,7 +37,7 @@ void handle_page_walk_request(int client_socket, t_package* package) {
 
   t_page_table_entry* entry = list_get(target_table->entries, payload.entry_index);
   
-  uint32_t response_value;
+  int32_t response_value;
   if (entry->is_last_level) {
     response_value = entry->frame_number;
     LOG_DEBUG("Returning frame number %d for PID %d, table %d, entry %d", 
@@ -51,7 +51,7 @@ void handle_page_walk_request(int client_socket, t_package* package) {
   send_page_entry_response_package(client_socket, response_value, entry->is_last_level ? 0 : 1);
 }
 
-t_page_table* find_table_by_id(t_page_table* root_table, uint32_t target_id) {
+t_page_table* find_table_by_id(t_page_table* root_table, int32_t target_id) {
   if (root_table == NULL) {
     return NULL;
   }

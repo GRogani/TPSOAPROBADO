@@ -1,7 +1,7 @@
 #include "frame_manager.h"
 
-_Atomic uint32_t frames_free_count = 0;
-uint32_t frames_total = 0;
+_Atomic int32_t frames_free_count = 0;
+int32_t frames_total = 0;
 t_bitarray *frames_bitmap = NULL;
 pthread_mutex_t frames_mutex;
 
@@ -35,7 +35,7 @@ void release_frames(t_list *frame_list)
     
     for (int i = 0; i < frames_released; i++)
     {
-        uint32_t *frame_num = list_get(frame_list, i);
+        int32_t *frame_num = list_get(frame_list, i);
         bitarray_clean_bit(frames_bitmap, *frame_num);
     }
 
@@ -47,7 +47,7 @@ void release_frames(t_list *frame_list)
 
 }
 
-t_list* allocate_frames(uint32_t pages_needed) {
+t_list* allocate_frames(int32_t pages_needed) {
     pthread_mutex_lock(&frames_mutex);
     
     if (pages_needed > frame_get_free_count()) {
@@ -57,13 +57,13 @@ t_list* allocate_frames(uint32_t pages_needed) {
     }
 
     t_list* allocated_frames = list_create();
-    uint32_t frames_allocated = 0;
+    int32_t frames_allocated = 0;
 
-    for (uint32_t frame_index = 0; frame_index < frames_total && frames_allocated < pages_needed; frame_index++) {
+    for (int32_t frame_index = 0; frame_index < frames_total && frames_allocated < pages_needed; frame_index++) {
         if (!bitarray_test_bit(frames_bitmap, frame_index)) {
             bitarray_set_bit(frames_bitmap, frame_index);
             
-            uint32_t* frame_num = safe_malloc(sizeof(uint32_t));
+            int32_t* frame_num = safe_malloc(sizeof(int32_t));
             *frame_num = frame_index;
             list_add(allocated_frames, frame_num);
 

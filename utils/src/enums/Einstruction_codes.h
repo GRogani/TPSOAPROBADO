@@ -7,7 +7,7 @@
 
 #define INSTRUCTION_CODE_ENUM_SIZE 8
 
-typedef uint32_t INSTRUCTION_CODE;
+typedef int32_t INSTRUCTION_CODE;
 enum
 {
     NOOP,

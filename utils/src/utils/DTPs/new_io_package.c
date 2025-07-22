@@ -20,7 +20,7 @@ int send_new_io_package(int kernel_socket, char* device_name)
 char* read_new_io_package(t_package* package)
 {
     package->buffer->offset = 0;
-    uint32_t bytes_read;
+    int32_t bytes_read;
     char* result = buffer_read_string(package->buffer, &bytes_read);
     package->buffer->offset = 0;
     LOG_PACKAGE("Read new IO package: device_name: %s", result);

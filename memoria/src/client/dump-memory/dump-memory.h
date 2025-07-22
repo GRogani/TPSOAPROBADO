@@ -17,6 +17,6 @@
  */
 void dump_memory_request_handler(int client_socket, t_package* package);
 
-FILE *create_dump_file(uint32_t pid);
+FILE *create_dump_file(int32_t pid);
 
 #endif

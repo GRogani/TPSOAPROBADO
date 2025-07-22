@@ -36,7 +36,7 @@ t_cpu_connection *get_cpu_to_dispatch(void);
  * @param pid PID del proceso a interrumpir
  * @return true si la interrupción fue exitosa, false en caso contrario
  */
-cpu_context_package_data send_and_receive_interrupt(int interrupt_socket_id, uint32_t pid);
+cpu_context_package_data send_and_receive_interrupt(int interrupt_socket_id, int32_t pid);
 
 /**
  * @brief Envía dispatch (DISPATCH) a CPU
@@ -45,7 +45,7 @@ cpu_context_package_data send_and_receive_interrupt(int interrupt_socket_id, uin
  * @param pc Program Counter del proceso
  * @return true si el dispatch fue exitoso, false en caso contrario
  */
-bool send_dispatch_to_cpu(t_cpu_connection *cpu_connection, uint32_t pid, uint32_t pc);
+bool send_dispatch_to_cpu(t_cpu_connection *cpu_connection, int32_t pid, int32_t pc);
 
 void check_cpu_executing(t_cpu_connection *cpu);
 

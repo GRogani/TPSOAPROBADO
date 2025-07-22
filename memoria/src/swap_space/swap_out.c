@@ -1,6 +1,6 @@
 #include "swap_out.h"
 
-bool swap_out_process(uint32_t pid)
+bool swap_out_process(int32_t pid)
 {
     LOG_INFO("## PID: %u - Iniciando suspensión del proceso", pid);
 
@@ -29,18 +29,18 @@ bool swap_out_process(uint32_t pid)
         return true;
     }
 
-    uint32_t allocated_frames_length = list_size(proc->allocated_frames);
+    int32_t allocated_frames_length = list_size(proc->allocated_frames);
 
     t_list *frames_to_swap = list_create();
     for (int i = 0; i < allocated_frames_length; i++)
     {
-        uint32_t *frame_num = list_get(proc->allocated_frames, i);
-        uint32_t *new_frame = malloc(sizeof(uint32_t));
+        int32_t *frame_num = list_get(proc->allocated_frames, i);
+        int32_t *new_frame = malloc(sizeof(int32_t));
         *new_frame = *frame_num;
         list_add(frames_to_swap, new_frame);
     }
 
-    uint32_t frames_needed = list_size(frames_to_swap);
+    int32_t frames_needed = list_size(frames_to_swap);
     t_list *swap_frames = swap_allocate_frames(frames_needed);
 
     if (swap_frames == NULL || list_size(swap_frames) < frames_needed)
@@ -69,10 +69,10 @@ bool swap_out_process(uint32_t pid)
     bool success = true;
     for (int i = 0; i < list_size(frames_to_swap) && success; i++)
     {
-        uint32_t *user_frame = list_get(frames_to_swap, i);
-        uint32_t *swap_frame = list_get(swap_frames, i);
+        int32_t *user_frame = list_get(frames_to_swap, i);
+        int32_t *swap_frame = list_get(swap_frames, i);
 
-        uint32_t physical_address = (*user_frame) * memoria_config.TAM_PAGINA;
+        int32_t physical_address = (*user_frame) * memoria_config.TAM_PAGINA;
 
         memset(page_buffer, 0, memoria_config.TAM_PAGINA);
         read_from_user_space(physical_address, page_buffer, memoria_config.TAM_PAGINA);

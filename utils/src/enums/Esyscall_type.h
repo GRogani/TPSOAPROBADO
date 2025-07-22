@@ -3,7 +3,7 @@
 
 
 
-typedef uint32_t SYSCALL_TYPE;
+typedef int32_t SYSCALL_TYPE;
 enum
 {
     SYSCALL_INIT_PROC,

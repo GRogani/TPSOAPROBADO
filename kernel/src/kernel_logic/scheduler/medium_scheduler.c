@@ -1,6 +1,6 @@
 #include "medium_scheduler.h"
 
-void run_medium_scheduler(uint32_t pid)
+void run_medium_scheduler(int32_t pid)
 {
     /**
      * Aca va la implementacion del algoritmo de MEDIANO plazo

@@ -18,9 +18,9 @@
  * Mantiene un stream de bytes con posición actual para lectura/escritura secuencial
  */
 typedef struct t_buffer {
-    uint32_t stream_size;           // Tamaño total del buffer en bytes
+    int32_t stream_size;           // Tamaño total del buffer en bytes
     void* stream;       // Puntero al stream de datos serializados
-    uint32_t offset;    // Offset actual para operaciones de lectura/escritura
+    int32_t offset;    // Offset actual para operaciones de lectura/escritura
 } t_buffer;
 
 /**
@@ -30,7 +30,7 @@ typedef struct t_buffer {
  * 
  * @note El buffer creado debe liberarse con buffer_destroy()
  */
-t_buffer* buffer_create(uint32_t size);
+t_buffer* buffer_create(int32_t size);
 
 /**
  * @brief Destruye un buffer liberando sus recursos
@@ -46,14 +46,14 @@ void buffer_destroy(t_buffer *buffer);
  * 
  * @warning data debe apuntar a una región válida de al menos 'size' bytes
  */
-void buffer_add(t_buffer *buffer, void *data, uint32_t size);
+void buffer_add(t_buffer *buffer, void *data, int32_t size);
 
 /**
  * @brief Agrega un entero de 32 bits al buffer
  * @param buffer Buffer destino
  * @param data Valor a agregar
  */
-void buffer_add_uint32(t_buffer *buffer, uint32_t data);
+void buffer_add_int32(t_buffer *buffer, int32_t data);
 
 /**
  * @brief Agrega una cadena de texto al buffer
@@ -63,7 +63,7 @@ void buffer_add_uint32(t_buffer *buffer, uint32_t data);
  * 
  * @note No se almacena el null-terminator en el buffer
  */
-void buffer_add_string(t_buffer *buffer, uint32_t length, char *string);
+void buffer_add_string(t_buffer *buffer, int32_t length, char *string);
 
 /**
  * @brief Agrega un puntero al buffer
@@ -82,14 +82,14 @@ void buffer_add_pointer(t_buffer *buffer, void *ptr);
  * 
  * @pre data debe tener espacio suficiente para los bytes solicitados
  */
-void buffer_read(t_buffer *buffer, void *data, uint32_t size);
+void buffer_read(t_buffer *buffer, void *data, int32_t size);
 
 /**
  * @brief Lee un entero de 32 bits del buffer
  * @param buffer Buffer fuente
- * @return uint32_t Valor leído
+ * @return int32_t Valor leído
  */
-uint32_t buffer_read_uint32(t_buffer *buffer);
+int32_t buffer_read_int32(t_buffer *buffer);
 
 /**
  * @brief Lee una cadena del buffer
@@ -99,7 +99,7 @@ uint32_t buffer_read_uint32(t_buffer *buffer);
  * 
  * @note La cadena retornada es una copia y debe liberarse con free()
  */
-char *buffer_read_string(t_buffer *buffer, uint32_t *length);
+char *buffer_read_string(t_buffer *buffer, int32_t *length);
 
 /**
  * @brief Lee un puntero del buffer

@@ -6,8 +6,8 @@
 #include "../utils/logger/logger.h"
 
 #define INFO 0
-#define WARNING 1
-#define ERROR 1
+#define WARNING 0
+#define ERROR 0
 #define DEBUG_MODE 0
 #define PACKAGE 1
 

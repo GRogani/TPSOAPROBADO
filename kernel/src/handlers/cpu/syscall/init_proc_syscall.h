@@ -32,8 +32,8 @@
  * @param new_process_pseudocode_file Archivo de pseudocódigo del nuevo proceso
  * @param response_socket Socket para enviar la respuesta de confirmación
  */
-void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc, 
-                                     uint32_t new_process_memory_space, 
+void handle_init_proc_syscall(int32_t caller_pid, int32_t caller_pc, 
+                                     int32_t new_process_memory_space, 
                                      char *new_process_pseudocode_file,
                                      int response_socket);
 
@@ -41,7 +41,7 @@ void handle_init_proc_syscall(uint32_t caller_pid, uint32_t caller_pc,
  * @brief Genera un nuevo PID único para el proceso a crear
  * @return PID único generado
  */
-uint32_t generate_new_pid(void);
+int32_t generate_new_pid(void);
 
 void process_schedulers();
 

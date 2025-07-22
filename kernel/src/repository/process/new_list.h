@@ -24,9 +24,9 @@ void destroy_repository_new();
 void lock_new_list();
 void unlock_new_list();
 
-bool find_pcb_in_new(uint32_t pid);
+bool find_pcb_in_new(int32_t pid);
 void add_pcb_to_new(t_pcb* pcb);
-t_pcb* remove_pcb_from_new(uint32_t pid);
+t_pcb* remove_pcb_from_new(int32_t pid);
 t_pcb* get_next_pcb_from_new(); // Para algoritmos de planificación
 
 #endif

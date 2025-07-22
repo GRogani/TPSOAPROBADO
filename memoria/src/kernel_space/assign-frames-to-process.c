@@ -89,7 +89,7 @@ bool assign_frames(t_page_table *root_table, t_list* frames_for_process, int pag
       if (entry)
       {
         // Asignamos el frame
-        uint32_t *frame_number = list_get(frames_for_process, frame_index); // Acceso directo al arreglo
+        int32_t *frame_number = list_get(frames_for_process, frame_index); // Acceso directo al arreglo
         if (frame_number)
         {
           entry->frame_number = *frame_number;

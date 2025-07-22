@@ -24,7 +24,7 @@ void unlock_new_list() {
     sem_post(&sem_new);
 }
 
-bool find_pcb_in_new(uint32_t pid) {
+bool find_pcb_in_new(int32_t pid) {
     t_list* list = get_new_list();
     
     for (int i = 0; i < list_size(list); i++) {
@@ -53,7 +53,7 @@ t_pcb* get_next_pcb_from_new() {
     return (t_pcb*) list_get(get_new_list(), 0);
 }
 
-t_pcb* remove_pcb_from_new(uint32_t pid) {
+t_pcb* remove_pcb_from_new(int32_t pid) {
     bool pid_matches(void* ptr) {
         t_pcb* pcb = (t_pcb*) ptr;
         return pcb->pid == pid;

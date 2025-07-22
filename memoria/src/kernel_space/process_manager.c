@@ -61,7 +61,7 @@ void process_manager_destroy()
     LOG_INFO("Process Manager: Destruido.");
 }
 
-process_info *process_manager_find_process(uint32_t pid)
+process_info *process_manager_find_process(int32_t pid)
 {
     process_info *found_proc = NULL;
     lock_process_list();
@@ -78,7 +78,7 @@ process_info *process_manager_find_process(uint32_t pid)
     return found_proc;
 }
 
-bool process_manager_delete_process(uint32_t pid)
+bool process_manager_delete_process(int32_t pid)
 {
     bool result = false;
     lock_process_list();

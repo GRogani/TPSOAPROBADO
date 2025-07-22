@@ -23,6 +23,6 @@
  * @param memory_space Espacio en memoria asignado al proceso
  * @param pseudocode_file Nombre del archivo de pseudocódigo del proceso
  */
-void initialize_root_process(uint32_t pid, uint32_t memory_space, char *pseudocode_file);
+void initialize_root_process(int32_t pid, int32_t memory_space, char *pseudocode_file);
 
 #endif

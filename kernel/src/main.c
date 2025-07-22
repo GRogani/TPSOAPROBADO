@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 
 }
 
-void process_enter(char* pseudocode_file_name, uint32_t program_size)
+void process_enter(char* pseudocode_file_name, int32_t program_size)
 {   
     wait_cpu_connected(); // esperamos a que el thread nos notifique que terminó de correr y limpiar todo antes de cerrar.
     destroy_cpu_connected_sem();

@@ -8,11 +8,11 @@
 
 typedef struct {
     char* data;
-    uint32_t data_size;
+    int32_t data_size;
 } t_memory_read_response;
 
-t_package* create_package_memory_read_response(char* data, uint32_t size);
-void send_memory_read_response(int socket, char* data, uint32_t size);
+t_package* create_package_memory_read_response(char* data, int32_t size);
+void send_memory_read_response(int socket, char* data, int32_t size);
 t_memory_read_response* read_memory_read_response(t_package* package);
 void destroy_memory_read_response(t_memory_read_response* response);
 

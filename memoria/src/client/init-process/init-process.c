@@ -15,7 +15,7 @@ void init_process_request_handler(int socket, t_package *package)
   send_confirmation_package(socket, result);
 }
 
-bool create_process(uint32_t pid, uint32_t size, char *script_path)
+bool create_process(int32_t pid, int32_t size, char *script_path)
 {
   process_info *proc = safe_malloc(sizeof(process_info));
 
@@ -34,7 +34,7 @@ bool create_process(uint32_t pid, uint32_t size, char *script_path)
   if (size != 0)
   {
 
-    uint32_t pages_needed = (uint32_t)ceil((double)size / memoria_config.TAM_PAGINA);
+    int32_t pages_needed = (int32_t)ceil((double)size / memoria_config.TAM_PAGINA);
     LOG_OBLIGATORIO("## PID: %u - Proceso requiere %d paginas (tamano: %d bytes, pagina: %d bytes).", pid, pages_needed, size, memoria_config.TAM_PAGINA);
 
     if (frame_get_free_count() < pages_needed)
@@ -124,7 +124,7 @@ t_list *process_manager_load_script_lines(char *path)
 
   while ((read_bytes = getline(&line, &len, file)) != -1)
   {
-    uint32_t line_len = strlen(line);
+    int32_t line_len = strlen(line);
     while (line_len > 0 && (line[line_len - 1] == '\n' || line[line_len - 1] == '\r' ||
                             line[line_len - 1] == ' ' || line[line_len - 1] == '\t'))
     {

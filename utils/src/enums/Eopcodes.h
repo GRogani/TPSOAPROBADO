@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef uint32_t OPCODE;
+typedef int32_t OPCODE;
 enum
 {
     FETCH,       // cpu -> memoria

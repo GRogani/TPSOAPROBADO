@@ -3,8 +3,8 @@
 void get_instruction_request_handler(int socket, t_package *package)
 {
   fetch_package_data request = read_fetch_package(package);
-  uint32_t pid = request.pid;
-  uint32_t pc = request.pc;
+  int32_t pid = request.pid;
+  int32_t pc = request.pc;
 
   process_info *proc = process_manager_find_process(pid);
 

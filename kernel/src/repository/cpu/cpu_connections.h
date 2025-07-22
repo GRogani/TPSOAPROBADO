@@ -15,7 +15,7 @@ void destroy_repository_cpu_connections();
 void lock_cpu_connections();
 
 void* get_cpu_connection_by_id(char *id);
-void* get_cpu_connection_by_pid(uint32_t pid);
+void* get_cpu_connection_by_pid(int32_t pid);
 char *create_cpu_connection(int socket_interrupt, int socket_dispatch);
 void remove_cpu_connection(char *id);
 

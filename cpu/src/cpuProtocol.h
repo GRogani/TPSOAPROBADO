@@ -8,14 +8,14 @@
 
 typedef struct {
     int socket_interrupt;
-    uint32_t* pid;
-    uint32_t* pc;
+    int32_t* pid;
+    int32_t* pc;
     int socket_memory;
 } interrupt_args_t;
 
-void request_instruction (int socket,uint32_t PID, uint32_t PC);
+//void request_instruction (int socket,int32_t PID, int32_t PC);
 
-t_package* recv_dispatch (int socket_dispatch_kernel, uint32_t* PID, uint32_t* PC);
+t_package* recv_dispatch (int socket_dispatch_kernel, int32_t* PID, int32_t* PC);
 
 t_package* receive_instruction (int socket);
 

@@ -7,11 +7,11 @@ extern t_memoria_config memoria_config;
 static FILE *swap_file = NULL;
 static t_bitarray *swap_frames_bitmap = NULL;
 static size_t swap_frames_total = 0;
-static _Atomic uint32_t swap_frames_free_count = 0;
+static _Atomic int32_t swap_frames_free_count = 0;
 static pthread_mutex_t swap_frames_mutex;
 static pthread_mutex_t swap_file_mutex;
 
-t_list *swap_allocate_frames(uint32_t pages_needed)
+t_list *swap_allocate_frames(int32_t pages_needed)
 {
   pthread_mutex_lock(&swap_frames_mutex);
 
@@ -22,15 +22,15 @@ t_list *swap_allocate_frames(uint32_t pages_needed)
   }
 
   t_list *allocated_frames = list_create();
-  uint32_t frames_allocated = 0;
+  int32_t frames_allocated = 0;
 
-  for (uint32_t frame_index = 0; frame_index < swap_frames_total && frames_allocated < pages_needed; frame_index++)
+  for (int32_t frame_index = 0; frame_index < swap_frames_total && frames_allocated < pages_needed; frame_index++)
   {
     if (!bitarray_test_bit(swap_frames_bitmap, frame_index))
     {
       bitarray_set_bit(swap_frames_bitmap, frame_index);
 
-      uint32_t *frame_num = malloc(sizeof(uint32_t));
+      int32_t *frame_num = malloc(sizeof(int32_t));
       *frame_num = frame_index;
       list_add(allocated_frames, frame_num);
 
@@ -46,7 +46,7 @@ t_list *swap_allocate_frames(uint32_t pages_needed)
   return allocated_frames;
 }
 
-bool swap_write_frame(uint32_t frame_num, void *data, uint32_t size)
+bool swap_write_frame(int32_t frame_num, void *data, int32_t size)
 {
   if (swap_file == NULL)
   {
@@ -136,7 +136,7 @@ void swap_manager_destroy()
 /**
  * Read data from a specific frame in swap space
  */
-bool swap_read_frame(uint32_t frame_num, void *buffer, uint32_t size)
+bool swap_read_frame(int32_t frame_num, void *buffer, int32_t size)
 {
   
   if (swap_file == NULL)
@@ -193,7 +193,7 @@ void swap_release_frames(t_list *frame_list)
 
   for (int i = 0; i < frames_released; i++)
   {
-    uint32_t *frame_num = list_get(frame_list, i);
+    int32_t *frame_num = list_get(frame_list, i);
     bitarray_clean_bit(swap_frames_bitmap, *frame_num);
     free(frame_num);
   }

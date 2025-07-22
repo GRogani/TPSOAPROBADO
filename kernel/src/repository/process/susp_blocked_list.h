@@ -21,8 +21,8 @@ void destroy_repository_susp_blocked();
 void lock_susp_blocked_list();
 void unlock_susp_blocked_list();
 
-t_pcb *find_pcb_in_susp_blocked(uint32_t pid);
+t_pcb *find_pcb_in_susp_blocked(int32_t pid);
 void add_pcb_to_susp_blocked(t_pcb* pcb);
-t_pcb* remove_pcb_from_susp_blocked(uint32_t pid);
+t_pcb* remove_pcb_from_susp_blocked(int32_t pid);
 
 #endif

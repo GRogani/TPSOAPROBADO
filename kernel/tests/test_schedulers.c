@@ -26,7 +26,7 @@ void* memory_server_mock(void* arg) {
     if (request != NULL) {
         int *cont = (int *) arg;
         (*cont)++;
-        uint32_t pid = read_swap_operation_package(request);
+        int32_t pid = read_swap_operation_package(request);
         printf("[MEMORY MOCK] Recibida solicitud de suspensión para PID %u\n", pid);
         
         // Enviar respuesta exitosa
@@ -65,7 +65,7 @@ void start_memory_mock_server(int* arg) {
     LOG_DEBUG("[MEMORY MOCK] Servidor mock iniciado correctamente");
 }
 
-t_pcb* create_test_pcb(uint32_t pid, uint32_t size, const char* filename){
+t_pcb* create_test_pcb(int32_t pid, int32_t size, const char* filename){
     t_pcb* pcb = pcb_create(pid, 0, size, (char *) filename);
     return pcb;
 }

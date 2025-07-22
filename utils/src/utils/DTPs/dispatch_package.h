@@ -7,20 +7,20 @@
 #include "enums/Eopcodes.h"
 
 typedef struct dispatch_package_data {
-    uint32_t pid;
-    uint32_t pc;
+    int32_t pid;
+    int32_t pc;
 } dispatch_package_data;
 
 /**
  * @brief 
  */
-t_package* create_dispatch_package(uint32_t pid, uint32_t pc);
+t_package* create_dispatch_package(int32_t pid, int32_t pc);
 
 
 /**
  * @brief 
  */
-int send_dispatch_package(int socket, uint32_t pid, uint32_t pc);
+int send_dispatch_package(int socket, int32_t pid, int32_t pc);
 
 /**
  * @brief 

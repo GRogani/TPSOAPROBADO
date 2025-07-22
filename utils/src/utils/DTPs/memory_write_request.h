@@ -7,8 +7,8 @@
 
 // Estructura para la solicitud de escritura en memoria
 typedef struct {
-    uint32_t physical_address;
-    uint32_t size;
+    int32_t physical_address;
+    int32_t size;
     void* data;
 } t_memory_write_request;
 
@@ -20,7 +20,7 @@ typedef struct {
  * @param data Puntero al dato a escribir.
  * @return Puntero a la estructura t_memory_write_request creada.
  */
-t_memory_write_request* create_memory_write_request(uint32_t physical_address, uint32_t size, void* data);
+t_memory_write_request* create_memory_write_request(int32_t physical_address, int32_t size, void* data);
 
 /**
  * @brief Destruye un objeto de solicitud de escritura en memoria.

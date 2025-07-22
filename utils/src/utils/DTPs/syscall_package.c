@@ -2,23 +2,23 @@
 
 t_package *create_syscall_package(syscall_package_data *syscall)
 {
-    t_buffer* buffer = buffer_create(sizeof(uint32_t) * 3);
-    buffer_add_uint32(buffer, (uint32_t)syscall->syscall_type);
-    buffer_add_uint32(buffer, syscall->pid);
-    buffer_add_uint32(buffer, syscall->pc);
+    t_buffer* buffer = buffer_create(sizeof(int32_t) * 3);
+    buffer_add_int32(buffer, (int32_t)syscall->syscall_type);
+    buffer_add_int32(buffer, syscall->pid);
+    buffer_add_int32(buffer, syscall->pc);
 
     switch (syscall->syscall_type)
     {
     case SYSCALL_INIT_PROC:
     {
-        buffer_add_uint32(buffer, syscall->params.init_proc.memory_space);
+        buffer_add_int32(buffer, syscall->params.init_proc.memory_space);
         buffer_add_string(buffer, strlen(syscall->params.init_proc.pseudocode_file) + 1, syscall->params.init_proc.pseudocode_file);
         break;
     }
     case SYSCALL_IO:
     {
         buffer_add_string(buffer, strlen(syscall->params.io.device_name) + 1, syscall->params.io.device_name);
-        buffer_add_uint32(buffer, syscall->params.io.sleep_time);
+        buffer_add_int32(buffer, syscall->params.io.sleep_time);
         break;
     }
     case SYSCALL_DUMP_MEMORY:
@@ -45,24 +45,24 @@ syscall_package_data *read_syscall_package(t_package *package)
     package->buffer->offset = 0;
     syscall_package_data *syscall = safe_malloc(sizeof(syscall_package_data));
 
-    syscall->syscall_type = buffer_read_uint32(package->buffer);
-    syscall->pid = buffer_read_uint32(package->buffer);
-    syscall->pc = buffer_read_uint32(package->buffer);
+    syscall->syscall_type = buffer_read_int32(package->buffer);
+    syscall->pid = buffer_read_int32(package->buffer);
+    syscall->pc = buffer_read_int32(package->buffer);
 
     switch (syscall->syscall_type)
     {
     case SYSCALL_INIT_PROC:
     {
-        syscall->params.init_proc.memory_space = buffer_read_uint32(package->buffer);
-        uint32_t filename_len;
+        syscall->params.init_proc.memory_space = buffer_read_int32(package->buffer);
+        int32_t filename_len;
         syscall->params.init_proc.pseudocode_file = buffer_read_string(package->buffer, &filename_len);
         break;
     }
     case SYSCALL_IO:
     {
-        uint32_t device_len;
+        int32_t device_len;
         syscall->params.io.device_name = buffer_read_string(package->buffer, &device_len);
-        syscall->params.io.sleep_time = buffer_read_uint32(package->buffer);
+        syscall->params.io.sleep_time = buffer_read_int32(package->buffer);
         break;
     }
     case SYSCALL_DUMP_MEMORY:

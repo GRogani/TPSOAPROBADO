@@ -30,7 +30,7 @@ void* get_cpu_connection_by_id(char *id) {
   return cpu_connection;
 }
 
-void* get_cpu_connection_by_pid(uint32_t pid) 
+void* get_cpu_connection_by_pid(int32_t pid) 
 {
   t_list* cpus = get_all_cpu_connections();
 

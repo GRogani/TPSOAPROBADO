@@ -21,8 +21,8 @@ void destroy_repository_exit();
 void lock_exit_list();
 void unlock_exit_list();
 
-bool find_pcb_in_exit(uint32_t pid);
+bool find_pcb_in_exit(int32_t pid);
 void add_pcb_to_exit(t_pcb* pcb);
-void remove_pcb_from_exit(uint32_t pid);
+void remove_pcb_from_exit(int32_t pid);
 
 #endif

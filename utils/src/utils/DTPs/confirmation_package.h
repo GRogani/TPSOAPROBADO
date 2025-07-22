@@ -5,7 +5,7 @@
 #include "utils/serialization/buffer.h"
 #include "enums/Eopcodes.h"
 
-t_package *create_confirmation_package (uint32_t success);
+t_package *create_confirmation_package (int32_t success);
 
 int send_confirmation_package (int socket, bool success);
 

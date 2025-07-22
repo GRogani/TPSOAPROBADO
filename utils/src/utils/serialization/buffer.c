@@ -1,6 +1,6 @@
 #include "buffer.h"
 
-t_buffer *buffer_create(uint32_t size){
+t_buffer *buffer_create(int32_t size){
 
     t_buffer *buffer = safe_malloc(sizeof(t_buffer));
 
@@ -26,9 +26,9 @@ void buffer_destroy(t_buffer *buffer){
     }
 }
 
-void buffer_add(t_buffer *buffer, void *data, uint32_t size){
+void buffer_add(t_buffer *buffer, void *data, int32_t size){
     if (buffer->offset + size > buffer->stream_size) {
-        uint32_t new_size = buffer->offset + size;
+        int32_t new_size = buffer->offset + size;
         buffer->stream = safe_realloc(buffer->stream, new_size);
         buffer->stream_size = new_size;
     }
@@ -38,12 +38,12 @@ void buffer_add(t_buffer *buffer, void *data, uint32_t size){
 }
 
 
-void buffer_add_uint32(t_buffer *buffer, uint32_t data){
-    buffer_add(buffer, &data, sizeof(uint32_t));
+void buffer_add_int32(t_buffer *buffer, int32_t data){
+    buffer_add(buffer, &data, sizeof(int32_t));
 }
 
-void buffer_add_string(t_buffer *buffer, uint32_t length, char *string){
-    buffer_add_uint32(buffer, length);
+void buffer_add_string(t_buffer *buffer, int32_t length, char *string){
+    buffer_add_int32(buffer, length);
     buffer_add(buffer, string, length);
 }
 
@@ -53,7 +53,7 @@ void buffer_add_pointer(t_buffer *buffer, void *ptr) {
 }
 
 
-void buffer_read(t_buffer *buffer, void *data, uint32_t size){
+void buffer_read(t_buffer *buffer, void *data, int32_t size){
    	if (buffer == NULL)
 	{
         LOG_WARNING("El buffer es NULL");
@@ -78,14 +78,14 @@ void buffer_read(t_buffer *buffer, void *data, uint32_t size){
 	buffer->offset += size;
 }
 
-uint32_t buffer_read_uint32(t_buffer *buffer){
-    uint32_t data;
-    buffer_read(buffer, &data, sizeof(uint32_t));
+int32_t buffer_read_int32(t_buffer *buffer){
+    int32_t data;
+    buffer_read(buffer, &data, sizeof(int32_t));
     return data;
 }
 
-char *buffer_read_string(t_buffer *buffer, uint32_t *length){
-    *length = buffer_read_uint32(buffer);
+char *buffer_read_string(t_buffer *buffer, int32_t *length){
+    *length = buffer_read_int32(buffer);
     char *string = safe_malloc(*length);
     buffer_read(buffer, string, *length);
     return string;

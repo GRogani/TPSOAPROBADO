@@ -1,13 +1,13 @@
 #include "init_process_package.h"
 
-t_package* create_init_process_package(uint32_t pid, uint32_t size, char* pseudocode_path) 
+t_package* create_init_process_package(int32_t pid, int32_t size, char* pseudocode_path) 
 {
-    uint32_t path_len = pseudocode_path ? strlen(pseudocode_path) + 1 : 1;
-    uint32_t buffer_size = sizeof(uint32_t) * 2 + path_len;
+    int32_t path_len = pseudocode_path ? strlen(pseudocode_path) + 1 : 1;
+    int32_t buffer_size = sizeof(int32_t) * 2 + path_len;
     
     t_buffer* buffer = buffer_create(buffer_size);
-    buffer_add_uint32(buffer, pid);
-    buffer_add_uint32(buffer, size);
+    buffer_add_int32(buffer, pid);
+    buffer_add_int32(buffer, size);
     
     if (pseudocode_path) {
         buffer_add_string(buffer, strlen(pseudocode_path) + 1, pseudocode_path);
@@ -18,7 +18,7 @@ t_package* create_init_process_package(uint32_t pid, uint32_t size, char* pseudo
     return create_package(INIT_PROCESS, buffer);
 }
 
-int send_init_process_package(int socket, uint32_t pid, uint32_t size, char* pseudocode_path) 
+int send_init_process_package(int socket, int32_t pid, int32_t size, char* pseudocode_path) 
 {
     LOG_PACKAGE("Sending init process package: pid: %u, size: %u, pseudocode_path: %s", pid, size, pseudocode_path ? pseudocode_path : "NULL");
     t_package* package = create_init_process_package(pid, size, pseudocode_path);
@@ -32,10 +32,10 @@ init_process_package_data* read_init_process_package(t_package* package)
     package->buffer->offset = 0;
     init_process_package_data* request = safe_malloc(sizeof(init_process_package_data));
     
-    request->pid = buffer_read_uint32(package->buffer);
-    request->size = buffer_read_uint32(package->buffer);
+    request->pid = buffer_read_int32(package->buffer);
+    request->size = buffer_read_int32(package->buffer);
     
-    uint32_t path_len;
+    int32_t path_len;
     request->pseudocode_path = buffer_read_string(package->buffer, &path_len);
     
     package->buffer->offset = 0;

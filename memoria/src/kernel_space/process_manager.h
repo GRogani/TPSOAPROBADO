@@ -11,17 +11,17 @@ static t_list *global_process_list = NULL;
 extern t_memoria_config memoria_config;
 
 typedef struct process_metrics {
-    uint32_t page_table_access_count;
-    uint32_t instruction_requests_count;
-    uint32_t swap_out_count;
-    uint32_t swap_in_count;
-    uint32_t memory_read_count;
-    uint32_t memory_write_count;
+    int32_t page_table_access_count;
+    int32_t instruction_requests_count;
+    int32_t swap_out_count;
+    int32_t swap_in_count;
+    int32_t memory_read_count;
+    int32_t memory_write_count;
 } t_process_metrics;
 
 typedef struct process_info {
-    uint32_t pid;
-    uint32_t process_size;
+    int32_t pid;
+    int32_t process_size;
     bool is_suspended;
     t_list* instructions;
     t_page_table* page_table;
@@ -35,9 +35,9 @@ void process_manager_init();
 
 void process_manager_destroy();
 
-process_info* process_manager_find_process(uint32_t pid);
+process_info* process_manager_find_process(int32_t pid);
 
-bool process_manager_delete_process(uint32_t pid);
+bool process_manager_delete_process(int32_t pid);
 
 t_list* process_manager_get_process_list();
 

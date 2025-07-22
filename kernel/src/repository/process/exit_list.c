@@ -21,7 +21,7 @@ void unlock_exit_list() {
     sem_post(&sem_exit);
 }
 
-bool find_pcb_in_exit (uint32_t pid) {
+bool find_pcb_in_exit (int32_t pid) {
     bool pid_matches(void* ptr) {
         t_pcb* pcb = (t_pcb*) ptr;
         return pcb->pid == pid;
@@ -38,7 +38,7 @@ void add_pcb_to_exit (t_pcb* pcb) {
     list_add(get_exit_list(), pcb);
 }
 
-void remove_pcb_from_exit (uint32_t pid) 
+void remove_pcb_from_exit (int32_t pid) 
 {
     bool pid_matches(void* ptr) 
     {

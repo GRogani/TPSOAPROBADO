@@ -25,14 +25,14 @@ int connect_to_memory(t_kernel_config* config);
  * @param pseudocode_path Ruta al archivo de pseudocódigo
  * @return true si la creación fue exitosa, false caso contrario
  */
-bool create_process(int memory_socket, uint32_t pid, uint32_t size, char* pseudocode_path);
+bool create_process(int memory_socket, int32_t pid, int32_t size, char* pseudocode_path);
 
 /**
  * @brief Consulta espacio libre en memoria
  * @param memory_socket Socket de conexión con memoria
  * @return Cantidad de espacio libre en bytes, o 0 si hay error
  */
-uint32_t get_memory_free_space(int memory_socket);
+int32_t get_memory_free_space(int memory_socket);
 
 /**
  * @brief Envia mensaje a memoria para eliminar el recurso mediante una coneccion efimera,
@@ -42,7 +42,7 @@ uint32_t get_memory_free_space(int memory_socket);
  *  
  * - `-1 (ERROR)`
  */
-int kill_process_in_memory(uint32_t pid);
+int kill_process_in_memory(int32_t pid);
 
 
 /**
@@ -52,7 +52,7 @@ int kill_process_in_memory(uint32_t pid);
  * 
  * - `-1 (ERROR)` 
  */
-bool dump_memory_routine(uint32_t pid);
+bool dump_memory_routine(int32_t pid);
 
 /**
  * @brief Desconecta de memoria

@@ -16,13 +16,13 @@
  * @brief Estructura para métricas de estado (ME) - cuenta las veces que el proceso estuvo en cada estado
  */
 typedef struct {
-    uint32_t new_count;
-    uint32_t ready_count;
-    uint32_t exec_count;
-    uint32_t blocked_count;
-    uint32_t susp_blocked_count;
-    uint32_t susp_ready_count;
-    uint32_t exit_count;
+    int32_t new_count;
+    int32_t ready_count;
+    int32_t exec_count;
+    int32_t blocked_count;
+    int32_t susp_blocked_count;
+    int32_t susp_ready_count;
+    int32_t exit_count;
 } t_state_metrics;
 
 /**
@@ -44,9 +44,9 @@ typedef struct {
  * @brief Process Control Block (PCB)
  */
 typedef struct t_pcb {
-    uint32_t pc;                    // Program Counter
-    uint32_t pid;                   // Process ID
-    uint32_t size;                  // Tamaño del proceso en memoria
+    int32_t pc;                    // Program Counter
+    int32_t pid;                   // Process ID
+    int32_t size;                  // Tamaño del proceso en memoria
     char* pseudocode_file;          // Nombre del archivo de pseudocódigo
     PROCESS_STATE current_state;    // Estado actual del proceso
     uint64_t state_start_time_ms; // Tiempo de inicio del estado actual
@@ -62,7 +62,7 @@ typedef struct t_pcb {
  * @param pseudocode_file Nombre del archivo de pseudocódigo del proceso.
  * @return Puntero al PCB creado o NULL si falla.
  */
-t_pcb* pcb_create(uint32_t pid, uint32_t pc, uint32_t size, char* pseudocode_file);
+t_pcb* pcb_create(int32_t pid, int32_t pc, int32_t size, char* pseudocode_file);
 
 /**
  * @brief Libera la memoria de un PCB.

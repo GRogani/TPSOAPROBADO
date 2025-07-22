@@ -11,7 +11,7 @@
 #include "handlers/memory/client/memory_client.h"
 #include "handlers/cpu/syscall/exit_syscall.h"
 
-void dump_memory_syscall(uint32_t pid, uint32_t pc);
+void dump_memory_syscall(int32_t pid, int32_t pc);
 
 
 #endif

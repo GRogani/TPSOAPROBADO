@@ -29,15 +29,15 @@ int main()
     printf("Press enter to send packages...\n");
     getchar();
 
-    buffer1 = buffer_create(sizeof(uint32_t) * 2);
-    buffer_add_uint32(buffer1, 1);
-    buffer_add_uint32(buffer1, 10000);
+    buffer1 = buffer_create(sizeof(int32_t) * 2);
+    buffer_add_int32(buffer1, 1);
+    buffer_add_int32(buffer1, 10000);
 
     package1 = create_package(IO_OPERATION, buffer1);
 
-    buffer2 = buffer_create(sizeof(uint32_t) * 2);
-    buffer_add_uint32(buffer2, 2);
-    buffer_add_uint32(buffer2, 20000);
+    buffer2 = buffer_create(sizeof(int32_t) * 2);
+    buffer_add_int32(buffer2, 2);
+    buffer_add_int32(buffer2, 20000);
 
     package2 = create_package(IO_OPERATION, buffer2);
 

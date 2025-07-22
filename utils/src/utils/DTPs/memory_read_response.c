@@ -1,14 +1,14 @@
 #include "memory_read_response.h"
 
-t_package *create_package_memory_read_response(char *data, uint32_t size)
+t_package *create_package_memory_read_response(char *data, int32_t size)
 {
-  t_buffer *buffer = buffer_create(size + sizeof(uint32_t));
+  t_buffer *buffer = buffer_create(size + sizeof(int32_t));
   buffer_add_string(buffer, size, data);
   t_package *package = create_package(READ_MEMORY, buffer);
   return package;
 }
 
-void send_memory_read_response(int socket, char *data, uint32_t size)
+void send_memory_read_response(int socket, char *data, int32_t size)
 {
   LOG_PACKAGE("Sending memory read response: size: %u", size);
   t_package *package = create_package_memory_read_response(data, size);

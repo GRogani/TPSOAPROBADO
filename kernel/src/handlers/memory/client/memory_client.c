@@ -19,7 +19,7 @@ int connect_to_memory(t_kernel_config* config) {
     return memory_socket;
 }
 
-bool create_process(int memory_socket, uint32_t pid, uint32_t size, char* pseudocode_path) {
+bool create_process(int memory_socket, int32_t pid, int32_t size, char* pseudocode_path) {
     if (memory_socket < 0) {
         LOG_ERROR("memory_client: Socket inválido");
         return false;
@@ -58,7 +58,7 @@ bool create_process(int memory_socket, uint32_t pid, uint32_t size, char* pseudo
     return success;
 }
 
-int kill_process_in_memory(uint32_t pid)
+int kill_process_in_memory(int32_t pid)
 {
     extern t_kernel_config kernel_config; // en globals.h
 
@@ -77,7 +77,7 @@ int kill_process_in_memory(uint32_t pid)
         return false;
 }
 
-bool dump_memory_routine(uint32_t pid)
+bool dump_memory_routine(int32_t pid)
 {
     extern t_kernel_config kernel_config; // en globals.h
 

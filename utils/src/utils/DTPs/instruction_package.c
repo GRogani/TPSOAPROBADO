@@ -20,7 +20,7 @@ int send_instruction_package(int socket, char* instruction)
 char* read_instruction_package(t_package* package) 
 {
     package->buffer->offset = 0;
-    uint32_t instruction_len;
+    int32_t instruction_len;
     char* instruction = buffer_read_string(package->buffer, &instruction_len);
     LOG_PACKAGE("Read instruction package: instruction: %s", instruction);
     return instruction;

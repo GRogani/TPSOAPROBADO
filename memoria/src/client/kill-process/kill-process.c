@@ -2,7 +2,7 @@
 
 void delete_process_request_handler(int socket, t_package *package)
 {
-  uint32_t pid_to_delete = read_kill_process_package(package);
+  int32_t pid_to_delete = read_kill_process_package(package);
 
   LOG_INFO("## PID: %u - Solicitud de Finalizacion de Proceso Recibida.", pid_to_delete);
 
