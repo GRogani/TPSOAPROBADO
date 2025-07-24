@@ -10,7 +10,7 @@ void exit_process_syscall(int32_t pid)
 
   bool memory_space_free = exit_routine(pcb);
   unlock_exec_list();
-
+  run_long_scheduler();
   run_short_scheduler(); // si o si lo corremos, porque el proceso pasó a EXIT y tenemos que replanificar.
 }
 
