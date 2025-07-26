@@ -78,7 +78,12 @@ void handle_io_connection_not_found(int32_t pid, int32_t sleep_time, char *devic
 
   bool memory_space_free = exit_routine(pcb);
   unlock_exec_list();
-  run_long_scheduler();
+
+  if (memory_space_free) // si no se pudo sacar de la memoria, no tiene sentido porque no se liberó memoria, quedo el proceso ahi zombie.
+  {
+    run_long_scheduler();
+  }
+
   run_short_scheduler(); // si o si lo corremos, porque el proceso pasó a EXIT y tenemos que replanificar.
 }
 
