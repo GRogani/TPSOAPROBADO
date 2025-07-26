@@ -35,18 +35,27 @@ void run_medium_scheduler(int32_t pid)
         return;
     }
 
+    lock_susp_blocked_list();
+
     // BLOCKED -> SUSPEND_BLOCKED
     t_pcb *pcb = remove_pcb_from_blocked(pid);
     LOG_INFO("Cambio de estado de BLOCKED a SUSPENDED_BLOCKED para PID %d", pid);
+    add_pcb_to_susp_blocked(pcb);
+    unlock_blocked_list();
+    unlock_susp_blocked_list();
 
     if (pcb->size != 0)
     {
+        LOG_OBLIGATORIO("## (%d) enviando swap a la memoria para suspenderlo", pid);
         int memory_socket = connect_to_memory(&kernel_config);
         if (memory_socket == -1)
         {
             LOG_ERROR("Fallo la conexion con Memoria");
             lock_blocked_list();
+            lock_susp_blocked_list();
+            pcb = remove_pcb_from_susp_blocked(pid);
             add_pcb_to_blocked(pcb);
+            unlock_susp_blocked_list();
             unlock_blocked_list();
             return;
         }
@@ -58,7 +67,10 @@ void run_medium_scheduler(int32_t pid)
         {
             LOG_ERROR("No se pudo conectar con Memoria para suspender PID %d", pid);
             lock_blocked_list();
+            lock_susp_blocked_list();
+            pcb = remove_pcb_from_susp_blocked(pid);
             add_pcb_to_blocked(pcb);
+            unlock_susp_blocked_list();
             unlock_blocked_list();
             return;
         }
@@ -67,7 +79,10 @@ void run_medium_scheduler(int32_t pid)
             LOG_WARNING("Fallo el SWAP del PID %d", pid);
             // TODO: si falla el SWAP, por ahora hago esto SUSPEND_BLOCKED -> BLOCKED
             lock_blocked_list();
+            lock_susp_blocked_list();
+            pcb = remove_pcb_from_susp_blocked(pid);
             add_pcb_to_blocked(pcb);
+            unlock_susp_blocked_list();
             unlock_blocked_list();
 
             disconnect_from_memory(memory_socket);
@@ -78,13 +93,7 @@ void run_medium_scheduler(int32_t pid)
         LOG_INFO("Swap exitoso para PID %d", pid);
         disconnect_from_memory(memory_socket);
         destroy_package(package);
-    }    
-
-    lock_susp_blocked_list();
-    add_pcb_to_susp_blocked(pcb);
-
-    unlock_susp_blocked_list();
-    unlock_blocked_list();
+    }
 
     // Llamo al Planificador de Largo Plazo
     LOG_INFO("Llamando a planificador de largo plazo para admitir nuevos procesos");

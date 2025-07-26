@@ -52,7 +52,7 @@ bool compare_process_size(void *a, void *b)
     t_pcb *pcb_a = (t_pcb *)a;
     t_pcb *pcb_b = (t_pcb *)b;
 
-    return pcb_a->size < pcb_b->size;
+    return pcb_a->size <= pcb_b->size;
 }
 
 void sort_new_list_by_SSF()
