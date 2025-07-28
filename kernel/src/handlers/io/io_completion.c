@@ -44,6 +44,8 @@ void* io_completion(void *thread_args)
             found_in_susp_blocked = true;
             LOG_INFO("io_completion: Process PID %d found in SUSPENDED_BLOCKED, moving to SUSPENDED_READY", pid);
             add_pcb_to_susp_ready(pcb);
+        } else {
+            LOG_ERROR("## (%d) NO SE ENCONTRÓ EL PROCESO NI EN BLOCKED NI EN SUSP BLOCKED MIENTRAS SE RECIBIÓ UNA IO COMPLETION.", pid);
         }
     }
 

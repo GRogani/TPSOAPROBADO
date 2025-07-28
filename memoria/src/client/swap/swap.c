@@ -6,9 +6,9 @@ void swap_request_handler(int client_fd, t_package *package)
 
     LOG_INFO("Solicitud de SWAP recibida para proceso PID: %u", pid);
     
-    bool result = swap_out_process(pid);
-    
     delay_swap_access();
+
+    bool result = swap_out_process(pid);
 
     if (result) {
         LOG_INFO("SWAP exitoso para el proceso PID: %u", pid);

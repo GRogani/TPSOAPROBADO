@@ -143,7 +143,6 @@ void run_short_scheduler(void)
     else if (should_preempt_executing_process(pcb_in_ready, cpu->current_process_executing))
     {
         // (4.2) CPU ocupada, pero se puede desalojar
-        LOG_OBLIGATORIO("## (%d) - Desalojado por algoritmo SJF/SRT", cpu->current_process_executing);
 
         cpu_context_package_data cpu_context = send_and_receive_interrupt(cpu->interrupt_socket_id, cpu->current_process_executing);
 
@@ -153,6 +152,7 @@ void run_short_scheduler(void)
             t_pcb *preempted_pcb = remove_pcb_from_exec(cpu->current_process_executing);
             if (preempted_pcb != NULL)
             {
+                LOG_OBLIGATORIO("## (%d) - Desalojado por algoritmo SJF/SRT", cpu->current_process_executing);
                 preempted_pcb->pc = cpu_context.pc;
                 add_pcb_to_ready(preempted_pcb);
                 LOG_INFO("Proceso PID=%d movido de EXEC a READY por preemption", preempted_pcb->pid);

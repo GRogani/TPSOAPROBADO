@@ -18,8 +18,8 @@ bool run_long_scheduler(void)
 
   LOG_INFO("Procesando lista SUSP_READY");
 
+  lock_ready_list();
   lock_susp_ready_list();
-
 
   while (!list_is_empty(get_susp_ready_list()))
   {
@@ -42,9 +42,9 @@ bool run_long_scheduler(void)
     // Éxito: mover de SUSP_READY a READY
     LOG_INFO("Proceso con PID %d des-suspendido correctamente", pcb->pid);
     t_pcb *pcb_pop = remove_pcb_from_susp_ready(pcb->pid);
-    lock_ready_list();
+    
     add_pcb_to_ready(pcb_pop);
-    unlock_ready_list();
+    
     processes_initialized = true;
     
     LOG_INFO("Proceso con PID %d movido a READY", pcb->pid);
@@ -52,13 +52,16 @@ bool run_long_scheduler(void)
     
   }
   unlock_susp_ready_list();
+  unlock_ready_list();
+
   LOG_INFO("No hay mas procesos en SUSP_READY");
+
+  lock_ready_list();
+  lock_new_list();
 
   while (1)
   {
-    lock_new_list();
     t_pcb *pcb = get_next_process_to_initialize_from_new();
-    unlock_new_list();
     if (pcb == NULL)
     {
       LOG_INFO("No hay mas procesos en NEW");
@@ -73,18 +76,16 @@ bool run_long_scheduler(void)
     if (memory_ok)
     {
       LOG_INFO("Proceso con PID %d inicializado correctamente", pcb->pid);
-      lock_new_list();
       t_pcb* pcb_pop = remove_pcb_from_new(pcb->pid);
-      unlock_new_list();
 
-      lock_ready_list();
+      
       add_pcb_to_ready(pcb_pop);
-      unlock_ready_list();
+      
 
       processes_initialized = true;
 
       LOG_INFO("Proceso con PID %d movido a READY", pcb->pid);
-      break;
+      continue;
     }
     else
     {
@@ -92,6 +93,9 @@ bool run_long_scheduler(void)
       break;
     }
   }
+
+  unlock_new_list();
+  unlock_ready_list();
 
   disconnect_from_memory(memory_socket);
 
