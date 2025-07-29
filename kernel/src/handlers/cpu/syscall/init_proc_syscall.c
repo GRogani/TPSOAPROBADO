@@ -23,7 +23,7 @@ void handle_init_proc_syscall(int32_t caller_pid, int32_t caller_pc,
         return;
     }
 
-    current_pcb->MT.last_cpu_burst_ms = now();
+    current_pcb->MT.last_cpu_burst_ms = 0;
     
     current_pcb->pc = caller_pc;
 
