@@ -82,12 +82,10 @@ void *client_handler(void *client_fd_ptr)
         switch (package->opcode)
         {
         case FETCH:
-            delay_memory_access();
             get_instruction_request_handler(client_fd, package);
             break;
 
         case INIT_PROCESS:
-            delay_memory_access();
             init_process_request_handler(client_fd, package);
             break;
 
@@ -100,12 +98,10 @@ void *client_handler(void *client_fd_ptr)
             break;
 
         case C_DUMP_MEMORY:
-            delay_memory_access();
             dump_memory_request_handler(client_fd, package);
             break;
 
         case KILL_PROCESS:
-            delay_memory_access();
             delete_process_request_handler(client_fd, package);
             break;
 
@@ -118,7 +114,6 @@ void *client_handler(void *client_fd_ptr)
             break;
 
         case GET_PAGE_ENTRY:
-            delay_memory_access();
             handle_page_walk_request(client_fd, package);
             break;
 

@@ -39,7 +39,7 @@ t_pcb* pcb_create(int32_t pid, int32_t pc, int32_t size, char* pseudocode_file) 
     
     // Incrementar contador del estado inicial (NEW)
     pcb->ME.new_count = 1;
-    pcb->MT.last_cpu_burst_ms = kernel_config.default_estimated_cpu_burst_ms;
+    pcb->MT.last_estimated_cpu_burst_ms = kernel_config.default_estimated_cpu_burst_ms;
 
     LOG_OBLIGATORIO("## (%d) Se crea el proceso - Estado: NEW", pid);
 

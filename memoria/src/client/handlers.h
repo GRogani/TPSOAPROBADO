@@ -14,7 +14,6 @@
 #include "./swap/swap.h"
 #include "./unsuspend-process/unsuspend-process.h"
 #include "./dump-memory/dump-memory.h"
-#include "../delay_utils.h"
 
 int create_server_thread(pthread_t* listener_thread);
 
