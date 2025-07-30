@@ -31,7 +31,7 @@ bool compare_cpu_bursts_SRT(void *a, void *b)
     pcb_a->MT.last_estimated_cpu_burst_ms = pcb_a->MT.last_estimated_cpu_burst_ms * (1 - alpha) + pcb_a->MT.last_cpu_burst_ms * alpha;
     pcb_b->MT.last_estimated_cpu_burst_ms = pcb_b->MT.last_estimated_cpu_burst_ms * (1 - alpha) + pcb_b->MT.last_cpu_burst_ms * alpha;
 
-    return pcb_a->MT.last_estimated_cpu_burst_ms < pcb_b->MT.last_estimated_cpu_burst_ms - total_time_ms(pcb_b->state_start_time_ms);
+    return (pcb_a->MT.last_estimated_cpu_burst_ms < (pcb_b->MT.last_estimated_cpu_burst_ms - total_time_ms(pcb_b->state_start_time_ms)));
 }
 
 void sort_ready_list_by_SJF()
