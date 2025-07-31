@@ -64,6 +64,8 @@ void configure_scheduling_algorithms();
  */
 bool compare_cpu_bursts(void *a, void *b);
 
+bool compare_cpu_bursts_SRT(void *a, void *b);
+
 /**
  * @brief Ordena la lista de READY por Shortest Job First (SJF)
  * @note Utiliza la función `compare_cpu_bursts` para ordenar

@@ -39,7 +39,7 @@ t_pcb* pcb_create(int32_t pid, int32_t pc, int32_t size, char* pseudocode_file) 
     
     // Incrementar contador del estado inicial (NEW)
     pcb->ME.new_count = 1;
-    pcb->MT.last_estimated_cpu_burst_ms = kernel_config.default_estimated_cpu_burst_ms;
+    pcb->MT.last_cpu_burst_ms = kernel_config.default_estimated_cpu_burst_ms;
 
     LOG_OBLIGATORIO("## (%d) Se crea el proceso - Estado: NEW", pid);
 
@@ -67,6 +67,7 @@ void pcb_change_state(t_pcb* pcb, PROCESS_STATE new_state) {
 
     uint64_t time_in_current_state = total_time_ms(pcb->state_start_time_ms);
     // Actualizar métricas de tiempo según el estado actual
+    LOG_OBLIGATORIO("## (%d) Tiempo en estado %d: %lu ms", pcb->pid, pcb->current_state, time_in_current_state);
     switch (pcb->current_state) {
         case NEW:
             pcb->MT.new_time_ms += time_in_current_state;
