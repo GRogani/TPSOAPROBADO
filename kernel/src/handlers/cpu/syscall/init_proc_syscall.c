@@ -23,8 +23,9 @@ void handle_init_proc_syscall(int32_t caller_pid, int32_t caller_pc,
         return;
     }
 
-    current_pcb->MT.last_cpu_burst_ms = 0;
-    
+    uint64_t time_int_exec = total_time_ms(current_pcb->state_start_time_ms);
+    current_pcb->MT.last_cpu_burst_ms = time_int_exec;
+
     current_pcb->pc = caller_pc;
 
     // 2. Crear PCB del nuevo proceso
