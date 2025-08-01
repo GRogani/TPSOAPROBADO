@@ -1,6 +1,6 @@
 #include "exit_syscall.h"
 
-void exit_process_syscall(int32_t pid) 
+void exit_process_syscall(int32_t pid)
 {
   LOG_INFO("Exit syscall called for PID %d", pid);
 
@@ -11,9 +11,23 @@ void exit_process_syscall(int32_t pid)
   bool memory_space_free = exit_routine(pcb);
   unlock_exec_list();
 
+  pthread_t thread;
+  if (pthread_create(&thread, NULL, process_schedulers_exit, NULL) != 0)
+  {
+    LOG_ERROR("INIT_PROC syscall: Failure pthread_create");
+  }
+  pthread_detach(thread);
+}
 
+void process_schedulers_exit()
+{
+  LOG_INFO("exit_syscall: Ejecutando planificador de largo plazo");
   run_long_scheduler();
-  run_short_scheduler(); // si o si lo corremos, porque el proceso pasó a EXIT y tenemos que replanificar.
+  LOG_INFO("exit_syscall: Planificador de largo plazo completado");
+
+  LOG_INFO("exit_syscall: Ejecutando planificador de corto plazo");
+  run_short_scheduler();
+  LOG_INFO("exit_syscall: Syscall EXIT completada para nuevo proceso PID=%d", new_pid);
 }
 
 bool exit_routine(t_pcb* pcb) {

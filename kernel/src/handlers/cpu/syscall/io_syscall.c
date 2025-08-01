@@ -79,8 +79,18 @@ void handle_io_connection_not_found(int32_t pid, int32_t sleep_time, char *devic
   bool memory_space_free = exit_routine(pcb);
   unlock_exec_list();
 
+  pthread_t thread;
+  if (pthread_create(&thread, NULL, process_schedulers_io, NULL) != 0)
+  {
+    LOG_ERROR("INIT_PROC syscall: Failure pthread_create");
+  }
+  pthread_detach(thread);
+}
+
+void process_schedulers_io()
+{
   run_long_scheduler();
-  run_short_scheduler(); // si o si lo corremos, porque el proceso pasó a EXIT y tenemos que replanificar.
+  run_short_scheduler();
 }
 
 void* medium_scheduler_thread(void* arg) {

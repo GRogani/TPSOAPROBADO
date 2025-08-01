@@ -40,6 +40,7 @@ bool run_long_scheduler(void)
     }
 
     // Éxito: mover de SUSP_READY a READY
+    LOG_OBLIGATORIO("## des-suspendido de SUSP_READY a READY para PID %d", pcb->pid);
     LOG_INFO("Proceso con PID %d des-suspendido correctamente", pcb->pid);
     t_pcb *pcb_pop = remove_pcb_from_susp_ready(pcb->pid);
     

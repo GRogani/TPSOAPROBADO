@@ -14,4 +14,6 @@ void handle_io_process_syscall(int32_t pid, int32_t pc, int32_t sleep_time, char
 
 void* medium_scheduler_thread(void* arg); // wrapper
 
+void process_schedulers_io();
+
 #endif
