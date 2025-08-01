@@ -91,6 +91,7 @@ void run_medium_scheduler(int32_t pid)
         }
 
         LOG_INFO("Swap exitoso para PID %d", pid);
+        LOG_OBLIGATORIO("## Swap finalizó con exito para PID %d", pid);
         disconnect_from_memory(memory_socket);
         destroy_package(package);
     }
