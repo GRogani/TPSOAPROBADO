@@ -82,7 +82,7 @@ void handle_io_connection_not_found(int32_t pid, int32_t sleep_time, char *devic
   pthread_t thread;
   if (pthread_create(&thread, NULL, process_schedulers_io, NULL) != 0)
   {
-    LOG_ERROR("INIT_PROC syscall: Failure pthread_create");
+    LOG_ERROR("IO syscall: Failure pthread_create");
   }
   pthread_detach(thread);
 }

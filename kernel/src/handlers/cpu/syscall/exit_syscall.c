@@ -14,7 +14,7 @@ void exit_process_syscall(int32_t pid)
   pthread_t thread;
   if (pthread_create(&thread, NULL, process_schedulers_exit, NULL) != 0)
   {
-    LOG_ERROR("INIT_PROC syscall: Failure pthread_create");
+    LOG_ERROR("EXIT syscall: Failure pthread_create");
   }
   pthread_detach(thread);
 }
