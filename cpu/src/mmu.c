@@ -110,7 +110,7 @@ void cache_entry_destroy(void *element)
   free(entry);
 }
 
-TLBEntry *tlb_find_entry(int32_t page_number)
+TLBEntry *tlb_find_entry(int32_t page_number, int32_t pid)
 {
   if (g_tlb_config->entry_count == 0)
     return NULL;
@@ -118,7 +118,7 @@ TLBEntry *tlb_find_entry(int32_t page_number)
   bool _is_page(void *element)
   {
     TLBEntry *entry = (TLBEntry *)element;
-    return entry->page == page_number;
+    return entry->page == page_number && entry->pid == pid;
   }
 
   TLBEntry *entry = list_find(g_tlb, _is_page);
@@ -130,7 +130,7 @@ TLBEntry *tlb_find_entry(int32_t page_number)
   return entry;
 }
 
-void tlb_add_entry(int32_t page_number, int32_t frame_number)
+void tlb_add_entry(int32_t page_number, int32_t frame_number, int32_t pid)
 {
   if (g_tlb_config->entry_count == 0)
     return;
@@ -138,6 +138,7 @@ void tlb_add_entry(int32_t page_number, int32_t frame_number)
   TLBEntry *new_entry = malloc(sizeof(TLBEntry));
   new_entry->page = page_number;
   new_entry->frame = frame_number;
+  new_entry->pid = pid;
   new_entry->lru_timestamp = g_lru_timestamp_counter++;
 
   if (list_size(g_tlb) < g_tlb_config->entry_count)
@@ -213,7 +214,7 @@ int32_t mmu_translate_address(int memory_socket, int32_t logical_address, int32_
   LOG_DEBUG("  -> Page Number: %u, Offset: %u", page_number, offset);
 
   int32_t frame_number;
-  TLBEntry *tlb_entry = tlb_find_entry(page_number);
+  TLBEntry *tlb_entry = tlb_find_entry(page_number, pid);
 
   if (tlb_entry)
   {
@@ -225,7 +226,7 @@ int32_t mmu_translate_address(int memory_socket, int32_t logical_address, int32_
     LOG_OBLIGATORIO("PID: %d - TLB MISS - Pagina: %u", pid, page_number);
     // TODO: find victim entry in TLB
     frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
-    tlb_add_entry(page_number, frame_number);
+    tlb_add_entry(page_number, frame_number, pid);
   }
 
   int32_t physical_address = (frame_number * g_mmu_config->page_size) + offset;
@@ -237,7 +238,7 @@ int32_t mmu_translate_address(int memory_socket, int32_t logical_address, int32_
 int32_t mmu_translate_address_with_page_number(int memory_socket, int32_t page_number, int32_t pid)
 {
   int32_t frame_number;
-  TLBEntry *tlb_entry = tlb_find_entry(page_number);
+  TLBEntry *tlb_entry = tlb_find_entry(page_number, pid);
 
   if (tlb_entry)
   {
@@ -248,7 +249,7 @@ int32_t mmu_translate_address_with_page_number(int memory_socket, int32_t page_n
   {
     LOG_OBLIGATORIO("PID: %d - TLB MISS - Pagina: %u", pid, page_number);
     frame_number = mmu_perform_page_walk(memory_socket, page_number, pid);
-    tlb_add_entry(page_number, frame_number);
+    tlb_add_entry(page_number, frame_number, pid);
   }
 
   return (frame_number * g_mmu_config->page_size);

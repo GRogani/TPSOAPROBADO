@@ -17,6 +17,7 @@ extern MMUConfig* g_mmu_config;
 
 typedef struct {
     int32_t page;
+    int32_t pid;
     int32_t frame;
     uint64_t lru_timestamp; 
 } TLBEntry;
@@ -44,8 +45,8 @@ void mmu_request_page_read_from_memory(int memory_socket, int32_t physic_addr, v
 void mmu_request_page_write_to_memory(int memory_socket, int32_t physic_addr, void* content);
 
 // TLB Functions
-TLBEntry* tlb_find_entry(int32_t page_number);
-void tlb_add_entry(int32_t page_number, int32_t frame_number);
+TLBEntry* tlb_find_entry(int32_t page_number, int32_t pid);
+void tlb_add_entry(int32_t page_number, int32_t frame_number, int32_t pid);
 
 // MMU Page Walk
 int32_t mmu_perform_page_walk(int memory_socket, int32_t page_number, int32_t pid);
