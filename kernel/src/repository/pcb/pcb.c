@@ -67,7 +67,6 @@ void pcb_change_state(t_pcb* pcb, PROCESS_STATE new_state) {
 
     uint64_t time_in_current_state = total_time_ms(pcb->state_start_time_ms);
     // Actualizar métricas de tiempo según el estado actual
-    LOG_OBLIGATORIO("## (%d) Tiempo en estado %d: %lu ms", pcb->pid, pcb->current_state, time_in_current_state);
     switch (pcb->current_state) {
         case NEW:
             pcb->MT.new_time_ms += time_in_current_state;

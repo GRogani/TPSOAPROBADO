@@ -63,6 +63,18 @@ void handle_io_process_syscall(int32_t pid, int32_t pc, int32_t sleep_time, char
     LOG_ERROR("Failure pthread_create, PID [%u]", pcb->pid);
   }
   pthread_detach(thread);
+
+  pthread_t short_scheduler_t;
+  LOG_INFO("io_syscall: Attempting to run the short-term scheduler");
+  if (pthread_create(&short_scheduler_t, NULL, short_scheduler_thread, NULL) != 0)
+  {
+    LOG_ERROR("Failure pthread_create, PID [%u]", pcb->pid);
+  }
+  pthread_detach(short_scheduler_t);
+}
+
+void short_scheduler_thread()
+{
   LOG_INFO("io_syscall: running short scheduler");
   run_short_scheduler();
   LOG_INFO("io_syscall: short scheduler finished");
@@ -79,8 +91,18 @@ void handle_io_connection_not_found(int32_t pid, int32_t sleep_time, char *devic
   bool memory_space_free = exit_routine(pcb);
   unlock_exec_list();
 
+  pthread_t thread;
+  if (pthread_create(&thread, NULL, process_schedulers_io, NULL) != 0)
+  {
+    LOG_ERROR("IO syscall: Failure pthread_create");
+  }
+  pthread_detach(thread);
+}
+
+void process_schedulers_io()
+{
   run_long_scheduler();
-  run_short_scheduler(); // si o si lo corremos, porque el proceso pasó a EXIT y tenemos que replanificar.
+  run_short_scheduler();
 }
 
 void* medium_scheduler_thread(void* arg) {
