@@ -16,4 +16,6 @@ void* medium_scheduler_thread(void* arg); // wrapper
 
 void process_schedulers_io();
 
+void short_scheduler_thread();
+
 #endif

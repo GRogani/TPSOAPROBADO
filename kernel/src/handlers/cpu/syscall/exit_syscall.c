@@ -27,7 +27,7 @@ void process_schedulers_exit()
 
   LOG_INFO("exit_syscall: Ejecutando planificador de corto plazo");
   run_short_scheduler();
-  LOG_INFO("exit_syscall: Syscall EXIT completada para nuevo proceso PID=%d", new_pid);
+  LOG_INFO("exit_syscall: Syscall EXIT completada");
 }
 
 bool exit_routine(t_pcb* pcb) {

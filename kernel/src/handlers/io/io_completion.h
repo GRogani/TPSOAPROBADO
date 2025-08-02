@@ -26,5 +26,6 @@ typedef struct t_pending_io_thread_args {
 void* io_completion(void*);
 void* process_pending_io_thread(void* args);
 void process_schedulers_for_susp_blocked();
+void process_scheduler_for_blocked();
 
 #endif

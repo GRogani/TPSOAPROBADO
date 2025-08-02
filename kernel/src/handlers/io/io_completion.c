@@ -64,12 +64,22 @@ void* io_completion(void *thread_args)
     pending_args.device_name = strdup(args->device_name);
     pending_args.client_socket = args->client_socket;
     process_pending_io(pending_args);
+    pthread_t process_pending_io_t;
+    if (pthread_create(&process_pending_io_t, NULL, process_pending_io_thread, NULL) != 0)
+    {
+        LOG_ERROR("IO_COMPLETION: Failure pthread_create");
+    }
+    pthread_detach(process_pending_io_t);
 
     // 5. Ejecutar schedulers según corresponda
     if (found_in_blocked) {
         // Proceso pasó de BLOCKED a READY - ejecutar planificador de corto plazo
-        LOG_INFO("io_completion: running short scheduler after IO completion for PID %d", pid);
-        run_short_scheduler();
+        pthread_t thread;
+        if (pthread_create(&thread, NULL, process_scheduler_for_blocked, NULL) != 0)
+        {
+            LOG_ERROR("IO_COMPLETION: Failure pthread_create");
+        }
+        pthread_detach(thread);
     } else if (found_in_susp_blocked) {
         pthread_t thread;
         if (pthread_create(&thread, NULL, process_schedulers_for_susp_blocked, NULL) != 0)
@@ -88,8 +98,14 @@ cleanup:
     pthread_exit(NULL);
 }
 
+void process_scheduler_for_blocked()
+{
+    LOG_INFO("io_completion: running short scheduler after IO completion");
+    run_short_scheduler();
+}
+
 void process_schedulers_for_susp_blocked() {
-    LOG_INFO("io_completion: running long scheduler after IO completion for suspended PID %d", pid);
+    LOG_INFO("io_completion: running long scheduler after IO completion for suspended");
     bool process_moved_to_ready = run_long_scheduler();
 
     // Si el proceso pasó a READY, ejecutar corto plazo

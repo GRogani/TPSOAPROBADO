@@ -18,13 +18,16 @@ bool run_long_scheduler(void)
 
   LOG_INFO("Procesando lista SUSP_READY");
 
-  lock_ready_list();
-  lock_susp_ready_list();
-
-  while (!list_is_empty(get_susp_ready_list()))
+  while (1)
   {
     // Obtener siguiente proceso de SUSP_READY usando algoritmo configurado
+    lock_susp_ready_list();
     t_pcb *pcb = get_next_process_to_initialize_from_susp_ready();
+
+    if(pcb == NULL) {
+      unlock_susp_ready_list();
+      break;
+    }
 
     // SWAP IN -> Intentar de-suspender proceso en memoria
     LOG_INFO("Intentando des-suspender proceso con PID %d", pcb->pid);
@@ -36,6 +39,7 @@ bool run_long_scheduler(void)
       LOG_WARNING("No se pudo des-suspender proceso con PID %d", pcb->pid);
       LOG_WARNING("Fallo de SWAP o memoria sin espacio suficiente");
       destroy_package(response);
+      unlock_susp_ready_list();
       break;
     }
 
@@ -43,8 +47,11 @@ bool run_long_scheduler(void)
     LOG_OBLIGATORIO("## des-suspendido de SUSP_READY a READY para PID %d", pcb->pid);
     LOG_INFO("Proceso con PID %d des-suspendido correctamente", pcb->pid);
     t_pcb *pcb_pop = remove_pcb_from_susp_ready(pcb->pid);
-    
+    unlock_susp_ready_list();
+
+    lock_ready_list();
     add_pcb_to_ready(pcb_pop);
+    unlock_ready_list();
     
     processes_initialized = true;
     
@@ -52,8 +59,6 @@ bool run_long_scheduler(void)
     destroy_package(response);
     
   }
-  unlock_susp_ready_list();
-  unlock_ready_list();
 
   LOG_INFO("No hay mas procesos en SUSP_READY");
 
